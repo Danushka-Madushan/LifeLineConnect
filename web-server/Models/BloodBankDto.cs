@@ -8,6 +8,7 @@ namespace web_server.Models
         public int IncomingTransfers { get; set; }
         public int PendingRequests { get; set; }
         public int ExpiringSoon { get; set; }
+        public List<string> LowStockGroups { get; set; } = new List<string>();
     }
 
     public class BloodUnitDto
