@@ -1,0 +1,3 @@
+- check if plsql procedures functions trigger and cursors are used
+- check for any type usages
+- use .env for db urls
