@@ -9,8 +9,10 @@
 >
 > **Important rule:** the C# API must not duplicate Oracle business rules in application code when those rules can be enforced by a PL/SQL procedure/function/trigger. C# should validate request shape and authorization, then call the appropriate Oracle PL/SQL operation.
 >
-> **PL/SQL design principle:** prefer simple packages with focused procedures/functions, explicit transactions where a workflow crosses several tables, cursors for report/list retrieval, and triggers only for invariant/audit/status side effects that must never be bypassed. Do not create triggers for ordinary application workflow that is clearer inside a procedure.
+> **PL/SQL design principle:** prefer standalone procedures/functions with focused responsibilities, explicit transactions where a workflow crosses several tables, cursors for report/list retrieval, and triggers only for invariant/audit/status side effects that must never be bypassed. Do not create triggers for ordinary application workflow that is clearer inside a procedure.
 >
+> **PL/SQL object constraint:** use only standalone procedures, standalone functions, explicit cursors, simple SQL/PL/SQL blocks, exception handling, variables, and triggers where appropriate. Do **not** use PL/SQL packages or other advanced PL/SQL object types.
+> 
 > **Oracle operation variable convention:** every Oracle-backed API below includes an `OraclePLSql` design variable. This is a human-readable reference to the intended PL/SQL call/query; it is **not implementation code**.
 >
 > **MongoDB convention:** when an endpoint is MongoDB-backed, `OraclePLSql` is marked `N/A — MongoDB operation` rather than inventing an Oracle query for non-Oracle data.
@@ -41,20 +43,20 @@ For a single business workflow such as completing a donation, creating a transfe
 
 ### Oracle objects recommended by this design
 
-Suggested package families:
-- `PKG_AUTH`
-- `PKG_DONOR`
-- `PKG_CAMP`
-- `PKG_VENUE`
-- `PKG_DONATION`
-- `PKG_TRANSFER`
-- `PKG_BLOOD_BANK`
-- `PKG_HOSPITAL_REQUEST`
-- `PKG_STAFF`
-- `PKG_NOTIFICATION`
-- `PKG_REPORT`
-- `PKG_WEBMASTER`
-- `PKG_AUDIT`
+Suggested standalone PL/SQL operation groups:
+- authentication procedures/functions
+- donor procedures/functions
+- camp procedures/functions
+- venue procedures/functions
+- donation procedures/functions
+- transfer procedures/functions
+- blood-bank procedures/functions
+- hospital-request procedures/functions
+- staff procedures/functions
+- notification procedures/functions
+- report procedures/functions
+- webmaster procedures/functions
+- audit procedures/functions
 
 Suggested reusable functions/triggers:
 - donor eligibility function
@@ -62,7 +64,7 @@ Suggested reusable functions/triggers:
 - inventory availability function
 - blood-unit expiry/status maintenance trigger where appropriate
 - audit trigger for security-sensitive Oracle changes
-- status-transition validation inside package procedures (preferred over triggers when possible)
+- status-transition validation inside standalone procedures (preferred over triggers when possible)
 
 ---
 
@@ -169,7 +171,7 @@ pageSize=12
 
 **What to return:** Media metadata such as `mediaId`, `campId`, `title`, `type`, `url`, `thumbnailUrl`, `publishedAt`.
 
-**OraclePLSql:** If camp visibility is checked from Oracle: `PKG_CAMP.IS_PUBLICLY_VISIBLE(p_camp_id)`; the media itself is MongoDB-backed.
+**OraclePLSql:** If camp visibility is checked from Oracle: `IS_PUBLICLY_VISIBLE(p_camp_id)`; the media itself is MongoDB-backed.
 
 ---
 
@@ -281,7 +283,7 @@ location=Colombo
 
 **What to return:** Camp summary with `campId`, public camp details, `averageRating`, `ratingCount`, and ranking order.
 
-**OraclePLSql:** `PKG_CAMP.GET_PUBLIC_SUMMARY(p_camp_id)` for Oracle camp validation/enrichment; rating aggregation is MongoDB.
+**OraclePLSql:** `GET_PUBLIC_SUMMARY(p_camp_id)` for Oracle camp validation/enrichment; rating aggregation is MongoDB.
 
 ---
 
@@ -302,7 +304,7 @@ sort=recent
 
 **What to return:** `campId`, `averageRating`, `ratingCount`, paginated feedback entries, safe author display information, created date, and moderation-safe text.
 
-**OraclePLSql:** `PKG_CAMP.GET_PUBLIC_SUMMARY(p_camp_id)` only if Oracle camp verification is needed; feedback is MongoDB.
+**OraclePLSql:** `GET_PUBLIC_SUMMARY(p_camp_id)` only if Oracle camp verification is needed; feedback is MongoDB.
 
 ---
 
@@ -327,7 +329,7 @@ pageSize=20
 
 **What to return:** Camp cards with camp ID, date/time, venue, organizer public name, target blood groups, capacity/availability summary, status, and awareness media references.
 
-**OraclePLSql:** `PKG_CAMP.GET_PUBLIC_CATALOGUE(p_filters, p_page, p_page_size, p_result_cursor)`.
+**OraclePLSql:** `GET_PUBLIC_CATALOGUE(p_filters, p_page, p_page_size, p_result_cursor)`.
 
 ---
 
@@ -359,7 +361,7 @@ pageSize=20
 
 **What to return:** Every public entity returned by its endpoint includes its current safe `status` and relevant timestamps.
 
-**OraclePLSql:** Camp/request endpoints use their owning package procedures/functions; MongoDB content uses MongoDB status/expiry filtering.
+**OraclePLSql:** Camp/request endpoints use their corresponding standalone PL/SQL procedures/functions; MongoDB content uses MongoDB status/expiry filtering.
 
 ---
 
@@ -388,7 +390,7 @@ pageSize=20
 
 **What to return:** `donorId`, account state, profile summary, and authentication result/session token according to the chosen auth strategy.
 
-**OraclePLSql:** `PKG_AUTH.REGISTER_DONOR(...)` and/or `PKG_DONOR.CREATE_PROFILE(...)`.
+**OraclePLSql:** `REGISTER_DONOR(...)` and/or `CREATE_PROFILE(...)`.
 
 ---
 
@@ -410,7 +412,7 @@ pageSize=20
 
 **What to return:** Login result plus dashboard summaries: next eligible date, upcoming camps, recent donations, active registered appeals, notification count, and pending actions.
 
-**OraclePLSql:** `PKG_AUTH.AUTHENTICATE(...)`; `PKG_DONOR.GET_DASHBOARD(p_donor_id, p_result_cursor)`.
+**OraclePLSql:** `AUTHENTICATE(...)`; `GET_DASHBOARD(p_donor_id, p_result_cursor)`.
 
 ---
 
@@ -434,7 +436,7 @@ pageSize=20
 
 **What to return:** Updated safe profile.
 
-**OraclePLSql:** `PKG_DONOR.GET_PROFILE(p_donor_id, p_result_cursor)` and `PKG_DONOR.UPDATE_PROFILE(...)`.
+**OraclePLSql:** `GET_PROFILE(p_donor_id, p_result_cursor)` and `UPDATE_PROFILE(...)`.
 
 ---
 
@@ -450,7 +452,7 @@ pageSize=20
 
 **What to return:** `eligible`, `status`, `reasonCode`, `reason`, `nextEligibleDate`, and optionally `checkedAgainstCampDate`.
 
-**OraclePLSql:** `PKG_DONOR.CHECK_ELIGIBILITY(p_donor_id, p_reference_date, p_eligible OUT, p_reason_code OUT, p_next_date OUT)`.
+**OraclePLSql:** `CHECK_ELIGIBILITY(p_donor_id, p_reference_date, p_eligible OUT, p_reason_code OUT, p_next_date OUT)`.
 
 ---
 
@@ -466,7 +468,7 @@ pageSize=20
 
 **What to return:** Eligibility result object described above.
 
-**OraclePLSql:** `PKG_DONOR.CHECK_ELIGIBILITY(...)`.
+**OraclePLSql:** `CHECK_ELIGIBILITY(...)`.
 
 ---
 
@@ -489,7 +491,7 @@ bloodGroup=O+
 
 **What to return:** Camp IDs, coordinates, distance, date/time, venue, status, and registration availability.
 
-**OraclePLSql:** `PKG_CAMP.FIND_NEARBY_CAMPS(p_lat, p_lon, p_radius_km, p_date, p_blood_group, p_result_cursor)`.
+**OraclePLSql:** `FIND_NEARBY_CAMPS(p_lat, p_lon, p_radius_km, p_date, p_blood_group, p_result_cursor)`.
 
 ---
 
@@ -505,7 +507,7 @@ bloodGroup=O+
 
 **What to return:** Complete public camp details and map coordinates.
 
-**OraclePLSql:** `PKG_CAMP.GET_PUBLIC_DETAILS(p_camp_id, p_result_cursor)`.
+**OraclePLSql:** `GET_PUBLIC_DETAILS(p_camp_id, p_result_cursor)`.
 
 ---
 
@@ -526,7 +528,7 @@ bloodGroup=O+
 
 **What to return:** `registrationId`, camp ID, registration status, timestamps, and next action.
 
-**OraclePLSql:** `PKG_CAMP.REGISTER_DONOR_FOR_CAMP(p_donor_id, p_camp_id, p_registration_id OUT)`.
+**OraclePLSql:** `REGISTER_DONOR_FOR_CAMP(p_donor_id, p_camp_id, p_registration_id OUT)`.
 
 ---
 
@@ -542,7 +544,7 @@ bloodGroup=O+
 
 **What to return:** Camp summary, venue, date/time, registration status, and cancellation/action state.
 
-**OraclePLSql:** `PKG_CAMP.GET_DONOR_UPCOMING_REGISTRATIONS(p_donor_id, p_result_cursor)`.
+**OraclePLSql:** `GET_DONOR_UPCOMING_REGISTRATIONS(p_donor_id, p_result_cursor)`.
 
 ---
 
@@ -558,7 +560,7 @@ bloodGroup=O+
 
 **What to return:** Donation date, camp, blood group/unit information that the donor is allowed to see, record status, and transfer/receipt status where useful.
 
-**OraclePLSql:** `PKG_DONATION.GET_DONOR_HISTORY(p_donor_id, p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_DONOR_HISTORY(p_donor_id, p_filters, p_result_cursor)`.
 
 ---
 
@@ -574,7 +576,7 @@ bloodGroup=O+
 
 **What to return:** `application/pdf` stream with a safe filename.
 
-**OraclePLSql:** `PKG_REPORT.GET_DONOR_DONATION_HISTORY(p_donor_id, p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_DONOR_DONATION_HISTORY(p_donor_id, p_filters, p_result_cursor)`.
 
 ---
 
@@ -590,7 +592,7 @@ bloodGroup=O+
 
 **What to return:** Submitted donation records.
 
-**OraclePLSql:** `PKG_DONATION.GET_DONOR_HISTORY(p_donor_id, ...)`; finalization occurs via `PKG_DONATION.SUBMIT_DONATION_RECORD(...)`.
+**OraclePLSql:** `GET_DONOR_HISTORY(p_donor_id, ...)`; finalization occurs via `SUBMIT_DONATION_RECORD(...)`.
 
 ---
 
@@ -612,7 +614,7 @@ bloodGroup=O+
 
 **What to return:** `feedbackId`, camp ID, rating, submitted timestamp, and moderation/publication status.
 
-**OraclePLSql:** `PKG_DONATION.CAN_SUBMIT_FEEDBACK(p_donor_id, p_camp_id, p_allowed OUT, p_donation_id OUT, p_reason_code OUT)`.
+**OraclePLSql:** `CAN_SUBMIT_FEEDBACK(p_donor_id, p_camp_id, p_allowed OUT, p_donation_id OUT, p_reason_code OUT)`.
 
 ---
 
@@ -660,7 +662,7 @@ bloodGroup=O+
 
 **What to return:** Appeal summaries and optional `match`/`relevance` flags.
 
-**OraclePLSql:** If donor matching is required: `PKG_DONOR.GET_DONOR_MATCH_PROFILE(p_donor_id, ...)`; appeal data remains MongoDB.
+**OraclePLSql:** If donor matching is required: `GET_DONOR_MATCH_PROFILE(p_donor_id, ...)`; appeal data remains MongoDB.
 
 ---
 
@@ -704,7 +706,7 @@ bloodGroup=O+
 
 **What to return:** `appealId`, status, createdAt, expiry/neededBy, and next action.
 
-**OraclePLSql:** `PKG_DONOR.GET_ACCOUNT_STATUS(p_donor_id, ...)` if account verification is required; appeal content/status is MongoDB.
+**OraclePLSql:** `GET_ACCOUNT_STATUS(p_donor_id, ...)` if account verification is required; appeal content/status is MongoDB.
 
 ---
 
@@ -768,7 +770,7 @@ bloodGroup=O+
 
 **What to return:** Notification list with type, title, message/reference, read status, createdAt and action URL.
 
-**OraclePLSql:** `PKG_NOTIFICATION.GET_USER_NOTIFICATIONS(p_user_id, p_page, p_page_size, p_result_cursor)` and `PKG_NOTIFICATION.MARK_READ(p_user_id, p_notification_id)`.
+**OraclePLSql:** `GET_USER_NOTIFICATIONS(p_user_id, p_page, p_page_size, p_result_cursor)` and `MARK_READ(p_user_id, p_notification_id)`.
 
 ---
 
@@ -784,7 +786,7 @@ bloodGroup=O+
 
 **What to return:** `entityType`, `entityId`, `fromStatus`, `toStatus`, `changedAt`, safe reason, and actor type.
 
-**OraclePLSql:** `PKG_AUDIT.GET_DONOR_STATUS_HISTORY(p_donor_id, p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_DONOR_STATUS_HISTORY(p_donor_id, p_filters, p_result_cursor)`.
 
 ---
 
@@ -802,7 +804,7 @@ bloodGroup=O+
 
 **What to return:** Bank identity plus inventory/request/transfer/expiry summary.
 
-**OraclePLSql:** `PKG_AUTH.AUTHENTICATE(...)`; `PKG_BLOOD_BANK.GET_DASHBOARD(p_bank_id, p_result_cursor)`.
+**OraclePLSql:** `AUTHENTICATE(...)`; `GET_DASHBOARD(p_bank_id, p_result_cursor)`.
 
 ---
 
@@ -825,7 +827,7 @@ pageSize=50
 
 **What to return:** Units or aggregated inventory rows with group, unit/reference, batch, status, collection/received date, expiry date, storage/location metadata allowed to staff.
 
-**OraclePLSql:** `PKG_BLOOD_BANK.GET_INVENTORY(p_bank_id, p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_INVENTORY(p_bank_id, p_filters, p_result_cursor)`.
 
 ---
 
@@ -849,7 +851,7 @@ pageSize=50
 
 **What to return:** Blood unit identity and resulting status.
 
-**OraclePLSql:** `PKG_BLOOD_BANK.REGISTER_BLOOD_UNIT(...)` and `PKG_BLOOD_BANK.UPDATE_BLOOD_UNIT(...)`.
+**OraclePLSql:** `REGISTER_BLOOD_UNIT(...)` and `UPDATE_BLOOD_UNIT(...)`.
 
 ---
 
@@ -865,7 +867,7 @@ pageSize=50
 
 **What to return:** Matching inventory records and pagination metadata.
 
-**OraclePLSql:** `PKG_BLOOD_BANK.SEARCH_INVENTORY(p_bank_id, p_filters, p_result_cursor)`.
+**OraclePLSql:** `SEARCH_INVENTORY(p_bank_id, p_filters, p_result_cursor)`.
 
 ---
 
@@ -892,7 +894,7 @@ pageSize=50
 
 **What to return:** Request ID, status, requested units, allocated units, fulfilled units and timestamps.
 
-**OraclePLSql:** `PKG_HOSPITAL_REQUEST.CREATE_REQUEST(...)`, `PKG_HOSPITAL_REQUEST.GET_REQUESTS(...)`, `PKG_HOSPITAL_REQUEST.UPDATE_STATUS(...)`.
+**OraclePLSql:** `CREATE_REQUEST(...)`, `GET_REQUESTS(...)`, `UPDATE_STATUS(...)`.
 
 ---
 
@@ -908,7 +910,7 @@ pageSize=50
 
 **What to return:** `403 Forbidden` for unauthorized committee actions; normal result for authorized bank actions.
 
-**OraclePLSql:** Each hospital-request procedure uses bank authorization context, e.g. `PKG_HOSPITAL_REQUEST.AUTHORIZE_BANK_ACTION(...)`.
+**OraclePLSql:** Each hospital-request procedure uses bank authorization context, e.g. `AUTHORIZE_BANK_ACTION(...)`.
 
 ---
 
@@ -924,7 +926,7 @@ pageSize=50
 
 **What to return:** Transfer ID, camp, batch summary, unit count, created/submitted/received status, dispatch/receive timestamps.
 
-**OraclePLSql:** `PKG_TRANSFER.GET_INCOMING_TRANSFERS(p_bank_id, p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_INCOMING_TRANSFERS(p_bank_id, p_filters, p_result_cursor)`.
 
 ---
 
@@ -947,7 +949,7 @@ pageSize=50
 
 **What to return:** Transfer status, received count and resulting inventory summary.
 
-**OraclePLSql:** `PKG_TRANSFER.RECEIVE_TRANSFER(p_bank_id, p_transfer_id, p_received_at, p_received_count, ...)`.
+**OraclePLSql:** `RECEIVE_TRANSFER(p_bank_id, p_transfer_id, p_received_at, p_received_count, ...)`.
 
 ---
 
@@ -963,7 +965,7 @@ pageSize=50
 
 **What to return:** Camp ID/name, transfer ID, donation batch ID, received date, source committee, and unit reference.
 
-**OraclePLSql:** `PKG_BLOOD_BANK.GET_UNIT_SOURCE_TRACE(p_bank_id, p_unit_id, p_result_cursor)`.
+**OraclePLSql:** `GET_UNIT_SOURCE_TRACE(p_bank_id, p_unit_id, p_result_cursor)`.
 
 ---
 
@@ -985,7 +987,7 @@ pageSize=50
 
 **What to return:** Updated unit status and related request/allocation reference.
 
-**OraclePLSql:** `PKG_BLOOD_BANK.CHANGE_UNIT_STATUS(p_bank_id, p_unit_id, p_new_status, p_reference_id, ...)`.
+**OraclePLSql:** `CHANGE_UNIT_STATUS(p_bank_id, p_unit_id, p_new_status, p_reference_id, ...)`.
 
 ---
 
@@ -1004,7 +1006,7 @@ days=7&page=1&pageSize=50
 
 **What to return:** Unit/batch summary, blood group, expiry date, days remaining and current status.
 
-**OraclePLSql:** `PKG_BLOOD_BANK.GET_EXPIRING_UNITS(p_bank_id, p_days, p_result_cursor)`.
+**OraclePLSql:** `GET_EXPIRING_UNITS(p_bank_id, p_days, p_result_cursor)`.
 
 ---
 
@@ -1020,7 +1022,7 @@ days=7&page=1&pageSize=50
 
 **What to return:** Unit, group, expiry date, status and recommended action.
 
-**OraclePLSql:** `PKG_BLOOD_BANK.GET_EXPIRED_UNITS(p_bank_id, p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_EXPIRED_UNITS(p_bank_id, p_filters, p_result_cursor)`.
 
 ---
 
@@ -1036,7 +1038,7 @@ days=7&page=1&pageSize=50
 
 **What to return:** Staff ID, display name, position/role, active status, assignment dates.
 
-**OraclePLSql:** `PKG_STAFF.GET_BANK_STAFF(p_bank_id, p_result_cursor)`.
+**OraclePLSql:** `GET_BANK_STAFF(p_bank_id, p_result_cursor)`.
 
 ---
 
@@ -1059,7 +1061,7 @@ days=7&page=1&pageSize=50
 
 **What to return:** Staff record and assignment state.
 
-**OraclePLSql:** `PKG_STAFF.CREATE_BANK_STAFF(...)`, `PKG_STAFF.UPDATE_BANK_STAFF(...)`, `PKG_STAFF.GET_BANK_STAFF(...)`.
+**OraclePLSql:** `CREATE_BANK_STAFF(...)`, `UPDATE_BANK_STAFF(...)`, `GET_BANK_STAFF(...)`.
 
 ---
 
@@ -1080,7 +1082,7 @@ days=7&page=1&pageSize=50
 
 **What to return:** Current status, status history summary, allocated/fulfilled counts and timestamps.
 
-**OraclePLSql:** `PKG_HOSPITAL_REQUEST.UPDATE_STATUS(p_bank_id, p_request_id, p_new_status, ...)`.
+**OraclePLSql:** `UPDATE_STATUS(p_bank_id, p_request_id, p_new_status, ...)`.
 
 ---
 
@@ -1103,7 +1105,7 @@ format=json
 
 **What to return:** Report metadata plus rows/summary or a PDF/CSV stream.
 
-**OraclePLSql:** `PKG_REPORT.GET_BANK_REPORT(p_bank_id, p_report_type, p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_BANK_REPORT(p_bank_id, p_report_type, p_filters, p_result_cursor)`.
 
 ---
 
@@ -1119,7 +1121,7 @@ format=json
 
 **What to return:** Transfer list, source camp, batch count, received count, status and timestamps.
 
-**OraclePLSql:** `PKG_TRANSFER.GET_BANK_TRANSFER_HISTORY(p_bank_id, p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_BANK_TRANSFER_HISTORY(p_bank_id, p_filters, p_result_cursor)`.
 
 ---
 
@@ -1135,7 +1137,7 @@ format=json
 
 **What to return:** Notification feed.
 
-**OraclePLSql:** `PKG_NOTIFICATION.GET_BANK_NOTIFICATIONS(p_bank_id, ...)`; optionally `PKG_BLOOD_BANK.GET_LOW_STOCK_ALERTS(...)`.
+**OraclePLSql:** `GET_BANK_NOTIFICATIONS(p_bank_id, ...)`; optionally `GET_LOW_STOCK_ALERTS(...)`.
 
 ---
 
@@ -1151,7 +1153,7 @@ format=json
 
 **What to return:** Dashboard object with available units, low-stock groups, expiring count, pending requests and recent transfer summary.
 
-**OraclePLSql:** `PKG_BLOOD_BANK.GET_DASHBOARD(p_bank_id, p_result_cursor)`.
+**OraclePLSql:** `GET_DASHBOARD(p_bank_id, p_result_cursor)`.
 
 ---
 
@@ -1169,7 +1171,7 @@ format=json
 
 **What to return:** Committee identity and dashboard summaries.
 
-**OraclePLSql:** `PKG_AUTH.AUTHENTICATE(...)`; `PKG_CAMP.GET_COMMITTEE_DASHBOARD(p_committee_id, p_result_cursor)`.
+**OraclePLSql:** `AUTHENTICATE(...)`; `GET_COMMITTEE_DASHBOARD(p_committee_id, p_result_cursor)`.
 
 ---
 
@@ -1185,7 +1187,7 @@ format=json
 
 **What to return:** Camp summaries, counts and pending actions.
 
-**OraclePLSql:** `PKG_CAMP.GET_COMMITTEE_CAMPS(p_committee_id, p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_COMMITTEE_CAMPS(p_committee_id, p_filters, p_result_cursor)`.
 
 ---
 
@@ -1213,7 +1215,7 @@ format=json
 
 **What to return:** New camp ID and initial `DRAFT` status.
 
-**OraclePLSql:** `PKG_CAMP.CREATE_CAMP(...)`.
+**OraclePLSql:** `CREATE_CAMP(...)`.
 
 ---
 
@@ -1234,7 +1236,7 @@ format=json
 
 **What to return:** Camp ID, previous/current status, transition timestamp and next allowed action summary.
 
-**OraclePLSql:** `PKG_CAMP.CHANGE_CAMP_STATUS(p_committee_id, p_camp_id, p_new_status, ...)`.
+**OraclePLSql:** `CHANGE_CAMP_STATUS(p_committee_id, p_camp_id, p_new_status, ...)`.
 
 ---
 
@@ -1259,7 +1261,7 @@ format=json
 
 **What to return:** Venue record.
 
-**OraclePLSql:** `PKG_VENUE.CREATE_VENUE(...)`, `PKG_VENUE.UPDATE_VENUE(...)`, `PKG_VENUE.GET_COMMITTEE_VENUES(...)`.
+**OraclePLSql:** `CREATE_VENUE(...)`, `UPDATE_VENUE(...)`, `GET_COMMITTEE_VENUES(...)`.
 
 ---
 
@@ -1278,7 +1280,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Availability boolean and conflicting camp summaries.
 
-**OraclePLSql:** `PKG_VENUE.CHECK_AVAILABILITY(p_venue_id, p_date, p_start_time, p_end_time, p_exclude_camp_id, p_available OUT, p_result_cursor)`.
+**OraclePLSql:** `CHECK_AVAILABILITY(p_venue_id, p_date, p_start_time, p_end_time, p_exclude_camp_id, p_available OUT, p_result_cursor)`.
 
 ---
 
@@ -1303,7 +1305,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Media document metadata and publication state.
 
-**OraclePLSql:** `PKG_CAMP.AUTHORIZE_COMMITTEE_CAMP(p_committee_id, p_camp_id, p_allowed OUT)`; media is MongoDB.
+**OraclePLSql:** `AUTHORIZE_COMMITTEE_CAMP(p_committee_id, p_camp_id, p_allowed OUT)`; media is MongoDB.
 
 ---
 
@@ -1319,7 +1321,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Updated camp.
 
-**OraclePLSql:** `PKG_CAMP.UPDATE_CAMP(p_committee_id, p_camp_id, ...)`.
+**OraclePLSql:** `UPDATE_CAMP(p_committee_id, p_camp_id, ...)`.
 
 ---
 
@@ -1335,7 +1337,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Donor operational ID, display name, registration status, attendance status, eligibility status and check-in state.
 
-**OraclePLSql:** `PKG_CAMP.GET_CAMP_REGISTRATIONS(p_committee_id, p_camp_id, p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_CAMP_REGISTRATIONS(p_committee_id, p_camp_id, p_filters, p_result_cursor)`.
 
 ---
 
@@ -1359,7 +1361,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Donation record ID and `DRAFT`/`PENDING_REVIEW` status.
 
-**OraclePLSql:** `PKG_DONATION.CREATE_DONATION_RECORD(p_committee_id, p_camp_id, p_donor_id, ...)`.
+**OraclePLSql:** `CREATE_DONATION_RECORD(p_committee_id, p_camp_id, p_donor_id, ...)`.
 
 ---
 
@@ -1375,7 +1377,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Donation record with donor/camp references.
 
-**OraclePLSql:** `PKG_DONATION.UPDATE_DONATION_RECORD(...)` with ownership and immutability checks.
+**OraclePLSql:** `UPDATE_DONATION_RECORD(...)` with ownership and immutability checks.
 
 ---
 
@@ -1398,7 +1400,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Finalized donation record and status.
 
-**OraclePLSql:** `PKG_DONATION.UPDATE_DONATION_RECORD(...)`; `PKG_DONATION.SUBMIT_DONATION_RECORD(p_committee_id, p_donation_id, ...)`.
+**OraclePLSql:** `UPDATE_DONATION_RECORD(...)`; `SUBMIT_DONATION_RECORD(p_committee_id, p_donation_id, ...)`.
 
 ---
 
@@ -1414,7 +1416,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Updated eligibility on the next donor eligibility read; optionally include `nextEligibleDate` in the submit response.
 
-**OraclePLSql:** `PKG_DONOR.RECALCULATE_ELIGIBILITY(p_donor_id)` called from `PKG_DONATION.SUBMIT_DONATION_RECORD(...)` or derived by `PKG_DONOR.CHECK_ELIGIBILITY(...)`.
+**OraclePLSql:** `RECALCULATE_ELIGIBILITY(p_donor_id)` called from `SUBMIT_DONATION_RECORD(...)` or derived by `CHECK_ELIGIBILITY(...)`.
 
 ---
 
@@ -1436,7 +1438,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Transfer ID, selected bank, unit/batch count and `PENDING`/`PREPARED` status.
 
-**OraclePLSql:** `PKG_TRANSFER.CREATE_TRANSFER(p_committee_id, p_camp_id, p_bank_id, p_donation_record_ids, p_transfer_id OUT)`.
+**OraclePLSql:** `CREATE_TRANSFER(p_committee_id, p_camp_id, p_bank_id, p_donation_record_ids, p_transfer_id OUT)`.
 
 ---
 
@@ -1457,7 +1459,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Transfer status, bank, counts and timestamps.
 
-**OraclePLSql:** `PKG_TRANSFER.CHANGE_COMMITTEE_TRANSFER_STATUS(p_committee_id, p_transfer_id, p_new_status, ...)`.
+**OraclePLSql:** `CHANGE_COMMITTEE_TRANSFER_STATUS(p_committee_id, p_transfer_id, p_new_status, ...)`.
 
 ---
 
@@ -1489,7 +1491,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Transfer status, dispatched date, received date, received count, bank name.
 
-**OraclePLSql:** `PKG_TRANSFER.GET_TRANSFER_DETAILS_FOR_COMMITTEE(p_committee_id, p_transfer_id, p_result_cursor)`.
+**OraclePLSql:** `GET_TRANSFER_DETAILS_FOR_COMMITTEE(p_committee_id, p_transfer_id, p_result_cursor)`.
 
 ---
 
@@ -1505,7 +1507,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Staff summaries and assignment state.
 
-**OraclePLSql:** `PKG_STAFF.GET_COMMITTEE_STAFF(p_committee_id, p_result_cursor)`.
+**OraclePLSql:** `GET_COMMITTEE_STAFF(p_committee_id, p_result_cursor)`.
 
 ---
 
@@ -1527,7 +1529,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Assignment record.
 
-**OraclePLSql:** `PKG_STAFF.ASSIGN_TO_CAMP(...)`; `PKG_STAFF.REMOVE_FROM_CAMP(...)`.
+**OraclePLSql:** `ASSIGN_TO_CAMP(...)`; `REMOVE_FROM_CAMP(...)`.
 
 ---
 
@@ -1543,7 +1545,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Counts and current operational statuses.
 
-**OraclePLSql:** `PKG_CAMP.GET_OPERATIONAL_OVERVIEW(p_committee_id, p_camp_id, p_result_cursor)`.
+**OraclePLSql:** `GET_OPERATIONAL_OVERVIEW(p_committee_id, p_camp_id, p_result_cursor)`.
 
 ---
 
@@ -1559,7 +1561,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Average rating, count and paginated feedback.
 
-**OraclePLSql:** `PKG_CAMP.AUTHORIZE_COMMITTEE_CAMP(p_committee_id, p_camp_id, p_allowed OUT)`; feedback is MongoDB.
+**OraclePLSql:** `AUTHORIZE_COMMITTEE_CAMP(p_committee_id, p_camp_id, p_allowed OUT)`; feedback is MongoDB.
 
 ---
 
@@ -1575,7 +1577,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Notification list.
 
-**OraclePLSql:** `PKG_NOTIFICATION.GET_COMMITTEE_NOTIFICATIONS(p_committee_id, ...)`; `PKG_NOTIFICATION.MARK_READ(...)`.
+**OraclePLSql:** `GET_COMMITTEE_NOTIFICATIONS(p_committee_id, ...)`; `MARK_READ(...)`.
 
 ---
 
@@ -1591,7 +1593,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** JSON report model or PDF/CSV.
 
-**OraclePLSql:** `PKG_REPORT.GET_COMMITTEE_REPORT(p_committee_id, p_report_type, p_filters, p_result_cursor)` for Oracle-backed sections; MongoDB aggregation for feedback section.
+**OraclePLSql:** `GET_COMMITTEE_REPORT(p_committee_id, p_report_type, p_filters, p_result_cursor)` for Oracle-backed sections; MongoDB aggregation for feedback section.
 
 ---
 
@@ -1609,7 +1611,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Overall metrics and system health/workflow cards.
 
-**OraclePLSql:** `PKG_AUTH.AUTHENTICATE(...)`; `PKG_WEBMASTER.GET_DASHBOARD(p_result_cursor)`.
+**OraclePLSql:** `AUTHENTICATE(...)`; `GET_DASHBOARD(p_result_cursor)`.
 
 ---
 
@@ -1625,7 +1627,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Donor count, bank count, committee count, camp counts by state, donation counts, inventory totals, hospital request counts, appeal counts, community/content activity and recent system activity.
 
-**OraclePLSql:** `PKG_WEBMASTER.GET_SYSTEM_OVERVIEW(p_filters, p_result_cursor)`; MongoDB aggregation supplies Mongo-backed metrics.
+**OraclePLSql:** `GET_SYSTEM_OVERVIEW(p_filters, p_result_cursor)`; MongoDB aggregation supplies Mongo-backed metrics.
 
 ---
 
@@ -1637,11 +1639,11 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **Payload:** Date range/filter object.
 
-**What need to do:** Ensure this endpoint is read-only at the API and database package level.
+**What need to do:** Ensure this endpoint is read-only at the API and database procedure/function level.
 
 **What to return:** Aggregated statistics only, not raw personal records.
 
-**OraclePLSql:** `PKG_WEBMASTER.GET_GLOBAL_STATISTICS(p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_GLOBAL_STATISTICS(p_filters, p_result_cursor)`.
 
 ---
 
@@ -1657,7 +1659,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Dashboard-specific aggregate metrics.
 
-**OraclePLSql:** `PKG_WEBMASTER.GET_DASHBOARD_VIEW(p_dashboard_type, p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_DASHBOARD_VIEW(p_dashboard_type, p_filters, p_result_cursor)`.
 
 ---
 
@@ -1673,7 +1675,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Counts by entity/status plus recent transition summaries.
 
-**OraclePLSql:** `PKG_WEBMASTER.GET_STATUS_OVERVIEW(p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_STATUS_OVERVIEW(p_filters, p_result_cursor)`.
 
 ---
 
@@ -1681,7 +1683,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **API URL:** `GET /api/webmaster/reports/{reportType}`
 
-**Backend:** Oracle report packages with MongoDB aggregation for feedback/appeals/community/media reports.
+**Backend:** Oracle report procedures/functions with MongoDB aggregation for feedback/appeals/community/media reports.
 
 **Payload:** Date range, entity, status, location, blood group as applicable, format.
 
@@ -1689,7 +1691,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** JSON or PDF/CSV.
 
-**OraclePLSql:** `PKG_REPORT.GET_WEBMASTER_REPORT(p_report_type, p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_WEBMASTER_REPORT(p_report_type, p_filters, p_result_cursor)`.
 
 ---
 
@@ -1705,7 +1707,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Event type, actor role/display identity, entity reference, action, timestamp and result.
 
-**OraclePLSql:** `PKG_AUDIT.GET_SYSTEM_ACTIVITY(p_filters, p_result_cursor)`.
+**OraclePLSql:** `GET_SYSTEM_ACTIVITY(p_filters, p_result_cursor)`.
 
 ---
 
@@ -1713,7 +1715,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **API URL:** No write API for webmaster.
 
-**Backend:** Enforce read-only at both C# authorization and Oracle package permissions.
+**Backend:** Enforce read-only at both C# authorization and Oracle procedure/function permissions.
 
 **Payload:** Any attempted write should be rejected.
 
@@ -1721,7 +1723,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** `403 Forbidden`.
 
-**OraclePLSql:** N/A — there should be no webmaster write package entry points.
+**OraclePLSql:** N/A — there should be no webmaster write procedure/function entry points.
 
 ---
 
@@ -1755,7 +1757,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Public camp cards.
 
-**OraclePLSql:** `PKG_CAMP.GET_PUBLIC_CATALOGUE(...)`.
+**OraclePLSql:** `GET_PUBLIC_CATALOGUE(...)`.
 
 ---
 
@@ -1771,7 +1773,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** User ID, role, associated entity IDs/type, capabilities.
 
-**OraclePLSql:** `PKG_AUTH.GET_CURRENT_PRINCIPAL(p_user_id, p_result_cursor)`.
+**OraclePLSql:** `GET_CURRENT_PRINCIPAL(p_user_id, p_result_cursor)`.
 
 ---
 
@@ -1793,7 +1795,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Authentication result, safe principal data, expiration metadata.
 
-**OraclePLSql:** `PKG_AUTH.AUTHENTICATE(...)`; `PKG_AUTH.GET_ACCOUNT_STATE(...)`.
+**OraclePLSql:** `AUTHENTICATE(...)`; `GET_ACCOUNT_STATE(...)`.
 
 ---
 
@@ -1812,7 +1814,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Consistent `data` + `meta` shape.
 
-**OraclePLSql:** Each Oracle list endpoint uses its package-specific cursor procedure.
+**OraclePLSql:** Each Oracle list endpoint uses its corresponding cursor-based procedure.
 
 ---
 
@@ -1844,7 +1846,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Successful final state or a conflict such as `409` when the action has already been performed.
 
-**OraclePLSql:** Each relevant business package should enforce one-time transitions, e.g. `PKG_TRANSFER.RECEIVE_TRANSFER(...)`.
+**OraclePLSql:** Each relevant business procedure should enforce one-time transitions, e.g. `RECEIVE_TRANSFER(...)`.
 
 ---
 
@@ -1860,7 +1862,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Consistent success/error envelope.
 
-**OraclePLSql:** Business-state validation belongs to the package for the entity concerned.
+**OraclePLSql:** Business-state validation belongs to the standalone procedure/function for the entity concerned.
 
 ---
 
@@ -1876,7 +1878,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Notification records and unread count.
 
-**OraclePLSql:** `PKG_NOTIFICATION.GET_USER_NOTIFICATIONS(...)`; `PKG_NOTIFICATION.MARK_READ(...)`.
+**OraclePLSql:** `GET_USER_NOTIFICATIONS(...)`; `MARK_READ(...)`.
 
 ---
 
@@ -1892,7 +1894,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Entity-specific paginated search results.
 
-**OraclePLSql:** Structured searches use their Oracle package; Mongo-backed searches use MongoDB.
+**OraclePLSql:** Structured searches use their Oracle procedure/function; Mongo-backed searches use MongoDB.
 
 ---
 
@@ -1908,7 +1910,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Latitude, longitude, address, distance where calculated.
 
-**OraclePLSql:** `PKG_CAMP.FIND_NEARBY_CAMPS(...)`; `PKG_CAMP.GET_PUBLIC_DETAILS(...)`.
+**OraclePLSql:** `FIND_NEARBY_CAMPS(...)`; `GET_PUBLIC_DETAILS(...)`.
 
 ---
 
@@ -1924,7 +1926,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** HTTP `400` for invalid input with safe field error details; `409` for uniqueness/state conflicts; `403` for authorization failure.
 
-**OraclePLSql:** Relevant package procedure/function for business validation.
+**OraclePLSql:** Relevant standalone procedure/function for business validation.
 
 ---
 
@@ -1940,7 +1942,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** `status`, timestamps and safe `nextAction`.
 
-**OraclePLSql:** Entity-specific status function/package operation.
+**OraclePLSql:** Entity-specific status function/procedure.
 
 ---
 
@@ -1956,7 +1958,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Public-safe DTOs only.
 
-**OraclePLSql:** Public read procedures such as `PKG_CAMP.GET_PUBLIC_CATALOGUE(...)` must themselves expose only safe fields.
+**OraclePLSql:** Public read procedures such as `GET_PUBLIC_CATALOGUE(...)` must themselves expose only safe fields.
 
 ---
 
@@ -1972,7 +1974,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** NIC only in explicitly authorized identity/profile context, preferably masked on ordinary screens.
 
-**OraclePLSql:** `PKG_DONOR.GET_SECURE_IDENTITY(p_donor_id, ...)` where required; public procedures must omit it.
+**OraclePLSql:** `GET_SECURE_IDENTITY(p_donor_id, ...)` where required; public procedures must omit it.
 
 ---
 
@@ -1988,7 +1990,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** `403 Forbidden` for unauthorized operations.
 
-**OraclePLSql:** Each mutating package validates caller role/entity ownership.
+**OraclePLSql:** Each mutating procedure/function validates caller role/entity ownership.
 
 ---
 
@@ -2004,7 +2006,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Separate entity types/status models.
 
-**OraclePLSql:** Hospital requests use `PKG_HOSPITAL_REQUEST`; emergency appeals are MongoDB-backed.
+**OraclePLSql:** Hospital requests use hospital-request procedures/functions; emergency appeals are MongoDB-backed.
 
 ---
 
@@ -2036,7 +2038,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Request status and allocation/fulfilment information.
 
-**OraclePLSql:** `PKG_HOSPITAL_REQUEST.CREATE_REQUEST(...)`, `PKG_HOSPITAL_REQUEST.ALLOCATE_UNITS(...)`, `PKG_HOSPITAL_REQUEST.FULFILL_REQUEST(...)`.
+**OraclePLSql:** `CREATE_REQUEST(...)`, `ALLOCATE_UNITS(...)`, `FULFILL_REQUEST(...)`.
 
 ---
 
@@ -2052,7 +2054,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Each stage returns its current status and reference.
 
-**OraclePLSql:** Orchestration occurs through `PKG_DONATION`, `PKG_TRANSFER` and `PKG_BLOOD_BANK`.
+**OraclePLSql:** Orchestration occurs through donation procedures/functions, transfer procedures/functions and blood-bank procedures/functions.
 
 ---
 
@@ -2068,7 +2070,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Camp selection/registration status.
 
-**OraclePLSql:** `PKG_CAMP.FIND_NEARBY_CAMPS(...)`; `PKG_CAMP.REGISTER_DONOR_FOR_CAMP(...)`.
+**OraclePLSql:** `FIND_NEARBY_CAMPS(...)`; `REGISTER_DONOR_FOR_CAMP(...)`.
 
 ---
 
@@ -2084,7 +2086,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Finalized donation record.
 
-**OraclePLSql:** `PKG_DONATION.SUBMIT_DONATION_RECORD(...)`.
+**OraclePLSql:** `SUBMIT_DONATION_RECORD(...)`.
 
 ---
 
@@ -2100,7 +2102,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Transfer ID and status.
 
-**OraclePLSql:** `PKG_TRANSFER.CREATE_TRANSFER(...)`.
+**OraclePLSql:** `CREATE_TRANSFER(...)`.
 
 ---
 
@@ -2116,7 +2118,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Received transfer + inventory result.
 
-**OraclePLSql:** `PKG_TRANSFER.RECEIVE_TRANSFER(...)`.
+**OraclePLSql:** `RECEIVE_TRANSFER(...)`.
 
 ---
 
@@ -2137,7 +2139,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Request status, allocated/fulfilled unit count and unit references safe for bank users.
 
-**OraclePLSql:** `PKG_HOSPITAL_REQUEST.ALLOCATE_UNITS(...)`; `PKG_HOSPITAL_REQUEST.FULFILL_REQUEST(...)`.
+**OraclePLSql:** `ALLOCATE_UNITS(...)`; `FULFILL_REQUEST(...)`.
 
 ---
 
@@ -2153,7 +2155,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Feedback status and aggregate views.
 
-**OraclePLSql:** `PKG_DONATION.CAN_SUBMIT_FEEDBACK(...)` plus MongoDB operations.
+**OraclePLSql:** `CAN_SUBMIT_FEEDBACK(...)` plus MongoDB operations.
 
 ---
 
@@ -2169,7 +2171,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Completed record and eligibility update.
 
-**OraclePLSql:** `PKG_DONATION.SUBMIT_DONATION_RECORD(...)`.
+**OraclePLSql:** `SUBMIT_DONATION_RECORD(...)`.
 
 ---
 
@@ -2185,7 +2187,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Feedback record/status.
 
-**OraclePLSql:** `PKG_DONATION.CAN_SUBMIT_FEEDBACK(...)`.
+**OraclePLSql:** `CAN_SUBMIT_FEEDBACK(...)`.
 
 ---
 
@@ -2201,7 +2203,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Aggregate rating + safe reviews.
 
-**OraclePLSql:** Optional camp visibility check via `PKG_CAMP.GET_PUBLIC_SUMMARY(...)`; review content is MongoDB.
+**OraclePLSql:** Optional camp visibility check via `GET_PUBLIC_SUMMARY(...)`; review content is MongoDB.
 
 ---
 
@@ -2217,7 +2219,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Aggregate + paginated reviews.
 
-**OraclePLSql:** `PKG_CAMP.AUTHORIZE_COMMITTEE_CAMP(...)`.
+**OraclePLSql:** `AUTHORIZE_COMMITTEE_CAMP(...)`.
 
 ---
 
@@ -2233,7 +2235,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Total reviews, average rating, rating distribution, top-rated camps and recent-review counts.
 
-**OraclePLSql:** Camp/report metadata may be checked with `PKG_WEBMASTER.GET_SYSTEM_OVERVIEW(...)`; feedback aggregation is MongoDB.
+**OraclePLSql:** Camp/report metadata may be checked with `GET_SYSTEM_OVERVIEW(...)`; feedback aggregation is MongoDB.
 
 ---
 
@@ -2265,7 +2267,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Canonical entity names in JSON/API contracts.
 
-**OraclePLSql:** Package names follow the same terminology.
+**OraclePLSql:** Standalone procedure/function names follow the same terminology.
 
 ---
 
@@ -2281,7 +2283,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Business result + status + next action.
 
-**OraclePLSql:** Focused package procedures such as `PKG_DONATION.SUBMIT_DONATION_RECORD`, `PKG_TRANSFER.RECEIVE_TRANSFER`, and `PKG_HOSPITAL_REQUEST.ALLOCATE_UNITS`.
+**OraclePLSql:** Focused standalone procedures such as `SUBMIT_DONATION_RECORD`, `RECEIVE_TRANSFER`, and `ALLOCATE_UNITS`.
 
 ---
 
@@ -2290,17 +2292,17 @@ page=1&pageSize=20&sort=createdAt&order=desc
 ## 1. Donor registration and login
 
 1. `POST /api/auth/donors/register`
-2. `PKG_AUTH.REGISTER_DONOR(...)`
+2. `REGISTER_DONOR(...)`
 3. Oracle creates account/profile and identity data.
 4. `POST /api/auth/login`
-5. `PKG_AUTH.AUTHENTICATE(...)`
+5. `AUTHENTICATE(...)`
 6. C# creates the authenticated session/token context.
 
 ## 2. Camp discovery and registration
 
 1. Public catalogue or donor nearby endpoint reads Oracle camps.
-2. Donor checks eligibility through `PKG_DONOR.CHECK_ELIGIBILITY(...)`.
-3. Donor registers using `PKG_CAMP.REGISTER_DONOR_FOR_CAMP(...)`.
+2. Donor checks eligibility through `CHECK_ELIGIBILITY(...)`.
+3. Donor registers using `REGISTER_DONOR_FOR_CAMP(...)`.
 4. Oracle prevents duplicate registration, invalid camp state, over-capacity registration and ineligible registration.
 
 ## 3. Donation completion
@@ -2309,7 +2311,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 2. Committee records a donation.
 3. Record remains `DRAFT`/`PENDING_REVIEW`.
 4. Committee submits the record.
-5. `PKG_DONATION.SUBMIT_DONATION_RECORD(...)` validates and finalizes it.
+5. `SUBMIT_DONATION_RECORD(...)` validates and finalizes it.
 6. Donor history becomes visible.
 7. Eligibility is recalculated/derived.
 8. Notification is created after commit.
@@ -2317,18 +2319,18 @@ page=1&pageSize=20&sort=createdAt&order=desc
 ## 4. Donation transfer to a blood bank
 
 1. Committee selects completed donation records.
-2. `PKG_TRANSFER.CREATE_TRANSFER(...)` creates a transfer batch.
+2. `CREATE_TRANSFER(...)` creates a transfer batch.
 3. Committee marks dispatch.
 4. Bank sees the incoming transfer.
-5. Bank receives it using `PKG_TRANSFER.RECEIVE_TRANSFER(...)`.
+5. Bank receives it using `RECEIVE_TRANSFER(...)`.
 6. The procedure atomically marks the transfer received and registers corresponding inventory units.
 
 ## 5. Hospital request fulfilment
 
 1. Bank receives/creates a hospital request.
-2. `PKG_HOSPITAL_REQUEST.CREATE_REQUEST(...)`.
+2. `CREATE_REQUEST(...)`.
 3. Bank allocates appropriate available units.
-4. `PKG_HOSPITAL_REQUEST.ALLOCATE_UNITS(...)`.
+4. `ALLOCATE_UNITS(...)`.
 5. Reserved units become allocated/reserved.
 6. When actually issued, the fulfilment procedure updates unit and request states atomically.
 7. Expired or already issued units are rejected.
@@ -2351,7 +2353,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 ## 8. Camp feedback
 
 1. Donor has a completed Oracle donation record.
-2. `PKG_DONATION.CAN_SUBMIT_FEEDBACK(...)` confirms eligibility.
+2. `CAN_SUBMIT_FEEDBACK(...)` confirms eligibility.
 3. MongoDB stores the rating/review with camp/donation/donor references.
 4. Public queries aggregate ratings.
 5. Committee queries are authorized against Oracle before reading MongoDB feedback.
@@ -2365,15 +2367,15 @@ The following operations should preferably be **single PL/SQL procedures** rathe
 
 | Operation | Main PL/SQL operation | Why |
 |---|---|---|
-| Donor registration | `PKG_AUTH.REGISTER_DONOR` | Account/profile creation consistency |
-| Camp registration | `PKG_CAMP.REGISTER_DONOR_FOR_CAMP` | Eligibility + capacity + duplicate prevention |
-| Donation finalization | `PKG_DONATION.SUBMIT_DONATION_RECORD` | Final record + eligibility + audit/notification side effects |
-| Transfer creation | `PKG_TRANSFER.CREATE_TRANSFER` | Prevent duplicate transfer and ensure all donation records belong to camp |
-| Transfer receipt | `PKG_TRANSFER.RECEIVE_TRANSFER` | Transfer state + inventory insertion |
-| Unit allocation | `PKG_HOSPITAL_REQUEST.ALLOCATE_UNITS` | Prevent double allocation under concurrency |
-| Request fulfilment | `PKG_HOSPITAL_REQUEST.FULFILL_REQUEST` | Unit status + request status consistency |
-| Camp lifecycle change | `PKG_CAMP.CHANGE_CAMP_STATUS` | State-machine enforcement |
-| Feedback eligibility | `PKG_DONATION.CAN_SUBMIT_FEEDBACK` | Oracle remains source of truth |
+| Donor registration | `REGISTER_DONOR` | Account/profile creation consistency |
+| Camp registration | `REGISTER_DONOR_FOR_CAMP` | Eligibility + capacity + duplicate prevention |
+| Donation finalization | `SUBMIT_DONATION_RECORD` | Final record + eligibility + audit/notification side effects |
+| Transfer creation | `CREATE_TRANSFER` | Prevent duplicate transfer and ensure all donation records belong to camp |
+| Transfer receipt | `RECEIVE_TRANSFER` | Transfer state + inventory insertion |
+| Unit allocation | `ALLOCATE_UNITS` | Prevent double allocation under concurrency |
+| Request fulfilment | `FULFILL_REQUEST` | Unit status + request status consistency |
+| Camp lifecycle change | `CHANGE_CAMP_STATUS` | State-machine enforcement |
+| Feedback eligibility | `CAN_SUBMIT_FEEDBACK` | Oracle remains source of truth |
 
 ---
 
@@ -2383,19 +2385,19 @@ Use functions when a single deterministic answer is needed:
 
 | Function | Purpose |
 |---|---|
-| `PKG_DONOR.CHECK_ELIGIBILITY` | Determine donor eligibility and next eligible date |
-| `PKG_CAMP.IS_PUBLICLY_VISIBLE` | Decide whether a camp may appear publicly |
-| `PKG_CAMP.IS_AVAILABLE_FOR_REGISTRATION` | Determine whether a camp can accept registration |
-| `PKG_VENUE.CHECK_AVAILABILITY` | Detect venue scheduling conflicts |
-| `PKG_BLOOD_BANK.GET_AVAILABLE_UNIT_COUNT` | Calculate usable inventory |
-| `PKG_DONATION.CAN_SUBMIT_FEEDBACK` | Verify completed donation eligibility for review |
-| `PKG_AUTH.IS_ACCOUNT_ACTIVE` | Validate account state |
+| `CHECK_ELIGIBILITY` | Determine donor eligibility and next eligible date |
+| `IS_PUBLICLY_VISIBLE` | Decide whether a camp may appear publicly |
+| `IS_AVAILABLE_FOR_REGISTRATION` | Determine whether a camp can accept registration |
+| `CHECK_AVAILABILITY` | Detect venue scheduling conflicts |
+| `GET_AVAILABLE_UNIT_COUNT` | Calculate usable inventory |
+| `CAN_SUBMIT_FEEDBACK` | Verify completed donation eligibility for review |
+| `IS_ACCOUNT_ACTIVE` | Validate account state |
 
 ---
 
 # Recommended Oracle cursors
 
-Use `SYS_REFCURSOR`/equivalent cursor-return patterns for:
+Use explicit cursors and cursor-based result procedures for:
 - camp catalogue and camp searches
 - donor donation history
 - bank inventory searches
@@ -2414,7 +2416,7 @@ The C# layer should map cursor rows into DTOs; pagination should be supported by
 Triggers should be limited to invariants/auditing that must be enforced even outside the API:
 
 1. **Audit trigger** on security-sensitive relational tables such as donation records, blood-unit status, hospital requests and role/account state changes.
-2. **Expiry/status safeguard trigger** only where necessary to prevent a blood unit from remaining `AVAILABLE` after its expiry date. Prefer explicit package operations for normal status changes.
+2. **Expiry/status safeguard trigger** only where necessary to prevent a blood unit from remaining `AVAILABLE` after its expiry date. Prefer explicit standalone procedures/functions for normal status changes.
 3. **Do not use triggers** for multi-step workflow orchestration such as receiving a transfer or fulfilling a request; those are clearer and safer as PL/SQL procedures.
 
 ---
