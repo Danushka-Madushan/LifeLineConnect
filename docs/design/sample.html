@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>HemaPulse UI Standards</title><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {"darkMode": "class", "theme": {"extend": {"colors": {"on-primary-fixed-variant": "#93000b", "outline": "#916f6b", "on-tertiary": "#ffffff", "tertiary-fixed": "#6ffbbe", "secondary-fixed": "#dae2fd", "on-tertiary-container": "#e1ffec", "error-container": "#ffdad6", "on-error-container": "#93000a", "on-secondary-fixed": "#131b2e", "inverse-primary": "#ffb4ab", "on-surface-variant": "#5c403c", "tertiary-fixed-dim": "#4edea3", "on-surface": "#0b1c30", "on-secondary": "#ffffff", "inverse-surface": "#213145", "on-tertiary-fixed": "#002113", "tertiary": "#006645", "error": "#ba1a1a", "on-background": "#0b1c30", "surface-container": "#e5eeff", "surface-variant": "#d3e4fe", "surface-dim": "#cbdbf5", "background": "#f8f9ff", "surface": "#f8f9ff", "on-secondary-container": "#5c647a", "on-primary": "#ffffff", "surface-container-low": "#eff4ff", "surface-container-highest": "#d3e4fe", "on-tertiary-fixed-variant": "#005236", "surface-container-high": "#dce9ff", "tertiary-container": "#008259", "on-primary-fixed": "#410002", "on-primary-container": "#fff6f5", "surface-container-lowest": "#ffffff", "secondary": "#565e74", "surface-bright": "#f8f9ff", "primary-fixed-dim": "#ffb4ab", "surface-tint": "#bf0715", "primary-fixed": "#ffdad6", "on-error": "#ffffff", "secondary-container": "#dae2fd", "secondary-fixed-dim": "#bec6e0", "primary": "#b70011", "primary-container": "#dc2626", "on-secondary-fixed-variant": "#3f465c", "outline-variant": "#e6bdb8", "inverse-on-surface": "#eaf1ff"}, "borderRadius": {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"}, "spacing": {"space-xl": "1.5rem", "margin-mobile": "1rem", "gutter-tablet": "1.5rem", "margin-desktop": "3rem", "space-2xs": "0.125rem", "space-xs": "0.25rem", "space-md": "0.75rem", "space-4xl": "3rem", "margin-tablet": "2rem", "space-lg": "1.25rem", "space-sm": "0.5rem", "space-3xl": "2.5rem", "gutter-desktop": "1.5rem", "gutter-mobile": "1rem", "space-2xl": "2rem", "space-base": "1rem"}, "fontFamily": {"label-md": ["inter"], "stat-display": ["plusJakartaSans"], "label-lg": ["inter"], "headline-xl": ["plusJakartaSans"], "headline-sm": ["plusJakartaSans"], "body-sm": ["inter"], "body-md": ["inter"], "body-lg": ["inter"], "label-sm": ["inter"], "headline-md": ["plusJakartaSans"], "headline-lg": ["plusJakartaSans"], "display-lg": ["plusJakartaSans"], "display-lg-mobile": ["plusJakartaSans"], "headline-xl-mobile": ["plusJakartaSans"]}, "fontSize": {"label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}], "stat-display": ["36px", {"lineHeight": "42px", "letterSpacing": "-0.025em", "fontWeight": "800"}], "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.005em", "fontWeight": "600"}], "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}], "headline-sm": ["16px", {"lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "600"}], "body-sm": ["12px", {"lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "400"}], "body-md": ["14px", {"lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "400"}], "body-lg": ["16px", {"lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "400"}], "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600"}], "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}], "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600"}], "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}], "display-lg-mobile": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.015em", "fontWeight": "700"}], "headline-xl-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}]}}}};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 w-full px-space-xl flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><img alt="HemaPulse Design System Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1U4P5NrR9Wd5EhBrB0sqh9drdA-AKPSFvKu7oL5eDLwjI1rsKlTyJuOXUIxjTpYUpEg2uN6ZSQX3vyWI-GW-TGzfsrZhkeHOOYGb0PxXUh-X4H9oZ1wO-V3XsttLWgBi1K6Fcc7smKbYZYe9B6YgNKgHZ7hfhZommnTHNXDn4HXwAvETo2ePIw9eAznS6P6ksrhp7D1fYEu3yNkx-G5cR1IGz5zHxcrvjy3-v0O83wKsYb2K0ydMdUmsQk"/><span class="font-headline-sm text-headline-sm tracking-tight text-on-surface">HemaPulse</span></div><span class="px-space-sm py-space-2xs rounded-lg bg-surface-container-high text-on-secondary-fixed-variant font-label-sm text-label-sm">v2.4 LTS</span><nav class="hidden xl:flex items-center gap-space-xs ml-space-md" data-active-classes="bg-surface-container-high text-on-surface font-bold rounded-lg"><a aria-current="page" class="px-space-md py-space-sm transition-colors bg-surface-container-high text-on-surface font-bold rounded-lg" data-path="overview" href="#">Overview</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="foundations" href="#">Foundations</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="components" href="#">Components</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="patterns" href="#">Patterns</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="accessibility" href="#">Accessibility</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="page-templates" href="#">Page Templates</a></nav></div><div class="flex items-center gap-space-md"><div class="relative hidden md:flex items-center w-64 lg:w-80"><span class="material-symbols-outlined absolute left-space-md text-secondary text-[18px] pointer-events-none">search</span><input class="w-full pl-10 pr-space-md py-space-xs rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm placeholder:text-secondary focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container/20" placeholder="Search design tokens, specs, rules..." type="search"/></div><button class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">download</span><span>Export Guidelines PDF / Spec</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><aside class="fixed left-0 top-16 bottom-0 w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.02)] overflow-y-auto pt-space-lg pb-space-2xl z-40"><div class="px-space-xl mb-space-md"><span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Standards Navigation</span></div><nav class="flex flex-col gap-space-2xs px-space-md" data-active-classes="bg-primary-fixed text-on-primary-fixed font-bold rounded-lg"><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="core-principles" href="#">1. Core Principles</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="color-system-contrast" href="#">2. Color System &amp; Contrast</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="typography-scale" href="#">3. Typography Scale</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="spacing-grid-system" href="#">4. Spacing &amp; Grid System</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="component-rules-anatomy" href="#">5. Component Rules &amp; Anatomy</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="form-donor-flow-rules" href="#">6. Form &amp; Donor Flow Rules</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="state-alert-guidelines" href="#">7. State &amp; Alert Guidelines</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="page-archetype-blueprint" href="#">8. Page Archetype Blueprint</a></nav></aside><div class="pl-72"><main class="relative pt-16 w-full min-h-screen bg-surface"><div class="flex flex-col w-full">
+<!-- Top Spec Header & Hero Meta -->
+<div class="w-full px-space-4xl py-space-3xl bg-surface-container-lowest shadow-sm">
+<div class="max-w-[1440px] mx-auto flex flex-col gap-space-lg">
+<div class="flex flex-wrap items-center justify-between gap-space-base">
+<div class="flex items-center gap-space-sm">
+<span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary">
+<span class="material-symbols-outlined text-[18px]">emergency</span>
+</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-secondary">Clinical Systems Engineering Document</span>
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
+<span class="font-label-sm text-label-sm text-secondary">SYS-HEMA-2025-V2</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-xs">
+<span class="px-space-sm py-space-2xs rounded-lg bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[14px]">verified</span> Version 2.4.0 (LTS)
+          </span>
+<span class="px-space-sm py-space-2xs rounded-lg bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[14px]">shield</span> WCAG AAA Clinical
+          </span>
+<span class="px-space-sm py-space-2xs rounded-lg bg-surface-container-low text-secondary font-label-sm text-label-sm">
+            Updated: Q1 Active Release
+          </span>
+<span class="px-space-sm py-space-2xs rounded-lg bg-secondary-container text-on-secondary-fixed font-label-sm text-label-sm">
+            Scope: Mobile App, Kiosk, Clinic Portal
+          </span>
+</div>
+</div>
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-space-xl">
+<div class="max-w-3xl flex flex-col gap-space-sm">
+<h1 class="font-display-lg text-display-lg tracking-tight text-on-surface">
+            HemaPulse Design Ruleset &amp; Interface Standards
+          </h1>
+<p class="font-body-lg text-body-lg text-secondary leading-relaxed">
+            The authoritative interface specification for rapid triage, emergency donor mobilization, and phlebotomy operations. Designed to reconcile absolute clinical precision with deep donor reassurance across mission-critical blood supply networks.
+          </p>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+<button class="px-space-lg py-space-sm rounded-lg bg-surface-container-high text-on-surface font-label-md text-label-md hover:bg-surface-container-highest transition-colors flex items-center gap-space-xs" id="copyTokensBtn" type="button">
+<span class="material-symbols-outlined text-[18px]">code</span>
+<span>Copy Token JSON</span>
+</button>
+<a class="px-space-lg py-space-sm rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-colors shadow-sm flex items-center gap-space-xs" href="#ruleset-matrix">
+<span class="material-symbols-outlined text-[18px]">checklist</span>
+<span>Jump to Compliance Matrix</span>
+</a>
+</div>
+</div>
+<!-- Quick Telemetry Strip -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-space-md pt-space-md">
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-2xs">
+<span class="font-label-sm text-label-sm uppercase text-secondary">Min Tap Target</span>
+<span class="font-stat-display text-stat-display text-on-surface">48<span class="font-label-md text-label-md text-secondary">px</span></span>
+<span class="font-body-sm text-body-sm text-secondary">Mobile drives &amp; triage touch screens</span>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-2xs">
+<span class="font-label-sm text-label-sm uppercase text-secondary">Contrast Standard</span>
+<span class="font-stat-display text-stat-display text-tertiary">7.8:1</span>
+<span class="font-body-sm text-body-sm text-secondary">Exceeds WCAG AAA on all surfaces</span>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-2xs">
+<span class="font-label-sm text-label-sm uppercase text-secondary">Critical Alert Latency</span>
+<span class="font-stat-display text-stat-display text-primary">&lt; 150<span class="font-label-md text-label-md text-secondary">ms</span></span>
+<span class="font-body-sm text-body-sm text-secondary">Immediate visual state transition</span>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-2xs">
+<span class="font-label-sm text-label-sm uppercase text-secondary">Supported Locales</span>
+<span class="font-stat-display text-stat-display text-on-surface">14<span class="font-label-md text-label-md text-secondary">langs</span></span>
+<span class="font-body-sm text-body-sm text-secondary">RTL and multi-script verified</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Document Body -->
+<div class="w-full px-space-4xl py-space-3xl max-w-[1440px] mx-auto flex flex-col gap-space-4xl">
+<!-- Section 1: Core Design Philosophy & Principles -->
+<section class="flex flex-col gap-space-xl">
+<div class="flex flex-col gap-space-2xs">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">verified_user</span>
+<span>Section 01</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Core Design Philosophy &amp; Principles</h2>
+<p class="font-body-md text-body-md text-secondary max-w-2xl">
+          Four unbreakable tenets governing every user interface decision across the national and regional donor registry pipeline.
+        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-lg">
+<!-- Principle 1 -->
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between gap-space-lg hover:shadow-md transition-shadow">
+<div class="flex flex-col gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[26px]">bloodtype</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-secondary uppercase">Principle 01</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Life-Critical Clarity</h3>
+</div>
+<p class="font-body-md text-body-md text-secondary">
+              Zero ambiguous iconography. High-contrast typography for blood group classifications (A+, O-, Platelets), hemoglobin measures, and cross-matching alerts. Immediate cognitive recognition under harsh clinic lighting.
+            </p>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface">Rule: No text below 12px</span>
+<span class="material-symbols-outlined text-tertiary text-[16px]">check_circle</span>
+</div>
+</div>
+<!-- Principle 2 -->
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between gap-space-lg hover:shadow-md transition-shadow">
+<div class="flex flex-col gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-secondary-fixed flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[26px]">spa</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-secondary uppercase">Principle 02</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Reassurance &amp; Calm</h3>
+</div>
+<p class="font-body-md text-body-md text-secondary">
+              Clinical white space and disciplined rounded containers (8px–12px). Elimination of high-anxiety medical graphics or dramatic red fills that elevate donor heart rates during pre-donation vitals screening.
+            </p>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface">Rule: Soft tint fills for notices</span>
+<span class="material-symbols-outlined text-tertiary text-[16px]">check_circle</span>
+</div>
+</div>
+<!-- Principle 3 -->
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between gap-space-lg hover:shadow-md transition-shadow">
+<div class="flex flex-col gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[26px]">touch_app</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-secondary uppercase">Principle 03</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Emergency Speed</h3>
+</div>
+<p class="font-body-md text-body-md text-secondary">
+              Single-action appointment dispatching, large touch targets (&gt;=48px) for mobile camp kiosks, and zero multifold menus for emergency bed allocations during sudden trauma surges.
+            </p>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface">Rule: Triage flow ≤ 3 clicks</span>
+<span class="material-symbols-outlined text-tertiary text-[16px]">check_circle</span>
+</div>
+</div>
+<!-- Principle 4 -->
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between gap-space-lg hover:shadow-md transition-shadow">
+<div class="flex flex-col gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-tertiary-fixed flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[26px]">accessibility_new</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-secondary uppercase">Principle 04</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Universal Accessibility</h3>
+</div>
+<p class="font-body-md text-body-md text-secondary">
+              Strict WCAG AAA for vital status metrics, color-blind safe badges equipped with both alphanumeric strings and symbolic glyphs, accompanied by full screen-reader live region support.
+            </p>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface">Rule: Color is never sole signifier</span>
+<span class="material-symbols-outlined text-tertiary text-[16px]">check_circle</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Color System, Token Architecture & Contrast Matrix -->
+<section class="flex flex-col gap-space-xl">
+<div class="flex flex-col gap-space-2xs">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">palette</span>
+<span>Section 02</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Color System, Token Architecture &amp; Contrast Matrix</h2>
+<p class="font-body-md text-body-md text-secondary max-w-2xl">
+          Tokens engineered specifically for high-stress clinical readability, compliant with international medical device UI recommendations.
+        </p>
+</div>
+<!-- Token Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-md">
+<!-- Vital Crimson Token -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="h-20 rounded-lg bg-primary flex items-end p-space-md text-on-primary justify-between">
+<span class="font-label-md text-label-md">Primary Vital</span>
+<span class="font-label-sm text-label-sm opacity-80">#B70011</span>
+</div>
+<div class="flex flex-col gap-space-2xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">bg-primary</span>
+<span class="font-label-sm text-label-sm text-secondary">RGB(183, 0, 17)</span>
+<p class="font-body-sm text-body-sm text-secondary mt-space-2xs">
+              Reserved strictly for Primary CTAs, active blood bag registration, and life-critical shortage alerts.
+            </p>
+</div>
+<div class="pt-space-xs flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>Contrast on White:</span>
+<span class="px-space-xs py-space-2xs rounded bg-surface-container text-on-surface font-bold">8.1:1 (AAA)</span>
+</div>
+</div>
+<!-- High Emphasis Ink -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="h-20 rounded-lg bg-on-surface flex items-end p-space-md text-on-primary justify-between">
+<span class="font-label-md text-label-md">Clinical Navy</span>
+<span class="font-label-sm text-label-sm opacity-80">#0B1C30</span>
+</div>
+<div class="flex flex-col gap-space-2xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">text-on-surface</span>
+<span class="font-label-sm text-label-sm text-secondary">RGB(11, 28, 48)</span>
+<p class="font-body-sm text-body-sm text-secondary mt-space-2xs">
+              Primary typographical anchor for clinical donor records, phlebotomist notes, and vital numbers.
+            </p>
+</div>
+<div class="pt-space-xs flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>Contrast on White:</span>
+<span class="px-space-xs py-space-2xs rounded bg-surface-container text-on-surface font-bold">14.4:1 (AAA)</span>
+</div>
+</div>
+<!-- Cleared Safe Emerald -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="h-20 rounded-lg bg-tertiary flex items-end p-space-md text-on-tertiary justify-between">
+<span class="font-label-md text-label-md">Screening Cleared</span>
+<span class="font-label-sm text-label-sm opacity-80">#006645</span>
+</div>
+<div class="flex flex-col gap-space-2xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">bg-tertiary</span>
+<span class="font-label-sm text-label-sm text-secondary">RGB(0, 102, 69)</span>
+<p class="font-body-sm text-body-sm text-secondary mt-space-2xs">
+              Donor certified fit to donate, blood test verified pathogen-free, cold-chain temperature nominal.
+            </p>
+</div>
+<div class="pt-space-xs flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>Contrast on White:</span>
+<span class="px-space-xs py-space-2xs rounded bg-surface-container text-on-surface font-bold">7.3:1 (AAA)</span>
+</div>
+</div>
+<!-- Secondary Neutral -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="h-20 rounded-lg bg-secondary flex items-end p-space-md text-on-secondary justify-between">
+<span class="font-label-md text-label-md">Slate Neutral</span>
+<span class="font-label-sm text-label-sm opacity-80">#565E74</span>
+</div>
+<div class="flex flex-col gap-space-2xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">text-secondary</span>
+<span class="font-label-sm text-label-sm text-secondary">RGB(86, 94, 116)</span>
+<p class="font-body-sm text-body-sm text-secondary mt-space-2xs">
+              Secondary instructions, time-stamps, metadata descriptors, and inactive tab indicators.
+            </p>
+</div>
+<div class="pt-space-xs flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>Contrast on White:</span>
+<span class="px-space-xs py-space-2xs rounded bg-surface-container text-on-surface font-bold">5.8:1 (AA)</span>
+</div>
+</div>
+</div>
+<!-- Semantic Status Badges Matrix -->
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-lg">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Semantic Clinical Status System</h3>
+<span class="font-body-sm text-body-sm text-secondary">Pre-approved color combinations for clinical diagnostic chips</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary">Validation: ISO 15223-1 Compliant</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Critical Shortage -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary">Urgent Shortage / Deficit</span>
+<span class="px-space-xs py-space-2xs rounded-lg bg-primary text-on-primary font-label-sm text-label-sm font-bold">CRITICAL</span>
+</div>
+<div class="p-space-sm rounded-lg bg-primary-fixed text-on-primary-fixed flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+<span class="font-label-md text-label-md">O- Negative &lt; 2 Units</span>
+</div>
+<div class="font-body-sm text-body-sm text-secondary flex flex-col gap-space-2xs">
+<span>Token: <code class="text-on-surface font-mono">primary-fixed</code></span>
+<span>Usage: Severe inventory crisis, acute donor recall.</span>
+</div>
+</div>
+<!-- Qualified / Fit -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary">Fit to Donate / Cleared</span>
+<span class="px-space-xs py-space-2xs rounded-lg bg-tertiary text-on-tertiary font-label-sm text-label-sm font-bold">CLEARED</span>
+</div>
+<div class="p-space-sm rounded-lg bg-tertiary-fixed text-on-tertiary-fixed flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span class="font-label-md text-label-md">Hemoglobin: 14.2 g/dL</span>
+</div>
+<div class="font-body-sm text-body-sm text-secondary flex flex-col gap-space-2xs">
+<span>Token: <code class="text-on-surface font-mono">tertiary-fixed</code></span>
+<span>Usage: Triage clearance, lab verification pass.</span>
+</div>
+</div>
+<!-- Pending Evaluation -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary">Awaiting Triage / Lab</span>
+<span class="px-space-xs py-space-2xs rounded-lg bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-bold">SCREENING</span>
+</div>
+<div class="p-space-sm rounded-lg bg-secondary-container text-on-secondary-fixed flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px]">hourglass_top</span>
+<span class="font-label-md text-label-md">Pulse &amp; Pressure In-Review</span>
+</div>
+<div class="font-body-sm text-body-sm text-secondary flex flex-col gap-space-2xs">
+<span>Token: <code class="text-on-surface font-mono">secondary-container</code></span>
+<span>Usage: Pre-screening survey pending phlebotomist stamp.</span>
+</div>
+</div>
+<!-- Deferral -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary">Temporary Deferral</span>
+<span class="px-space-xs py-space-2xs rounded-lg bg-surface-container-highest text-on-surface font-label-sm text-label-sm font-bold">DEFERRED</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-high text-on-surface flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px]">event_busy</span>
+<span class="font-label-md text-label-md">Next Eligible: Nov 18</span>
+</div>
+<div class="font-body-sm text-body-sm text-secondary flex flex-col gap-space-2xs">
+<span>Token: <code class="text-on-surface font-mono">surface-container-high</code></span>
+<span>Usage: Non-punitive deferral with gentle recovery timeline.</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Typography Hierarchy & Data Density Rules -->
+<section class="flex flex-col gap-space-xl">
+<div class="flex flex-col gap-space-2xs">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">format_size</span>
+<span>Section 03</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Typography Hierarchy &amp; Data Density Rules</h2>
+<p class="font-body-md text-body-md text-secondary max-w-2xl">
+          Paired type tokens combining Plus Jakarta Sans for rapid numeral recognition with Inter for high-density clinical questionnaires.
+        </p>
+</div>
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-lg overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="text-secondary font-label-sm text-label-sm uppercase">
+<th class="pb-space-md">Role &amp; Token Pair</th>
+<th class="pb-space-md">Font Stack</th>
+<th class="pb-space-md">Size / Line-Height</th>
+<th class="pb-space-md">Weight / Letter Spacing</th>
+<th class="pb-space-md">Clinical Use Case</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 font-body-md text-body-md text-on-surface">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md font-bold text-primary">Display LG</td>
+<td class="py-space-md text-secondary">Plus Jakarta Sans</td>
+<td class="py-space-md font-mono text-body-sm">40px / 48px</td>
+<td class="py-space-md font-mono text-body-sm">Bold 700 (-0.02em)</td>
+<td class="py-space-md text-secondary">Camp drive hero banners, emergency shortage callouts</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md font-bold text-on-surface">Stat Display</td>
+<td class="py-space-md text-secondary">Plus Jakarta Sans</td>
+<td class="py-space-md font-mono text-body-sm">36px / 42px</td>
+<td class="py-space-md font-mono text-body-sm">ExtraBold 800 (-0.025em)</td>
+<td class="py-space-md text-secondary">Vital statistics, blood group letters (O-, AB+), volume counts</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md font-bold text-on-surface">Headline XL</td>
+<td class="py-space-md text-secondary">Plus Jakarta Sans</td>
+<td class="py-space-md font-mono text-body-sm">32px / 40px</td>
+<td class="py-space-md font-mono text-body-sm">Bold 700 (-0.02em)</td>
+<td class="py-space-md text-secondary">Section titles, triage station primary headers</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md font-bold text-on-surface">Headline MD</td>
+<td class="py-space-md text-secondary">Plus Jakarta Sans</td>
+<td class="py-space-md font-mono text-body-sm">20px / 28px</td>
+<td class="py-space-md font-mono text-body-sm">SemiBold 600 (-0.01em)</td>
+<td class="py-space-md text-secondary">Donor summary card titles, screening checklist categories</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md font-bold text-on-surface">Body LG</td>
+<td class="py-space-md text-secondary">Inter</td>
+<td class="py-space-md font-mono text-body-sm">16px / 26px</td>
+<td class="py-space-md font-mono text-body-sm">Regular 400 (0em)</td>
+<td class="py-space-md text-secondary">Donor consent agreements, recovery guidance paragraphs</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md font-bold text-on-surface">Body MD</td>
+<td class="py-space-md text-secondary">Inter</td>
+<td class="py-space-md font-mono text-body-sm">14px / 22px</td>
+<td class="py-space-md font-mono text-body-sm">Regular 400 (0em)</td>
+<td class="py-space-md text-secondary">Clinical screening questionnaires, phlebotomy logs, table cells</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md font-bold text-on-surface">Label SM</td>
+<td class="py-space-md text-secondary">Inter</td>
+<td class="py-space-md font-mono text-body-sm">11px / 14px</td>
+<td class="py-space-md font-mono text-body-sm">SemiBold 600 (+0.04em)</td>
+<td class="py-space-md text-secondary">Overline category stamps, micro-metadata, blood bag lot barcodes</td>
+</tr>
+</tbody>
+</table>
+<!-- Rendered Specimen Preview Card -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col lg:flex-row items-start lg:items-center justify-between gap-space-lg">
+<div class="flex items-center gap-space-md">
+<div class="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-on-primary">
+<span class="font-stat-display text-stat-display">O<sup class="text-label-md">-</sup></span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase text-secondary">Rendered Type Specimen</span>
+<span class="font-headline-lg text-headline-lg text-on-surface">O- Negative Universal Donor Needed</span>
+<span class="font-body-sm text-body-sm text-secondary">Clinical inventory threshold exceeded in St. Jude Trauma Unit</span>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-space-md">
+<div class="px-space-md py-space-xs rounded-lg bg-surface-container-lowest shadow-sm flex flex-col">
+<span class="font-label-sm text-label-sm text-secondary">Collected Today</span>
+<span class="font-headline-md text-headline-md text-on-surface">500 <span class="text-label-sm text-secondary">mL</span></span>
+</div>
+<div class="px-space-md py-space-xs rounded-lg bg-surface-container-lowest shadow-sm flex flex-col">
+<span class="font-label-sm text-label-sm text-secondary">Next Eligible Date</span>
+<span class="font-headline-md text-headline-md text-tertiary">Oct 24, 2025</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 4: Component Construction Rules & Anatomy -->
+<section class="flex flex-col gap-space-xl">
+<div class="flex flex-col gap-space-2xs">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">widgets</span>
+<span>Section 04</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Component Construction Rules &amp; Anatomy</h2>
+<p class="font-body-md text-body-md text-secondary max-w-2xl">
+          Micro-architectural standards for four primary UI components repeatedly used across donor kiosks and mobile collection buses.
+        </p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-xl">
+<!-- Component A: Blood Type Badge -->
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-lg">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-secondary uppercase">Component 01</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Blood Type Token Badge</h3>
+</div>
+<span class="px-space-xs py-space-2xs rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm">Specs: 48x48px min</span>
+</div>
+<!-- Visual Breakdown Canvas -->
+<div class="p-space-xl rounded-xl bg-surface-container-low flex flex-col sm:flex-row items-center justify-around gap-space-lg relative overflow-hidden">
+<!-- Normal Token -->
+<div class="flex flex-col items-center gap-space-xs">
+<div class="w-16 h-16 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center relative shadow-sm">
+<span class="font-stat-display text-stat-display">A<sup class="text-label-lg font-bold">+</sup></span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary">Standard (Sufficient)</span>
+</div>
+<!-- Urgent Shortage Token -->
+<div class="flex flex-col items-center gap-space-xs">
+<div class="w-16 h-16 rounded-full bg-primary text-on-primary flex items-center justify-center relative shadow-sm">
+<span class="font-stat-display text-stat-display">O<sup class="text-label-lg font-bold">-</sup></span>
+<span class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined text-[14px]">priority_high</span>
+</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-bold">Critical Shortage</span>
+</div>
+<!-- Inactive Token -->
+<div class="flex flex-col items-center gap-space-xs">
+<div class="w-16 h-16 rounded-full bg-surface-container-high text-secondary flex items-center justify-center relative">
+<span class="font-stat-display text-stat-display">B<sup class="text-label-lg font-bold">+</sup></span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary">Reserve Full</span>
+</div>
+</div>
+<!-- Anatomical Rules List -->
+<div class="flex flex-col gap-space-xs font-body-sm text-body-sm text-secondary">
+<div class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[16px] mt-0.5">adjust</span>
+<span><strong>Blood Group Glyphs:</strong> Group letter in Plus Jakarta Sans 800; Rh factor rendered as superscript at 60% font size for unambiguous distinction.</span>
+</div>
+<div class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[16px] mt-0.5">adjust</span>
+<span><strong>Shortage Indicator:</strong> Priority alert node top-right if national stock falls under a 48-hour reserve margin.</span>
+</div>
+</div>
+</div>
+<!-- Component B: Vital Metrics Card -->
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-lg">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-secondary uppercase">Component 02</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Vital Metrics Card</h3>
+</div>
+<span class="px-space-xs py-space-2xs rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm">Realtime Sensor Triage</span>
+</div>
+<!-- Interactive-looking Specimen -->
+<div class="p-space-lg rounded-xl bg-surface-container-low grid grid-cols-2 sm:grid-cols-3 gap-space-md">
+<div class="p-space-md rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-space-2xs">
+<span class="font-label-sm text-label-sm text-secondary">Hemoglobin</span>
+<span class="font-stat-display text-stat-display text-on-surface">14.1 <span class="font-label-sm text-label-sm text-secondary">g/dL</span></span>
+<span class="inline-flex items-center gap-space-2xs font-label-sm text-label-sm text-tertiary">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Nominal (&gt;12.5)
+              </span>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-space-2xs">
+<span class="font-label-sm text-label-sm text-secondary">Blood Pressure</span>
+<span class="font-stat-display text-stat-display text-on-surface">118/76</span>
+<span class="inline-flex items-center gap-space-2xs font-label-sm text-label-sm text-tertiary">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Optimal
+              </span>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-space-2xs col-span-2 sm:col-span-1">
+<span class="font-label-sm text-label-sm text-secondary">Pulse Rate</span>
+<span class="font-stat-display text-stat-display text-primary">102 <span class="font-label-sm text-label-sm text-secondary">bpm</span></span>
+<span class="inline-flex items-center gap-space-2xs font-label-sm text-label-sm text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Elevated (Rest 5m)
+              </span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs font-body-sm text-body-sm text-secondary">
+<div class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[16px] mt-0.5">adjust</span>
+<span><strong>Tri-Color Metric Guard:</strong> Green (Optimal), Amber (Borderline - Prompt Retest), Red (Immediate Deferral with Medical Counsel).</span>
+</div>
+<div class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[16px] mt-0.5">adjust</span>
+<span><strong>Accessibility Override:</strong> Every value card MUST pair color tint with verbal status label ("Nominal", "Elevated").</span>
+</div>
+</div>
+</div>
+<!-- Component C: Bed Allocation & Camp Capacity Meter -->
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-lg">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-secondary uppercase">Component 03</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Camp Bed Allocation Meter</h3>
+</div>
+<span class="px-space-xs py-space-2xs rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm">Phlebotomy Station</span>
+</div>
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface">Central Donor Camp Station Alpha</span>
+<span class="font-label-sm text-label-sm font-bold text-primary">9 / 12 Beds Active (75%)</span>
+</div>
+<!-- Segmented Gauge -->
+<div class="grid grid-cols-12 gap-1.5 h-6">
+<!-- Active Beds -->
+<div class="bg-primary rounded-sm h-full" title="Bed 1: In Progress"></div>
+<div class="bg-primary rounded-sm h-full" title="Bed 2: In Progress"></div>
+<div class="bg-primary rounded-sm h-full" title="Bed 3: In Progress"></div>
+<div class="bg-primary rounded-sm h-full" title="Bed 4: In Progress"></div>
+<div class="bg-primary rounded-sm h-full" title="Bed 5: In Progress"></div>
+<div class="bg-primary rounded-sm h-full" title="Bed 6: In Progress"></div>
+<div class="bg-primary rounded-sm h-full" title="Bed 7: In Progress"></div>
+<div class="bg-primary rounded-sm h-full" title="Bed 8: In Progress"></div>
+<div class="bg-primary rounded-sm h-full" title="Bed 9: In Progress"></div>
+<!-- Sanitizing / Available Beds -->
+<div class="bg-secondary-container rounded-sm h-full" title="Bed 10: Sanitizing"></div>
+<div class="bg-surface-container-highest rounded-sm h-full" title="Bed 11: Ready"></div>
+<div class="bg-surface-container-highest rounded-sm h-full" title="Bed 12: Ready"></div>
+</div>
+<div class="flex items-center justify-between text-secondary font-label-sm text-label-sm">
+<span class="flex items-center gap-space-2xs"><span class="w-2 h-2 rounded bg-primary"></span> In Collection (9)</span>
+<span class="flex items-center gap-space-2xs"><span class="w-2 h-2 rounded bg-secondary-container"></span> Turnover (1)</span>
+<span class="flex items-center gap-space-2xs"><span class="w-2 h-2 rounded bg-surface-container-highest"></span> Open Slot (2)</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs font-body-sm text-body-sm text-secondary">
+<div class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[16px] mt-0.5">adjust</span>
+<span><strong>Hardware Touch Target:</strong> Bed toggles on phlebotomy touchscreens measure 56px height to accommodate gloved operation.</span>
+</div>
+</div>
+</div>
+<!-- Component D: Donor Eligibility Pill Syntax -->
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-lg">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-secondary uppercase">Component 04</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Eligibility Status Pill Syntax</h3>
+</div>
+<span class="px-space-xs py-space-2xs rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm">Syntax Standard</span>
+</div>
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col gap-space-md">
+<div class="flex flex-wrap items-center gap-space-sm">
+<span class="px-space-md py-space-xs rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span>ELIGIBLE_FOR_WHOLE_BLOOD</span>
+</span>
+<span class="px-space-md py-space-xs rounded-full bg-secondary-container text-on-secondary-fixed font-label-md text-label-md flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<span>REST_PERIOD_ACTIVE</span>
+</span>
+<span class="px-space-md py-space-xs rounded-full bg-primary-fixed text-on-primary-fixed font-label-md text-label-md flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px]">block</span>
+<span>PERMANENT_DEFERRAL</span>
+</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary">
+              Strictly mandated naming format: <code class="text-on-surface font-mono">[OUTCOME]_[MODALITY]</code>. All pills must render an inline trailing or leading Material icon.
+            </p>
+</div>
+<div class="flex flex-col gap-space-xs font-body-sm text-body-sm text-secondary">
+<div class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[16px] mt-0.5">adjust</span>
+<span><strong>Screen Reader Label:</strong> Pills emit hidden descriptive text (e.g. `aria-label="Medical eligibility outcome: eligible for donation"`).</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 5: Universal Page Layout & Structural Blueprint -->
+<section class="flex flex-col gap-space-xl">
+<div class="flex flex-col gap-space-2xs">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">view_quilt</span>
+<span>Section 05</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Universal Page Layout &amp; Structural Blueprint</h2>
+<p class="font-body-md text-body-md text-secondary max-w-2xl">
+          Mandatory 5-zone architecture for all operational views in HemaPulse, from mobile intake tents to metropolitan hospital portals.
+        </p>
+</div>
+<!-- Schematic Diagram Box -->
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-xl">
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm uppercase text-secondary">Layout Architecture Wireframe</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">5-Zone Ergonomic Spatial Hierarchy</span>
+</div>
+<div class="flex flex-col gap-space-md p-space-lg rounded-xl bg-surface-container-low">
+<!-- Zone 1: Global Safety Header -->
+<div class="p-space-md rounded-lg bg-surface-container-lowest shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="px-space-xs py-space-2xs rounded bg-surface-container text-on-surface font-label-sm text-label-sm font-bold">ZONE 1</span>
+<span class="font-label-md text-label-md text-on-surface">Global Safety &amp; Site Identification Header</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary">Donor Camp GPS / Active Shift Phlebotomist / Emergency SOS Action</span>
+</div>
+<!-- Zone 2: Contextual Alert Bar -->
+<div class="p-space-md rounded-lg bg-primary-fixed text-on-primary-fixed flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="px-space-xs py-space-2xs rounded bg-surface-container-lowest text-primary font-label-sm text-label-sm font-bold">ZONE 2</span>
+<span class="font-label-md text-label-md font-bold">Contextual Alert / Shortage Broadcast Strip</span>
+</div>
+<span class="font-body-sm text-body-sm">Urgent local bank requests, donor hydration timers, or cold-chain notices</span>
+</div>
+<!-- Zones 3 & 4: Main Work Area & Sidebar -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- Zone 3: Main Action & Triage Canvas -->
+<div class="lg:col-span-8 p-space-xl rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="px-space-xs py-space-2xs rounded bg-surface-container text-on-surface font-label-sm text-label-sm font-bold">ZONE 3</span>
+<span class="font-label-sm text-label-sm text-secondary">Max-width 1200px equivalent</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-on-surface">Primary Triage &amp; Intake Work Area</h4>
+<p class="font-body-md text-body-md text-secondary">
+                Single-purpose interface canvas. Dedicated strictly to the active task (e.g. Donor Screening Questionnaire, Phlebotomy Vitals Entry, or Blood Bag Barcode Registration).
+              </p>
+<div class="h-28 rounded-lg bg-surface-container flex items-center justify-center text-secondary font-label-sm text-label-sm">
+                Primary Form Elements / Action Matrix / Bed Assignment View
+              </div>
+</div>
+<!-- Zone 4: Secondary Summary Sidebar -->
+<div class="lg:col-span-4 p-space-xl rounded-lg bg-surface-container-lowest shadow-sm flex flex-col justify-between gap-space-md">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="px-space-xs py-space-2xs rounded bg-surface-container text-on-surface font-label-sm text-label-sm font-bold">ZONE 4</span>
+<span class="font-label-sm text-label-sm text-secondary">Contextual Rail</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Donor History &amp; Vital Telemetry</h4>
+<div class="flex flex-col gap-space-xs font-body-sm text-body-sm text-secondary">
+<span>- Lifetime donations (14 Units)</span>
+<span>- Prior adverse reactions: None</span>
+<span>- Last phlebotomy: 92 days ago</span>
+</div>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low text-secondary font-label-sm text-label-sm">
+                Sticky actions &amp; emergency overrides
+              </div>
+</div>
+</div>
+<!-- Zone 5: Regulatory Compliance Footer -->
+<div class="p-space-md rounded-lg bg-surface-container-lowest shadow-sm flex flex-wrap items-center justify-between gap-space-sm text-secondary font-label-sm text-label-sm">
+<div class="flex items-center gap-space-sm">
+<span class="px-space-xs py-space-2xs rounded bg-surface-container text-on-surface font-bold">ZONE 5</span>
+<span>Regulatory Compliance &amp; Chain-of-Custody Audit Track</span>
+</div>
+<div class="flex items-center gap-space-md">
+<span>FDA 21 CFR Part 11</span>
+<span>HIPAA Compliant Session</span>
+<span>Encrypted Node #9024</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 6: Form Design & Donor Flow Rules (Do's and Don'ts) -->
+<section class="flex flex-col gap-space-xl">
+<div class="flex flex-col gap-space-2xs">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">rule</span>
+<span>Section 06</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Form Design &amp; Donor Flow Rules</h2>
+<p class="font-body-md text-body-md text-secondary max-w-2xl">
+          Clinical interaction principles for pre-donation medical history questionnaires and eligibility assessments.
+        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-xl">
+<!-- DO Card 1 -->
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center gap-space-xs text-tertiary">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+<span class="font-label-md text-label-md uppercase tracking-wider font-bold">DO: Chunk Questions &amp; Explain Intent</span>
+</div>
+<p class="font-body-md text-body-md text-secondary">
+            Present medical screening items as singular, focused questions with plain-language rationales and binary (Yes/No) large touch toggles.
+          </p>
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface">Have you received any tattoos in the last 3 months?</span>
+<span class="font-body-sm text-body-sm text-secondary">Why we ask: Protects blood recipients against blood-borne pathogens during incubation periods.</span>
+<div class="flex items-center gap-space-sm pt-space-2xs">
+<button class="flex-1 py-space-sm rounded-lg bg-surface-container-lowest shadow-sm font-label-md text-label-md text-on-surface hover:bg-surface-container transition-colors" type="button">Yes</button>
+<button class="flex-1 py-space-sm rounded-lg bg-primary text-on-primary font-label-md text-label-md" type="button">No</button>
+</div>
+</div>
+</div>
+<!-- DON'T Card 1 -->
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center gap-space-xs text-primary">
+<span class="material-symbols-outlined text-[20px]">cancel</span>
+<span class="font-label-md text-label-md uppercase tracking-wider font-bold">DON'T: Dense Medical Jargon Scrolls</span>
+</div>
+<p class="font-body-md text-body-md text-secondary">
+            Never dump a 40-item dense text questionnaire with unexplained clinical terminology (e.g. "variant Creutzfeldt-Jakob etiology") without human translation.
+          </p>
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-space-xs opacity-60">
+<span class="font-body-sm text-body-sm text-error">ANTI-PATTERN: Unreadable Dense Checkboxes</span>
+<div class="text-secondary font-mono text-body-sm leading-tight">
+              [ ] Patient exhibits subacute spongiform encephalopathy risk factors under clause 4.8.2.3...<br/>
+              [ ] Has ingested acetylsalicylic acid compounds within 48hr window prior to apheresis...
+            </div>
+</div>
+</div>
+<!-- DO Card 2 -->
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center gap-space-xs text-tertiary">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+<span class="font-label-md text-label-md uppercase tracking-wider font-bold">DO: Constructive Deferral Messages</span>
+</div>
+<p class="font-body-md text-body-md text-secondary">
+            Provide empathetic, health-positive deferral communications that guide the donor toward self-care and clearly state their exact return date.
+          </p>
+<div class="p-space-md rounded-lg bg-tertiary-fixed text-on-tertiary-fixed flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-[20px] mt-0.5">favorite</span>
+<div class="flex flex-col gap-space-2xs">
+<span class="font-headline-sm text-headline-sm">Take care of your health first!</span>
+<span class="font-body-sm text-body-sm">Your hemoglobin was 11.8 g/dL today (minimum is 12.5). You can safely re-test on <strong>Nov 12, 2025</strong>. Consider iron-rich nutrition in the meantime.</span>
+</div>
+</div>
+</div>
+<!-- DON'T Card 2 -->
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center gap-space-xs text-primary">
+<span class="material-symbols-outlined text-[20px]">cancel</span>
+<span class="font-label-md text-label-md uppercase tracking-wider font-bold">DON'T: Punitive Rejection Modals</span>
+</div>
+<p class="font-body-md text-body-md text-secondary">
+            Never display alarming bright red modal dialogs with stigmatizing wording like "DISQUALIFIED", "FAILED", or "REJECTED".
+          </p>
+<div class="p-space-md rounded-lg bg-error-container text-on-error-container flex items-start gap-space-sm opacity-60">
+<span class="material-symbols-outlined text-[20px] mt-0.5">error</span>
+<div class="flex flex-col gap-space-2xs">
+<span class="font-headline-sm text-headline-sm">APPLICATION REJECTED</span>
+<span class="font-body-sm text-body-sm">Failed medical standards check. Donor disqualified from further blood banking operations.</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 7: Export & Integration Quick Actions -->
+<section class="flex flex-col gap-space-xl" id="ruleset-matrix">
+<div class="flex flex-col gap-space-2xs">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">terminal</span>
+<span>Section 07</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Export &amp; Integration Quick Actions</h2>
+<p class="font-body-md text-body-md text-secondary max-w-2xl">
+          Direct engineering pipelines for front-end developers, phlebotomy tablet architects, and QA validation suites.
+        </p>
+</div>
+<div class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-xl">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-secondary uppercase">Token Export</span>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Design Tokens (JSON)</h4>
+<p class="font-body-sm text-body-sm text-secondary">Complete W3C design token spec formatted for Style Dictionary and Figma Tokens plugin.</p>
+</div>
+<button class="w-full py-space-sm rounded-lg bg-surface-container-lowest shadow-sm font-label-md text-label-md text-on-surface hover:bg-surface-container transition-colors flex items-center justify-center gap-space-xs" onclick="triggerToast('Tokens exported as tokens.hemapulse.json')" type="button">
+<span class="material-symbols-outlined text-[16px]">file_download</span>
+<span>Download JSON Spec</span>
+</button>
+</div>
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-secondary uppercase">Frontend Asset</span>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Tailwind Config Preset</h4>
+<p class="font-body-sm text-body-sm text-secondary">Zero-dependency module export containing all HemaPulse colors, typography rules, and radii.</p>
+</div>
+<button class="w-full py-space-sm rounded-lg bg-surface-container-lowest shadow-sm font-label-md text-label-md text-on-surface hover:bg-surface-container transition-colors flex items-center justify-center gap-space-xs" onclick="triggerToast('Tailwind configuration copied to clipboard!')" type="button">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+<span>Copy Config Preset</span>
+</button>
+</div>
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-secondary uppercase">Quality Assurance</span>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Audit Checklist (PDF)</h4>
+<p class="font-body-sm text-body-sm text-secondary">48-point accessibility, high-contrast, and glove-touch compliance checklist for clinic QA staff.</p>
+</div>
+<button class="w-full py-space-sm rounded-lg bg-surface-container-lowest shadow-sm font-label-md text-label-md text-on-surface hover:bg-surface-container transition-colors flex items-center justify-center gap-space-xs" onclick="triggerToast('Compliance audit checklist downloaded!')" type="button">
+<span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
+<span>Get QA Checklist</span>
+</button>
+</div>
+</div>
+<!-- QA Ruleset Quick Matrix Table -->
+<div class="flex flex-col gap-space-sm pt-space-md">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Pre-Flight Screen Deployment Checklist</h4>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-sm font-body-sm text-body-sm">
+<label class="flex items-center gap-space-sm p-space-md rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors">
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0" type="checkbox"/>
+<span class="text-on-surface">Min 48px touch targets verified</span>
+</label>
+<label class="flex items-center gap-space-sm p-space-md rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors">
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0" type="checkbox"/>
+<span class="text-on-surface">Rh factors marked via superscript</span>
+</label>
+<label class="flex items-center gap-space-sm p-space-md rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors">
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0" type="checkbox"/>
+<span class="text-on-surface">All alerts include text descriptions</span>
+</label>
+<label class="flex items-center gap-space-sm p-space-md rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors">
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0" type="checkbox"/>
+<span class="text-on-surface">No pure red background dialogs</span>
+</label>
+</div>
+</div>
+</div>
+</section>
+<!-- Sign-off & Document Attribution Footer -->
+<div class="py-space-xl flex flex-col sm:flex-row items-center justify-between gap-space-md text-secondary font-label-sm text-label-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Approved by HemaPulse Clinical Informatics Directorate &amp; UX Standards Board</span>
+</div>
+<span>Document Identifier: HP-UI-SPEC-2025-V2.4</span>
+</div>
+</div>
+<!-- Notification Toast Container -->
+<div class="fixed bottom-space-xl right-space-xl px-space-lg py-space-md rounded-xl bg-inverse-surface text-inverse-on-surface font-label-md text-label-md shadow-xl flex items-center gap-space-sm opacity-0 pointer-events-none transition-all duration-300 transform translate-y-4 z-50" id="toastNotification">
+<span class="material-symbols-outlined text-tertiary-fixed text-[20px]">check_circle</span>
+<span id="toastMessage">Action completed successfully.</span>
+</div>
+<!-- Embedded Vanilla Micro-Interactions Script -->
+<script>
+    function triggerToast(message) {
+      const toast = document.getElementById('toastNotification');
+      const toastMsg = document.getElementById('toastMessage');
+      if (toast && toastMsg) {
+        toastMsg.textContent = message;
+        toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+        toast.classList.add('opacity-100', 'translate-y-0');
+        setTimeout(() => {
+          toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+          toast.classList.remove('opacity-100', 'translate-y-0');
+        }, 3200);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const copyTokensBtn = document.getElementById('copyTokensBtn');
+      if (copyTokensBtn) {
+        copyTokensBtn.addEventListener('click', () => {
+          const sampleTokens = {
+            system: "HemaPulse Design Standards",
+            version: "2.4.0",
+            primaryColor: "#B70011",
+            surfaceColor: "#FFFFFF",
+            targetSizeMin: 48,
+            contrastRatioTarget: "7.0:1"
+          };
+          navigator.clipboard?.writeText(JSON.stringify(sampleTokens, null, 2));
+          triggerToast('Design tokens copied to clipboard as JSON!');
+        });
+      }
+    });
+  </script>
+</div></main></div></body></html>
