@@ -53,7 +53,7 @@ BEGIN
     INTO p_user_id, p_password_hash, p_account_status, p_role_code
     FROM APP_USER u
     JOIN USER_ROLE_LINK r ON u.USER_ID = r.USER_ID
-    WHERE u.USERNAME = p_username;
+    WHERE (u.USERNAME = p_username OR u.EMAIL = p_username);
 
     -- Update last login timestamp
     UPDATE APP_USER SET LAST_LOGIN_AT = SYSTIMESTAMP WHERE USER_ID = p_user_id;
