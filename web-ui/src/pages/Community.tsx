@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 
@@ -82,7 +83,7 @@ const Community = () => {
                   if(title && content) {
                     api.post('/donors/me/community/threads', { title, content, tags: ['General'] })
                       .then(() => fetchThreads())
-                      .catch(e => alert(e.response?.data?.message || 'Please log in as a Donor to post.'));
+                      .catch(e => toast(e.response?.data?.message || 'Please log in as a Donor to post.'));
                   }
                 }}
                 className="bg-primary text-on-primary px-3 py-1 rounded text-sm font-bold flex items-center gap-1 hover:bg-primary/90"
@@ -131,7 +132,7 @@ const Community = () => {
                 if(question && category) {
                   api.post('/donors/me/community/qa', { question, answer: 'Pending answer from community...', category })
                     .then(() => api.get('/public/community/qa').then(res => setQas(res.data.data)))
-                    .catch(e => alert(e.response?.data?.message || 'Please log in as a Donor to ask.'));
+                    .catch(e => toast(e.response?.data?.message || 'Please log in as a Donor to ask.'));
                 }
               }}
               className="bg-tertiary text-on-tertiary px-3 py-1 rounded text-sm font-bold flex items-center gap-1 hover:bg-tertiary/90"
