@@ -1,0 +1,2276 @@
+cells:
+  - kind: 2
+    value: "-- ================================================================\r
+
+      -- Auth Procedures\r
+
+      -- Blood Donation System — Oracle 21c PL/SQL\r
+
+      -- ================================================================\r
+
+      \r
+
+      -- Register a new donor account\r
+
+      CREATE OR REPLACE PROCEDURE REGISTER_DONOR (\r
+
+      \    p_username       IN  VARCHAR2,\r
+
+      \    p_email          IN  VARCHAR2,\r
+
+      \    p_password_hash  IN  VARCHAR2,\r
+
+      \    p_full_name      IN  VARCHAR2,\r
+
+      \    p_nic            IN  VARCHAR2,\r
+
+      \    p_date_of_birth  IN  DATE,\r
+
+      \    p_gender         IN  VARCHAR2,\r
+
+      \    p_phone          IN  VARCHAR2,\r
+
+      \    p_address        IN  VARCHAR2,\r
+
+      \    p_user_id        OUT NUMBER,\r
+
+      \    p_donor_id       OUT NUMBER\r
+
+      ) AS\r
+
+      BEGIN\r
+
+      \    -- 1. Create the APP_USER row\r
+
+      \    INSERT INTO APP_USER (USERNAME, EMAIL, PASSWORD_HASH,
+      ACCOUNT_STATUS)\r
+
+      \    VALUES (p_username, p_email, p_password_hash, 'ACTIVE')\r
+
+      \    RETURNING USER_ID INTO p_user_id;\r
+
+      \r
+
+      \    -- 2. Create the DONOR row\r
+
+      \    INSERT INTO DONOR (USER_ID, FULL_NAME, NIC, DATE_OF_BIRTH, GENDER,
+      PHONE, ADDRESS)\r
+
+      \    VALUES (p_user_id, p_full_name, p_nic, p_date_of_birth, p_gender,
+      p_phone, p_address)\r
+
+      \    RETURNING DONOR_ID INTO p_donor_id;\r
+
+      \r
+
+      \    -- 3. Create the role link\r
+
+      \    INSERT INTO USER_ROLE_LINK (USER_ID, ROLE_CODE, DONOR_ID)\r
+
+      \    VALUES (p_user_id, 'DONOR', p_donor_id);\r
+
+      \r
+
+      \    COMMIT;\r
+
+      EXCEPTION\r
+
+      \    WHEN OTHERS THEN\r
+
+      \        ROLLBACK;\r
+
+      \        RAISE;\r
+
+      END REGISTER_DONOR;\r
+
+      /\r
+
+      \r
+
+      -- Authenticate a user by username\r
+
+      CREATE OR REPLACE PROCEDURE AUTHENTICATE_USER (\r
+
+      \    p_username        IN  VARCHAR2,\r
+
+      \    p_user_id         OUT NUMBER,\r
+
+      \    p_password_hash   OUT VARCHAR2,\r
+
+      \    p_account_status  OUT VARCHAR2,\r
+
+      \    p_role_code       OUT VARCHAR2\r
+
+      ) AS\r
+
+      BEGIN\r
+
+      \    SELECT u.USER_ID, u.PASSWORD_HASH, u.ACCOUNT_STATUS, r.ROLE_CODE\r
+
+      \    INTO p_user_id, p_password_hash, p_account_status, p_role_code\r
+
+      \    FROM APP_USER u\r
+
+      \    JOIN USER_ROLE_LINK r ON u.USER_ID = r.USER_ID\r
+
+      \    WHERE u.USERNAME = p_username;\r
+
+      \r
+
+      \    -- Update last login timestamp\r
+
+      \    UPDATE APP_USER SET LAST_LOGIN_AT = SYSTIMESTAMP WHERE USER_ID =
+      p_user_id;\r
+
+      \    COMMIT;\r
+
+      EXCEPTION\r
+
+      \    WHEN NO_DATA_FOUND THEN\r
+
+      \        p_user_id := -1;\r
+
+      \        p_password_hash := NULL;\r
+
+      \        p_account_status := NULL;\r
+
+      \        p_role_code := NULL;\r
+
+      END AUTHENTICATE_USER;\r
+
+      /\r\n"
+    languageId: oracle-sql
+  - kind: 2
+    value: "-- ================================================================\r
+
+      -- Donor Procedures\r
+
+      -- Blood Donation System — Oracle 21c PL/SQL\r
+
+      -- ================================================================\r
+
+      \r
+
+      -- Get donor dashboard summary\r
+
+      CREATE OR REPLACE PROCEDURE GET_DONOR_DASHBOARD (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_donor_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID =
+      p_user_id;\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT\r
+
+      \            (SELECT COUNT(*) FROM DONATION_RECORD WHERE DONOR_ID =
+      v_donor_id AND STATUS = 'SUBMITTED') AS TOTAL_DONATIONS,\r
+
+      \            (SELECT COUNT(*) FROM CAMP_REGISTRATION cr\r
+
+      \             JOIN DONATION_CAMP dc ON cr.CAMP_ID = dc.CAMP_ID\r
+
+      \             WHERE cr.DONOR_ID = v_donor_id\r
+
+      \               AND cr.REGISTRATION_STATUS = 'REGISTERED'\r
+
+      \               AND dc.CAMP_DATE >= TRUNC(SYSDATE)) AS UPCOMING_CAMPS,\r
+
+      \            (SELECT MAX(DONATION_DATE) FROM DONATION_RECORD WHERE
+      DONOR_ID = v_donor_id AND STATUS = 'SUBMITTED') AS LAST_DONATION_DATE\r
+
+      \        FROM DUAL;\r
+
+      END GET_DONOR_DASHBOARD;\r
+
+      /\r
+
+      \r
+
+      -- Check donor eligibility (56-day rule)\r
+
+      CREATE OR REPLACE PROCEDURE CHECK_DONOR_ELIGIBILITY (\r
+
+      \    p_user_id   IN  NUMBER,\r
+
+      \    p_eligible  OUT NUMBER,\r
+
+      \    p_reason    OUT VARCHAR2,\r
+
+      \    p_next_date OUT DATE\r
+
+      ) AS\r
+
+      \    v_donor_id       NUMBER;\r
+
+      \    v_last_donation  DATE;\r
+
+      \    v_days_since     NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID =
+      p_user_id;\r
+
+      \r
+
+      \    BEGIN\r
+
+      \        SELECT MAX(DONATION_DATE) INTO v_last_donation\r
+
+      \        FROM DONATION_RECORD\r
+
+      \        WHERE DONOR_ID = v_donor_id AND STATUS = 'SUBMITTED';\r
+
+      \    EXCEPTION\r
+
+      \        WHEN NO_DATA_FOUND THEN\r
+
+      \            v_last_donation := NULL;\r
+
+      \    END;\r
+
+      \r
+
+      \    IF v_last_donation IS NULL THEN\r
+
+      \        p_eligible := 1;\r
+
+      \        p_reason := 'No previous donations on record. You are
+      eligible.';\r
+
+      \        p_next_date := TRUNC(SYSDATE);\r
+
+      \    ELSE\r
+
+      \        v_days_since := TRUNC(SYSDATE) - TRUNC(v_last_donation);\r
+
+      \        IF v_days_since >= 56 THEN\r
+
+      \            p_eligible := 1;\r
+
+      \            p_reason := 'You are eligible to donate.';\r
+
+      \            p_next_date := TRUNC(SYSDATE);\r
+
+      \        ELSE\r
+
+      \            p_eligible := 0;\r
+
+      \            p_next_date := TRUNC(v_last_donation) + 56;\r
+
+      \            p_reason := 'You must wait ' || (56 - v_days_since) || ' more
+      days. Next eligible date: ' || TO_CHAR(p_next_date, 'YYYY-MM-DD');\r
+
+      \        END IF;\r
+
+      \    END IF;\r
+
+      END CHECK_DONOR_ELIGIBILITY;\r
+
+      /\r
+
+      \r
+
+      -- Get donor profile\r
+
+      CREATE OR REPLACE PROCEDURE GET_DONOR_PROFILE (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      BEGIN\r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT d.DONOR_ID, d.FULL_NAME, d.NIC, d.DATE_OF_BIRTH,
+      d.GENDER,\r
+
+      \               d.BLOOD_GROUP, d.PHONE, d.EMAIL, d.ADDRESS, d.STATUS\r
+
+      \        FROM DONOR d\r
+
+      \        WHERE d.USER_ID = p_user_id;\r
+
+      END GET_DONOR_PROFILE;\r
+
+      /\r
+
+      \r
+
+      -- Update donor profile\r
+
+      CREATE OR REPLACE PROCEDURE UPDATE_DONOR_PROFILE (\r
+
+      \    p_user_id     IN VARCHAR2,\r
+
+      \    p_full_name   IN VARCHAR2,\r
+
+      \    p_phone       IN VARCHAR2,\r
+
+      \    p_email       IN VARCHAR2,\r
+
+      \    p_address     IN VARCHAR2,\r
+
+      \    p_blood_group IN VARCHAR2,\r
+
+      \    p_gender      IN VARCHAR2\r
+
+      ) AS\r
+
+      BEGIN\r
+
+      \    UPDATE DONOR\r
+
+      \    SET FULL_NAME   = p_full_name,\r
+
+      \        PHONE       = p_phone,\r
+
+      \        EMAIL       = p_email,\r
+
+      \        ADDRESS     = p_address,\r
+
+      \        BLOOD_GROUP = p_blood_group,\r
+
+      \        GENDER      = p_gender,\r
+
+      \        UPDATED_AT  = SYSTIMESTAMP\r
+
+      \    WHERE USER_ID = p_user_id;\r
+
+      \    COMMIT;\r
+
+      END UPDATE_DONOR_PROFILE;\r
+
+      /\r
+
+      \r
+
+      -- Register donor for a camp\r
+
+      CREATE OR REPLACE PROCEDURE REGISTER_DONOR_FOR_CAMP (\r
+
+      \    p_user_id         IN  NUMBER,\r
+
+      \    p_camp_id         IN  NUMBER,\r
+
+      \    p_registration_id OUT NUMBER,\r
+
+      \    p_status          OUT VARCHAR2\r
+
+      ) AS\r
+
+      \    v_donor_id NUMBER;\r
+
+      \    v_existing NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID =
+      p_user_id;\r
+
+      \r
+
+      \    -- Check for duplicate registration\r
+
+      \    SELECT COUNT(*) INTO v_existing\r
+
+      \    FROM CAMP_REGISTRATION\r
+
+      \    WHERE CAMP_ID = p_camp_id AND DONOR_ID = v_donor_id;\r
+
+      \r
+
+      \    IF v_existing > 0 THEN\r
+
+      \        p_registration_id := -1;\r
+
+      \        p_status := 'ALREADY_REGISTERED';\r
+
+      \        RETURN;\r
+
+      \    END IF;\r
+
+      \r
+
+      \    INSERT INTO CAMP_REGISTRATION (CAMP_ID, DONOR_ID,
+      REGISTRATION_STATUS, ATTENDANCE_STATUS)\r
+
+      \    VALUES (p_camp_id, v_donor_id, 'REGISTERED', 'EXPECTED')\r
+
+      \    RETURNING REGISTRATION_ID INTO p_registration_id;\r
+
+      \r
+
+      \    p_status := 'REGISTERED';\r
+
+      \    COMMIT;\r
+
+      EXCEPTION\r
+
+      \    WHEN OTHERS THEN\r
+
+      \        ROLLBACK;\r
+
+      \        RAISE;\r
+
+      END REGISTER_DONOR_FOR_CAMP;\r
+
+      /\r
+
+      \r
+
+      -- Get donor upcoming registrations\r
+
+      CREATE OR REPLACE PROCEDURE GET_DONOR_UPCOMING_REGISTRATIONS (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_donor_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID =
+      p_user_id;\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT cr.REGISTRATION_ID, cr.REGISTRATION_STATUS,\r
+
+      \               dc.CAMP_ID, dc.CAMP_TITLE, dc.CAMP_DATE,\r
+
+      \               v.VENUE_NAME\r
+
+      \        FROM CAMP_REGISTRATION cr\r
+
+      \        JOIN DONATION_CAMP dc ON cr.CAMP_ID = dc.CAMP_ID\r
+
+      \        JOIN VENUE v ON dc.VENUE_ID = v.VENUE_ID\r
+
+      \        WHERE cr.DONOR_ID = v_donor_id\r
+
+      \          AND cr.REGISTRATION_STATUS = 'REGISTERED'\r
+
+      \          AND dc.CAMP_DATE >= TRUNC(SYSDATE)\r
+
+      \        ORDER BY dc.CAMP_DATE ASC;\r
+
+      END GET_DONOR_UPCOMING_REGISTRATIONS;\r
+
+      /\r
+
+      \r
+
+      -- Get donor donation history\r
+
+      CREATE OR REPLACE PROCEDURE GET_DONOR_DONATION_HISTORY (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_donor_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID =
+      p_user_id;\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT dr.DONATION_ID, dr.DONATION_DATE, dr.BLOOD_GROUP,\r
+
+      \               dr.UNITS_COLLECTED, dr.STATUS,\r
+
+      \               dc.CAMP_ID, dc.CAMP_TITLE,\r
+
+      \               v.VENUE_NAME\r
+
+      \        FROM DONATION_RECORD dr\r
+
+      \        JOIN DONATION_CAMP dc ON dr.CAMP_ID = dc.CAMP_ID\r
+
+      \        JOIN VENUE v ON dc.VENUE_ID = v.VENUE_ID\r
+
+      \        WHERE dr.DONOR_ID = v_donor_id\r
+
+      \        ORDER BY dr.DONATION_DATE DESC;\r
+
+      END GET_DONOR_DONATION_HISTORY;\r
+
+      /\r
+
+      \r
+
+      -- Check if donor can submit feedback for a camp\r
+
+      CREATE OR REPLACE PROCEDURE CAN_SUBMIT_FEEDBACK (\r
+
+      \    p_user_id  IN  NUMBER,\r
+
+      \    p_camp_id  IN  NUMBER,\r
+
+      \    p_allowed  OUT NUMBER\r
+
+      ) AS\r
+
+      \    v_donor_id NUMBER;\r
+
+      \    v_count    NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID =
+      p_user_id;\r
+
+      \r
+
+      \    SELECT COUNT(*) INTO v_count\r
+
+      \    FROM DONATION_RECORD\r
+
+      \    WHERE DONOR_ID = v_donor_id\r
+
+      \      AND CAMP_ID = p_camp_id\r
+
+      \      AND STATUS = 'SUBMITTED';\r
+
+      \r
+
+      \    IF v_count > 0 THEN\r
+
+      \        p_allowed := 1;\r
+
+      \    ELSE\r
+
+      \        p_allowed := 0;\r
+
+      \    END IF;\r
+
+      END CAN_SUBMIT_FEEDBACK;\r
+
+      /\r
+
+      \r
+
+      -- Get donor status history (timeline of registrations and donations)\r
+
+      CREATE OR REPLACE PROCEDURE GET_DONOR_STATUS_HISTORY (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_donor_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID =
+      p_user_id;\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT 'REGISTRATION' AS EVENT_TYPE,\r
+
+      \               r.REGISTERED_AT AS EVENT_DATE,\r
+
+      \               c.CAMP_TITLE AS EVENT_TITLE,\r
+
+      \               r.REGISTRATION_STATUS AS STATUS,\r
+
+      \               'Registered for camp' AS DETAILS\r
+
+      \        FROM CAMP_REGISTRATION r\r
+
+      \        JOIN DONATION_CAMP c ON r.CAMP_ID = c.CAMP_ID\r
+
+      \        WHERE r.DONOR_ID = v_donor_id\r
+
+      \        UNION ALL\r
+
+      \        SELECT 'DONATION' AS EVENT_TYPE,\r
+
+      \               d.DONATION_DATE AS EVENT_DATE,\r
+
+      \               c.CAMP_TITLE AS EVENT_TITLE,\r
+
+      \               d.STATUS AS STATUS,\r
+
+      \               'Donated ' || d.UNITS_COLLECTED || ' units' AS DETAILS\r
+
+      \        FROM DONATION_RECORD d\r
+
+      \        JOIN DONATION_CAMP c ON d.CAMP_ID = c.CAMP_ID\r
+
+      \        WHERE d.DONOR_ID = v_donor_id\r
+
+      \        ORDER BY EVENT_DATE DESC;\r
+
+      END GET_DONOR_STATUS_HISTORY;\r
+
+      /\r\n"
+    languageId: oracle-sql
+  - kind: 2
+    value: "-- ================================================================\r
+
+      -- Blood Bank Procedures\r
+
+      -- Blood Donation System — Oracle 21c PL/SQL\r
+
+      -- ================================================================\r
+
+      \r
+
+      -- Get blood bank dashboard stats\r
+
+      CREATE OR REPLACE PROCEDURE GET_BANK_DASHBOARD (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_bank_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT BLOOD_BANK_ID INTO v_bank_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'BLOOD_BANK';\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT\r
+
+      \            (SELECT COUNT(*) FROM BLOOD_UNIT WHERE BLOOD_BANK_ID =
+      v_bank_id AND STATUS = 'AVAILABLE') AS TOTAL_UNITS,\r
+
+      \            (SELECT COUNT(*) FROM DONATION_TRANSFER WHERE BLOOD_BANK_ID =
+      v_bank_id AND STATUS IN ('DISPATCHED', 'IN_TRANSIT')) AS
+      INCOMING_TRANSFERS,\r
+
+      \            (SELECT COUNT(*) FROM HOSPITAL_BLOOD_REQUEST WHERE
+      BLOOD_BANK_ID = v_bank_id AND STATUS = 'PENDING') AS PENDING_REQUESTS,\r
+
+      \            (SELECT COUNT(*) FROM BLOOD_UNIT WHERE BLOOD_BANK_ID =
+      v_bank_id AND STATUS = 'AVAILABLE' AND EXPIRY_DATE <= TRUNC(SYSDATE) + 7)
+      AS EXPIRING_SOON,\r
+
+      \            (SELECT LISTAGG(BLOOD_GROUP, ',') WITHIN GROUP (ORDER BY
+      BLOOD_GROUP) FROM (\r
+
+      \                SELECT BLOOD_GROUP FROM BLOOD_UNIT \r
+
+      \                WHERE BLOOD_BANK_ID = v_bank_id AND STATUS =
+      'AVAILABLE'\r
+
+      \                GROUP BY BLOOD_GROUP\r
+
+      \                HAVING COUNT(*) < 10\r
+
+      \            )) AS LOW_STOCK_GROUPS\r
+
+      \        FROM DUAL;\r
+
+      END GET_BANK_DASHBOARD;\r
+
+      /\r
+
+      \r
+
+      -- Get blood bank inventory\r
+
+      CREATE OR REPLACE PROCEDURE GET_BANK_INVENTORY (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_bank_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT BLOOD_BANK_ID INTO v_bank_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'BLOOD_BANK';\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT BLOOD_UNIT_ID, UNIT_CODE, BLOOD_GROUP, COLLECTION_DATE,\r
+
+      \               EXPIRY_DATE, STATUS, STORAGE_LOCATION\r
+
+      \        FROM BLOOD_UNIT\r
+
+      \        WHERE BLOOD_BANK_ID = v_bank_id\r
+
+      \        ORDER BY EXPIRY_DATE ASC;\r
+
+      END GET_BANK_INVENTORY;\r
+
+      /\r
+
+      \r
+
+      -- Get blood bank transfers\r
+
+      CREATE OR REPLACE PROCEDURE GET_BANK_TRANSFERS (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_bank_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT BLOOD_BANK_ID INTO v_bank_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'BLOOD_BANK';\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT dt.TRANSFER_ID, dt.TRANSFER_CODE, dt.STATUS,\r
+
+      \               dt.CREATED_AT, dt.DISPATCHED_AT, dt.RECEIVED_AT,
+      dt.RECEIVED_UNIT_COUNT,\r
+
+      \               dc.CAMP_TITLE,\r
+
+      \               oc.COMMITTEE_NAME\r
+
+      \        FROM DONATION_TRANSFER dt\r
+
+      \        JOIN DONATION_CAMP dc ON dt.CAMP_ID = dc.CAMP_ID\r
+
+      \        JOIN ORGANIZING_COMMITTEE oc ON dt.COMMITTEE_ID =
+      oc.COMMITTEE_ID\r
+
+      \        WHERE dt.BLOOD_BANK_ID = v_bank_id\r
+
+      \        ORDER BY dt.CREATED_AT DESC;\r
+
+      END GET_BANK_TRANSFERS;\r
+
+      /\r
+
+      \r
+
+      -- Receive a transfer (mark as RECEIVED)\r
+
+      CREATE OR REPLACE PROCEDURE RECEIVE_TRANSFER (\r
+
+      \    p_user_id     IN NUMBER,\r
+
+      \    p_transfer_id IN NUMBER\r
+
+      ) AS\r
+
+      \    v_bank_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT BLOOD_BANK_ID INTO v_bank_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'BLOOD_BANK';\r
+
+      \r
+
+      \    UPDATE DONATION_TRANSFER\r
+
+      \    SET STATUS = 'RECEIVED',\r
+
+      \        RECEIVED_AT = SYSTIMESTAMP\r
+
+      \    WHERE TRANSFER_ID = p_transfer_id\r
+
+      \      AND BLOOD_BANK_ID = v_bank_id\r
+
+      \      AND STATUS IN ('DISPATCHED', 'IN_TRANSIT');\r
+
+      \r
+
+      \    COMMIT;\r
+
+      END RECEIVE_TRANSFER;\r
+
+      /\r
+
+      \r
+
+      -- Get hospital blood requests for a bank\r
+
+      CREATE OR REPLACE PROCEDURE GET_BANK_HOSPITAL_REQUESTS (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_bank_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT BLOOD_BANK_ID INTO v_bank_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'BLOOD_BANK';\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT hr.REQUEST_ID, hr.REQUEST_CODE,\r
+
+      \               h.HOSPITAL_NAME,\r
+
+      \               hr.BLOOD_GROUP, hr.UNITS_REQUIRED, hr.UNITS_ALLOCATED,
+      hr.UNITS_FULFILLED,\r
+
+      \               hr.NEEDED_BY, hr.PRIORITY, hr.STATUS\r
+
+      \        FROM HOSPITAL_BLOOD_REQUEST hr\r
+
+      \        JOIN HOSPITAL h ON hr.HOSPITAL_ID = h.HOSPITAL_ID\r
+
+      \        WHERE hr.BLOOD_BANK_ID = v_bank_id\r
+
+      \        ORDER BY CASE hr.PRIORITY\r
+
+      \            WHEN 'CRITICAL' THEN 1\r
+
+      \            WHEN 'HIGH' THEN 2\r
+
+      \            WHEN 'NORMAL' THEN 3\r
+
+      \            WHEN 'LOW' THEN 4\r
+
+      \            ELSE 5\r
+
+      \        END, hr.NEEDED_BY ASC;\r
+
+      END GET_BANK_HOSPITAL_REQUESTS;\r
+
+      /\r
+
+      \r
+
+      -- Get staff assigned to a blood bank\r
+
+      CREATE OR REPLACE PROCEDURE GET_BANK_STAFF (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_bank_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT BLOOD_BANK_ID INTO v_bank_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'BLOOD_BANK';\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT sm.STAFF_ID, sm.FULL_NAME, sm.POSITION_TITLE,\r
+
+      \               sm.PHONE, sm.EMAIL,\r
+
+      \               bsa.ASSIGNED_FROM, bsa.STATUS\r
+
+      \        FROM BANK_STAFF_ASSIGNMENT bsa\r
+
+      \        JOIN STAFF_MEMBER sm ON bsa.STAFF_ID = sm.STAFF_ID\r
+
+      \        WHERE bsa.BLOOD_BANK_ID = v_bank_id\r
+
+      \        ORDER BY bsa.ASSIGNED_FROM DESC;\r
+
+      END GET_BANK_STAFF;\r
+
+      /\r
+
+      \r
+
+      -- Update blood unit status\r
+
+      CREATE OR REPLACE PROCEDURE UPDATE_UNIT_STATUS (\r
+
+      \    p_user_id  IN NUMBER,\r
+
+      \    p_unit_id  IN NUMBER,\r
+
+      \    p_status   IN VARCHAR2\r
+
+      ) AS\r
+
+      \    v_bank_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT BLOOD_BANK_ID INTO v_bank_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'BLOOD_BANK';\r
+
+      \r
+
+      \    UPDATE BLOOD_UNIT\r
+
+      \    SET STATUS = p_status, UPDATED_AT = SYSTIMESTAMP\r
+
+      \    WHERE BLOOD_UNIT_ID = p_unit_id AND BLOOD_BANK_ID = v_bank_id;\r
+
+      \r
+
+      \    COMMIT;\r
+
+      END UPDATE_UNIT_STATUS;\r
+
+      /\r
+
+      \r
+
+      -- Update hospital request status\r
+
+      CREATE OR REPLACE PROCEDURE UPDATE_REQUEST_STATUS (\r
+
+      \    p_user_id    IN NUMBER,\r
+
+      \    p_request_id IN NUMBER,\r
+
+      \    p_status     IN VARCHAR2\r
+
+      ) AS\r
+
+      \    v_bank_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT BLOOD_BANK_ID INTO v_bank_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'BLOOD_BANK';\r
+
+      \r
+
+      \    UPDATE HOSPITAL_BLOOD_REQUEST\r
+
+      \    SET STATUS = p_status, UPDATED_AT = SYSTIMESTAMP\r
+
+      \    WHERE REQUEST_ID = p_request_id AND BLOOD_BANK_ID = v_bank_id;\r
+
+      \r
+
+      \    COMMIT;\r
+
+      END UPDATE_REQUEST_STATUS;\r
+
+      /\r
+
+      \r
+
+      -- Add a staff member to a blood bank\r
+
+      CREATE OR REPLACE PROCEDURE ADD_BANK_STAFF (\r
+
+      \    p_user_id    IN  NUMBER,\r
+
+      \    p_full_name  IN  VARCHAR2,\r
+
+      \    p_position   IN  VARCHAR2,\r
+
+      \    p_phone      IN  VARCHAR2,\r
+
+      \    p_email      IN  VARCHAR2,\r
+
+      \    p_staff_id   OUT NUMBER\r
+
+      ) AS\r
+
+      \    v_bank_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT BLOOD_BANK_ID INTO v_bank_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'BLOOD_BANK';\r
+
+      \r
+
+      \    INSERT INTO STAFF_MEMBER (FULL_NAME, POSITION_TITLE, PHONE, EMAIL,
+      STATUS)\r
+
+      \    VALUES (p_full_name, p_position, p_phone, p_email, 'ACTIVE')\r
+
+      \    RETURNING STAFF_ID INTO p_staff_id;\r
+
+      \r
+
+      \    INSERT INTO BANK_STAFF_ASSIGNMENT (STAFF_ID, BLOOD_BANK_ID,
+      ASSIGNED_FROM, STATUS)\r
+
+      \    VALUES (p_staff_id, v_bank_id, TRUNC(SYSDATE), 'ACTIVE');\r
+
+      \r
+
+      \    COMMIT;\r
+
+      EXCEPTION\r
+
+      \    WHEN OTHERS THEN\r
+
+      \        ROLLBACK;\r
+
+      \        RAISE;\r
+
+      END ADD_BANK_STAFF;\r
+
+      /\r
+
+      \r
+
+      -- Remove (deactivate) a staff member from a blood bank\r
+
+      CREATE OR REPLACE PROCEDURE REMOVE_BANK_STAFF (\r
+
+      \    p_user_id   IN NUMBER,\r
+
+      \    p_staff_id  IN NUMBER\r
+
+      ) AS\r
+
+      \    v_bank_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT BLOOD_BANK_ID INTO v_bank_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'BLOOD_BANK';\r
+
+      \r
+
+      \    UPDATE BANK_STAFF_ASSIGNMENT\r
+
+      \    SET STATUS = 'INACTIVE', ASSIGNED_TO = TRUNC(SYSDATE)\r
+
+      \    WHERE STAFF_ID = p_staff_id AND BLOOD_BANK_ID = v_bank_id;\r
+
+      \r
+
+      \    UPDATE STAFF_MEMBER\r
+
+      \    SET STATUS = 'INACTIVE'\r
+
+      \    WHERE STAFF_ID = p_staff_id;\r
+
+      \r
+
+      \    COMMIT;\r
+
+      END REMOVE_BANK_STAFF;\r
+
+      /\r
+
+      CREATE OR REPLACE PROCEDURE ALLOCATE_UNITS_TO_REQUEST(\r
+
+      \    p_user_id IN NUMBER,\r
+
+      \    p_request_id IN NUMBER,\r
+
+      \    p_units_to_allocate OUT NUMBER\r
+
+      ) IS\r
+
+      \    v_bank_id NUMBER;\r
+
+      \    v_blood_group VARCHAR2(10);\r
+
+      \    v_units_needed NUMBER;\r
+
+      \    v_allocated_count NUMBER := 0;\r
+
+      BEGIN\r
+
+      \    -- Verify bank user\r
+
+      \    SELECT BLOOD_BANK_ID INTO v_bank_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'BLOOD_BANK';\r
+
+      \r
+
+      \    -- Get request details\r
+
+      \    SELECT BLOOD_GROUP, (UNITS_REQUIRED - NVL(UNITS_ALLOCATED, 0))\r
+
+      \    INTO v_blood_group, v_units_needed\r
+
+      \    FROM HOSPITAL_BLOOD_REQUEST\r
+
+      \    WHERE REQUEST_ID = p_request_id AND BLOOD_BANK_ID = v_bank_id AND
+      STATUS IN ('PENDING', 'PARTIALLY_ALLOCATED')\r
+
+      \    FOR UPDATE;\r
+
+      \r
+
+      \    IF v_units_needed > 0 THEN\r
+
+      \        -- Find available units and allocate them\r
+
+      \        FOR u IN (\r
+
+      \            SELECT BLOOD_UNIT_ID \r
+
+      \            FROM BLOOD_UNIT \r
+
+      \            WHERE BLOOD_BANK_ID = v_bank_id \r
+
+      \              AND BLOOD_GROUP = v_blood_group \r
+
+      \              AND STATUS = 'AVAILABLE'\r
+
+      \              AND EXPIRY_DATE >= SYSDATE\r
+
+      \            FETCH FIRST v_units_needed ROWS ONLY\r
+
+      \        ) LOOP\r
+
+      \            UPDATE BLOOD_UNIT\r
+
+      \            SET STATUS = 'RESERVED'\r
+
+      \            WHERE BLOOD_UNIT_ID = u.BLOOD_UNIT_ID;\r
+
+      \r
+
+      \            v_allocated_count := v_allocated_count + 1;\r
+
+      \        END LOOP;\r
+
+      \r
+
+      \        IF v_allocated_count > 0 THEN\r
+
+      \            UPDATE HOSPITAL_BLOOD_REQUEST\r
+
+      \            SET UNITS_ALLOCATED = NVL(UNITS_ALLOCATED, 0) +
+      v_allocated_count,\r
+
+      \                STATUS = CASE \r
+
+      \                    WHEN NVL(UNITS_ALLOCATED, 0) + v_allocated_count >=
+      UNITS_REQUIRED THEN 'ALLOCATED'\r
+
+      \                    ELSE 'PARTIALLY_ALLOCATED'\r
+
+      \                END\r
+
+      \            WHERE REQUEST_ID = p_request_id;\r
+
+      \        END IF;\r
+
+      \    END IF;\r
+
+      \r
+
+      \    p_units_to_allocate := v_allocated_count;\r
+
+      \    COMMIT;\r
+
+      EXCEPTION\r
+
+      \    WHEN NO_DATA_FOUND THEN\r
+
+      \        p_units_to_allocate := 0;\r
+
+      END ALLOCATE_UNITS_TO_REQUEST;\r
+
+      /\r\n"
+    languageId: oracle-sql
+  - kind: 2
+    value: "-- ================================================================\r
+
+      -- Committee Procedures\r
+
+      -- Blood Donation System — Oracle 21c PL/SQL\r
+
+      -- ================================================================\r
+
+      \r
+
+      -- Get committee dashboard stats\r
+
+      CREATE OR REPLACE PROCEDURE GET_COMMITTEE_DASHBOARD (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_committee_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT COMMITTEE_ID INTO v_committee_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'ORGANIZING_COMMITTEE';\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT\r
+
+      \            (SELECT COUNT(*) FROM DONATION_CAMP WHERE COMMITTEE_ID =
+      v_committee_id AND STATUS IN ('PUBLISHED', 'ONGOING')) AS ACTIVE_CAMPS,\r
+
+      \            (SELECT COUNT(*) FROM DONATION_TRANSFER WHERE COMMITTEE_ID =
+      v_committee_id AND STATUS IN ('PREPARED', 'DISPATCHED', 'IN_TRANSIT')) AS
+      PENDING_TRANSFERS,\r
+
+      \            (SELECT COUNT(*) FROM CAMP_REGISTRATION cr JOIN DONATION_CAMP
+      dc ON cr.CAMP_ID = dc.CAMP_ID WHERE dc.COMMITTEE_ID = v_committee_id) AS
+      TOTAL_REGISTRATIONS,\r
+
+      \            (SELECT COUNT(*) FROM VENUE WHERE COMMITTEE_ID =
+      v_committee_id AND STATUS = 'ACTIVE') AS ACTIVE_VENUES\r
+
+      \        FROM DUAL;\r
+
+      END GET_COMMITTEE_DASHBOARD;\r
+
+      /\r
+
+      \r
+
+      -- Get committee venues\r
+
+      CREATE OR REPLACE PROCEDURE GET_COMMITTEE_VENUES (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_committee_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT COMMITTEE_ID INTO v_committee_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'ORGANIZING_COMMITTEE';\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT VENUE_ID, VENUE_NAME, ADDRESS, CAPACITY, STATUS\r
+
+      \        FROM VENUE\r
+
+      \        WHERE COMMITTEE_ID = v_committee_id\r
+
+      \        ORDER BY VENUE_NAME;\r
+
+      END GET_COMMITTEE_VENUES;\r
+
+      /\r
+
+      \r
+
+      -- Get committee camps\r
+
+      CREATE OR REPLACE PROCEDURE GET_COMMITTEE_CAMPS (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_committee_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT COMMITTEE_ID INTO v_committee_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'ORGANIZING_COMMITTEE';\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT dc.CAMP_ID, dc.CAMP_TITLE, dc.CAMP_DATE,\r
+
+      \               dc.START_TIME, dc.END_TIME, dc.CAPACITY,\r
+
+      \               dc.STATUS, dc.PUBLIC_VISIBLE,\r
+
+      \               v.VENUE_NAME\r
+
+      \        FROM DONATION_CAMP dc\r
+
+      \        JOIN VENUE v ON dc.VENUE_ID = v.VENUE_ID\r
+
+      \        WHERE dc.COMMITTEE_ID = v_committee_id\r
+
+      \        ORDER BY dc.CAMP_DATE DESC;\r
+
+      END GET_COMMITTEE_CAMPS;\r
+
+      /\r
+
+      \r
+
+      -- Create a new donation camp\r
+
+      CREATE OR REPLACE PROCEDURE CREATE_DONATION_CAMP (\r
+
+      \    p_user_id   IN  NUMBER,\r
+
+      \    p_venue_id  IN  NUMBER,\r
+
+      \    p_title     IN  VARCHAR2,\r
+
+      \    p_date      IN  DATE,\r
+
+      \    p_start     IN  TIMESTAMP,\r
+
+      \    p_end       IN  TIMESTAMP,\r
+
+      \    p_capacity  IN  NUMBER,\r
+
+      \    p_camp_id   OUT NUMBER\r
+
+      ) AS\r
+
+      \    v_committee_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT COMMITTEE_ID INTO v_committee_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'ORGANIZING_COMMITTEE';\r
+
+      \r
+
+      \    INSERT INTO DONATION_CAMP (COMMITTEE_ID, VENUE_ID, CAMP_TITLE,
+      CAMP_DATE, START_TIME, END_TIME, CAPACITY, STATUS, PUBLIC_VISIBLE)\r
+
+      \    VALUES (v_committee_id, p_venue_id, p_title, p_date, p_start, p_end,
+      p_capacity, 'PUBLISHED', 'Y')\r
+
+      \    RETURNING CAMP_ID INTO p_camp_id;\r
+
+      \r
+
+      \    COMMIT;\r
+
+      EXCEPTION\r
+
+      \    WHEN OTHERS THEN\r
+
+      \        ROLLBACK;\r
+
+      \        RAISE;\r
+
+      END CREATE_DONATION_CAMP;\r
+
+      /\r
+
+      \r
+
+      -- Get camp attendance list\r
+
+      CREATE OR REPLACE PROCEDURE GET_CAMP_ATTENDANCE (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_camp_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      BEGIN\r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT cr.REGISTRATION_ID, cr.DONOR_ID,\r
+
+      \               cr.REGISTRATION_STATUS, cr.ATTENDANCE_STATUS,\r
+
+      \               d.FULL_NAME, d.NIC, d.BLOOD_GROUP,\r
+
+      \               CASE WHEN EXISTS (\r
+
+      \                   SELECT 1 FROM DONATION_RECORD dr\r
+
+      \                   WHERE dr.REGISTRATION_ID = cr.REGISTRATION_ID AND
+      dr.STATUS IN ('DRAFT', 'SUBMITTED')\r
+
+      \               ) THEN 1 ELSE 0 END AS HAS_DONATED\r
+
+      \        FROM CAMP_REGISTRATION cr\r
+
+      \        JOIN DONOR d ON cr.DONOR_ID = d.DONOR_ID\r
+
+      \        WHERE cr.CAMP_ID = p_camp_id\r
+
+      \        ORDER BY cr.REGISTERED_AT;\r
+
+      END GET_CAMP_ATTENDANCE;\r
+
+      /\r
+
+      \r
+
+      -- Record a donation at a camp\r
+
+      CREATE OR REPLACE PROCEDURE RECORD_CAMP_DONATION (\r
+
+      \    p_user_id         IN NUMBER,\r
+
+      \    p_registration_id IN NUMBER,\r
+
+      \    p_camp_id         IN NUMBER,\r
+
+      \    p_donor_id        IN NUMBER,\r
+
+      \    p_blood_group     IN VARCHAR2,\r
+
+      \    p_units           IN NUMBER\r
+
+      ) AS\r
+
+      BEGIN\r
+
+      \    INSERT INTO DONATION_RECORD (REGISTRATION_ID, CAMP_ID, DONOR_ID,
+      DONATION_DATE, BLOOD_GROUP, UNITS_COLLECTED, STATUS)\r
+
+      \    VALUES (p_registration_id, p_camp_id, p_donor_id, TRUNC(SYSDATE),
+      p_blood_group, p_units, 'SUBMITTED');\r
+
+      \r
+
+      \    -- Update attendance status\r
+
+      \    UPDATE CAMP_REGISTRATION\r
+
+      \    SET ATTENDANCE_STATUS = 'COMPLETED'\r
+
+      \    WHERE REGISTRATION_ID = p_registration_id;\r
+
+      \r
+
+      \    COMMIT;\r
+
+      EXCEPTION\r
+
+      \    WHEN OTHERS THEN\r
+
+      \        ROLLBACK;\r
+
+      \        RAISE;\r
+
+      END RECORD_CAMP_DONATION;\r
+
+      /\r
+
+      \r
+
+      -- Dispatch donation transfer to blood bank\r
+
+      CREATE OR REPLACE PROCEDURE DISPATCH_DONATION_TRANSFER (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_camp_id       IN  NUMBER,\r
+
+      \    p_blood_bank_id IN  NUMBER,\r
+
+      \    p_transfer_id   OUT NUMBER,\r
+
+      \    p_transfer_code OUT VARCHAR2\r
+
+      ) AS\r
+
+      \    v_committee_id NUMBER;\r
+
+      \    v_count        NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT COMMITTEE_ID INTO v_committee_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'ORGANIZING_COMMITTEE';\r
+
+      \r
+
+      \    -- Check if there are submitted donations not yet transferred\r
+
+      \    SELECT COUNT(*) INTO v_count\r
+
+      \    FROM DONATION_RECORD dr\r
+
+      \    WHERE dr.CAMP_ID = p_camp_id\r
+
+      \      AND dr.STATUS = 'SUBMITTED'\r
+
+      \      AND NOT EXISTS (SELECT 1 FROM DONATION_TRANSFER_ITEM dti WHERE
+      dti.DONATION_ID = dr.DONATION_ID);\r
+
+      \r
+
+      \    IF v_count = 0 THEN\r
+
+      \        p_transfer_id := -1;\r
+
+      \        p_transfer_code := NULL;\r
+
+      \        RETURN;\r
+
+      \    END IF;\r
+
+      \r
+
+      \    -- Generate transfer code\r
+
+      \    p_transfer_code := 'TRF-' || TO_CHAR(SYSDATE, 'YYYYMMDD') || '-' ||
+      TO_CHAR(DBMS_RANDOM.VALUE(1000, 9999), 'FM9999');\r
+
+      \r
+
+      \    -- Create transfer\r
+
+      \    INSERT INTO DONATION_TRANSFER (CAMP_ID, COMMITTEE_ID, BLOOD_BANK_ID,
+      TRANSFER_CODE, STATUS, DISPATCHED_AT)\r
+
+      \    VALUES (p_camp_id, v_committee_id, p_blood_bank_id, p_transfer_code,
+      'DISPATCHED', SYSTIMESTAMP)\r
+
+      \    RETURNING TRANSFER_ID INTO p_transfer_id;\r
+
+      \r
+
+      \    -- Link all untransferred donations\r
+
+      \    INSERT INTO DONATION_TRANSFER_ITEM (TRANSFER_ID, DONATION_ID,
+      UNITS_TRANSFERRED)\r
+
+      \    SELECT p_transfer_id, dr.DONATION_ID, dr.UNITS_COLLECTED\r
+
+      \    FROM DONATION_RECORD dr\r
+
+      \    WHERE dr.CAMP_ID = p_camp_id\r
+
+      \      AND dr.STATUS = 'SUBMITTED'\r
+
+      \      AND NOT EXISTS (SELECT 1 FROM DONATION_TRANSFER_ITEM dti WHERE
+      dti.DONATION_ID = dr.DONATION_ID);\r
+
+      \r
+
+      \    COMMIT;\r
+
+      EXCEPTION\r
+
+      \    WHEN OTHERS THEN\r
+
+      \        ROLLBACK;\r
+
+      \        RAISE;\r
+
+      END DISPATCH_DONATION_TRANSFER;\r
+
+      /\r
+
+      \r
+
+      -- Update camp status\r
+
+      CREATE OR REPLACE PROCEDURE UPDATE_CAMP_STATUS (\r
+
+      \    p_user_id  IN NUMBER,\r
+
+      \    p_camp_id  IN NUMBER,\r
+
+      \    p_status   IN VARCHAR2\r
+
+      ) AS\r
+
+      \    v_committee_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT COMMITTEE_ID INTO v_committee_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'ORGANIZING_COMMITTEE';\r
+
+      \r
+
+      \    UPDATE DONATION_CAMP\r
+
+      \    SET STATUS = p_status, UPDATED_AT = SYSTIMESTAMP\r
+
+      \    WHERE CAMP_ID = p_camp_id AND COMMITTEE_ID = v_committee_id;\r
+
+      \r
+
+      \    COMMIT;\r
+
+      END UPDATE_CAMP_STATUS;\r
+
+      /\r
+
+      \r
+
+      -- Create a new venue\r
+
+      CREATE OR REPLACE PROCEDURE CREATE_VENUE (\r
+
+      \    p_user_id    IN  NUMBER,\r
+
+      \    p_venue_name IN  VARCHAR2,\r
+
+      \    p_address    IN  VARCHAR2,\r
+
+      \    p_capacity   IN  NUMBER,\r
+
+      \    p_venue_id   OUT NUMBER\r
+
+      ) AS\r
+
+      \    v_committee_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT COMMITTEE_ID INTO v_committee_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'ORGANIZING_COMMITTEE';\r
+
+      \r
+
+      \    INSERT INTO VENUE (COMMITTEE_ID, VENUE_NAME, ADDRESS, CAPACITY,
+      STATUS)\r
+
+      \    VALUES (v_committee_id, p_venue_name, p_address, p_capacity,
+      'ACTIVE')\r
+
+      \    RETURNING VENUE_ID INTO p_venue_id;\r
+
+      \r
+
+      \    COMMIT;\r
+
+      END CREATE_VENUE;\r
+
+      /\r
+
+      \r
+
+      -- Get committee transfers\r
+
+      CREATE OR REPLACE PROCEDURE GET_COMMITTEE_TRANSFERS (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_committee_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT COMMITTEE_ID INTO v_committee_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'ORGANIZING_COMMITTEE';\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT TRANSFER_ID, TRANSFER_CODE, STATUS, DISPATCHED_AT,
+      RECEIVED_AT\r
+
+      \        FROM DONATION_TRANSFER\r
+
+      \        WHERE COMMITTEE_ID = v_committee_id\r
+
+      \        ORDER BY DISPATCHED_AT DESC;\r
+
+      END GET_COMMITTEE_TRANSFERS;\r
+
+      /\r
+
+      \r
+
+      -- Get committee staff\r
+
+      CREATE OR REPLACE PROCEDURE GET_COMMITTEE_STAFF (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_committee_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT COMMITTEE_ID INTO v_committee_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'ORGANIZING_COMMITTEE';\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT sm.STAFF_ID, sm.FULL_NAME, sm.POSITION_TITLE,\r
+
+      \               sm.PHONE, sm.EMAIL,\r
+
+      \               csa.ASSIGNED_FROM, csa.STATUS\r
+
+      \        FROM COMMITTEE_STAFF_ASSIGNMENT csa\r
+
+      \        JOIN STAFF_MEMBER sm ON csa.STAFF_ID = sm.STAFF_ID\r
+
+      \        WHERE csa.COMMITTEE_ID = v_committee_id\r
+
+      \        ORDER BY csa.ASSIGNED_FROM DESC;\r
+
+      END GET_COMMITTEE_STAFF;\r
+
+      /\r
+
+      \r
+
+      -- Add a staff member to a committee\r
+
+      CREATE OR REPLACE PROCEDURE ADD_COMMITTEE_STAFF (\r
+
+      \    p_user_id    IN  NUMBER,\r
+
+      \    p_full_name  IN  VARCHAR2,\r
+
+      \    p_position   IN  VARCHAR2,\r
+
+      \    p_phone      IN  VARCHAR2,\r
+
+      \    p_email      IN  VARCHAR2,\r
+
+      \    p_staff_id   OUT NUMBER\r
+
+      ) AS\r
+
+      \    v_committee_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT COMMITTEE_ID INTO v_committee_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'ORGANIZING_COMMITTEE';\r
+
+      \r
+
+      \    INSERT INTO STAFF_MEMBER (FULL_NAME, POSITION_TITLE, PHONE, EMAIL,
+      STATUS)\r
+
+      \    VALUES (p_full_name, p_position, p_phone, p_email, 'ACTIVE')\r
+
+      \    RETURNING STAFF_ID INTO p_staff_id;\r
+
+      \r
+
+      \    INSERT INTO COMMITTEE_STAFF_ASSIGNMENT (STAFF_ID, COMMITTEE_ID,
+      ASSIGNED_FROM, STATUS)\r
+
+      \    VALUES (p_staff_id, v_committee_id, TRUNC(SYSDATE), 'ACTIVE');\r
+
+      \r
+
+      \    COMMIT;\r
+
+      EXCEPTION\r
+
+      \    WHEN OTHERS THEN\r
+
+      \        ROLLBACK;\r
+
+      \        RAISE;\r
+
+      END ADD_COMMITTEE_STAFF;\r
+
+      /\r
+
+      \r
+
+      -- Remove (deactivate) a staff member from a committee\r
+
+      CREATE OR REPLACE PROCEDURE REMOVE_COMMITTEE_STAFF (\r
+
+      \    p_user_id   IN NUMBER,\r
+
+      \    p_staff_id  IN NUMBER\r
+
+      ) AS\r
+
+      \    v_committee_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT COMMITTEE_ID INTO v_committee_id\r
+
+      \    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE =
+      'ORGANIZING_COMMITTEE';\r
+
+      \r
+
+      \    UPDATE COMMITTEE_STAFF_ASSIGNMENT\r
+
+      \    SET STATUS = 'INACTIVE', ASSIGNED_TO = TRUNC(SYSDATE)\r
+
+      \    WHERE STAFF_ID = p_staff_id AND COMMITTEE_ID = v_committee_id;\r
+
+      \r
+
+      \    UPDATE STAFF_MEMBER\r
+
+      \    SET STATUS = 'INACTIVE'\r
+
+      \    WHERE STAFF_ID = p_staff_id;\r
+
+      \r
+
+      \    COMMIT;\r
+
+      END REMOVE_COMMITTEE_STAFF;\r
+
+      /\r\n"
+    languageId: oracle-sql
+  - kind: 2
+    value: "-- ================================================================\r
+
+      -- Webmaster Procedures\r
+
+      -- Blood Donation System — Oracle 21c PL/SQL\r
+
+      -- ================================================================\r
+
+      \r
+
+      -- Get Webmaster Dashboard Statistics\r
+
+      CREATE OR REPLACE PROCEDURE GET_WEBMASTER_DASHBOARD (\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      BEGIN\r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT\r
+
+      \            (SELECT COUNT(*) FROM DONOR WHERE STATUS = 'ACTIVE') AS
+      TOTAL_DONORS,\r
+
+      \            (SELECT COUNT(*) FROM BLOOD_BANK WHERE STATUS = 'ACTIVE') AS
+      TOTAL_BANKS,\r
+
+      \            (SELECT COUNT(*) FROM ORGANIZING_COMMITTEE WHERE STATUS =
+      'ACTIVE') AS TOTAL_COMMITTEES,\r
+
+      \            (SELECT COUNT(*) FROM DONATION_CAMP WHERE STATUS = 'ONGOING')
+      AS ONGOING_CAMPS,\r
+
+      \            (SELECT COUNT(*) FROM DONATION_CAMP WHERE STATUS =
+      'COMPLETED') AS COMPLETED_CAMPS,\r
+
+      \            (SELECT COUNT(*) FROM DONATION_RECORD WHERE STATUS =
+      'SUBMITTED') AS TOTAL_DONATIONS,\r
+
+      \            (SELECT COUNT(*) FROM HOSPITAL_BLOOD_REQUEST WHERE STATUS =
+      'PENDING') AS PENDING_REQUESTS\r
+
+      \        FROM DUAL;\r
+
+      END GET_WEBMASTER_DASHBOARD;\r
+
+      /\r
+
+      \r
+
+      -- Get all users for administration\r
+
+      CREATE OR REPLACE PROCEDURE GET_ALL_USERS (\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      BEGIN\r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT u.USER_ID, u.EMAIL, r.ROLE_CODE AS ROLE, u.ACCOUNT_STATUS
+      AS STATUS,\r
+
+      \               u.CREATED_AT, u.LAST_LOGIN_AT AS LAST_LOGIN\r
+
+      \        FROM APP_USER u\r
+
+      \        JOIN USER_ROLE_LINK r ON u.USER_ID = r.USER_ID\r
+
+      \        ORDER BY u.CREATED_AT DESC;\r
+
+      END GET_ALL_USERS;\r
+
+      /\r\n"
+    languageId: oracle-sql
+  - kind: 2
+    value: "-- ================================================================\r
+
+      -- Notification Procedures\r
+
+      -- Blood Donation System — Oracle 21c PL/SQL\r
+
+      -- ================================================================\r
+
+      \r
+
+      -- Get user notifications\r
+
+      CREATE OR REPLACE PROCEDURE GET_USER_NOTIFICATIONS (\r
+
+      \    p_user_id       IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      BEGIN\r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT NOTIFICATION_ID, NOTIFICATION_TYPE, TITLE, MESSAGE,
+      ACTION_PATH, IS_READ, CREATED_AT\r
+
+      \        FROM NOTIFICATION\r
+
+      \        WHERE USER_ID = p_user_id\r
+
+      \        ORDER BY CREATED_AT DESC\r
+
+      \        FETCH FIRST 50 ROWS ONLY;\r
+
+      END GET_USER_NOTIFICATIONS;\r
+
+      /\r
+
+      \r
+
+      -- Mark notification as read\r
+
+      CREATE OR REPLACE PROCEDURE MARK_NOTIFICATION_READ (\r
+
+      \    p_user_id       IN NUMBER,\r
+
+      \    p_notification_id IN NUMBER\r
+
+      ) AS\r
+
+      BEGIN\r
+
+      \    UPDATE NOTIFICATION\r
+
+      \    SET IS_READ = 'Y', READ_AT = SYSTIMESTAMP\r
+
+      \    WHERE NOTIFICATION_ID = p_notification_id AND USER_ID = p_user_id;\r
+
+      \r
+
+      \    COMMIT;\r
+
+      END MARK_NOTIFICATION_READ;\r
+
+      /\r\n"
+    languageId: oracle-sql
+  - kind: 2
+    value: "-- ================================================================\r
+
+      -- Public Catalog Procedures\r
+
+      -- Blood Donation System — Oracle 21c PL/SQL\r
+
+      -- ================================================================\r
+
+      \r
+
+      CREATE OR REPLACE PROCEDURE GET_PUBLIC_CAMPS (\r
+
+      \    p_status        IN  VARCHAR2,\r
+
+      \    p_lat           IN  NUMBER,\r
+
+      \    p_lng           IN  NUMBER,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_sql VARCHAR2(4000);\r
+
+      BEGIN\r
+
+      \    v_sql := 'SELECT c.CAMP_ID, c.COMMITTEE_ID, c.VENUE_ID, c.CAMP_TITLE,
+      c.CAMP_DESCRIPTION, ' ||\r
+
+      \             'c.CAMP_DATE, c.START_TIME, c.END_TIME, c.CAPACITY,
+      c.STATUS, c.PUBLIC_VISIBLE, ' ||\r
+
+      \             'v.LATITUDE, v.LONGITUDE ' ||\r
+
+      \             'FROM DONATION_CAMP c ' ||\r
+
+      \             'JOIN VENUE v ON c.VENUE_ID = v.VENUE_ID ' ||\r
+
+      \             'WHERE c.PUBLIC_VISIBLE = ''Y'' ';\r
+
+      \             \r
+
+      \    IF p_status IS NOT NULL THEN\r
+
+      \        v_sql := v_sql || ' AND c.STATUS = ''' || REPLACE(p_status, '''',
+      '''''') || ''' ';\r
+
+      \    ELSE\r
+
+      \        v_sql := v_sql || ' AND c.STATUS IN (''PUBLISHED'', ''ONGOING'',
+      ''COMPLETED'') ';\r
+
+      \    END IF;\r
+
+      \    \r
+
+      \    IF p_lat IS NOT NULL AND p_lng IS NOT NULL THEN\r
+
+      \        v_sql := v_sql || ' ORDER BY SQRT(POWER(v.LATITUDE - (' || p_lat
+      || '), 2) + POWER(v.LONGITUDE - (' || p_lng || '), 2)) ASC';\r
+
+      \    ELSE\r
+
+      \        v_sql := v_sql || ' ORDER BY c.CAMP_DATE DESC';\r
+
+      \    END IF;\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR v_sql;\r
+
+      END GET_PUBLIC_CAMPS;\r
+
+      /\r
+
+      \r
+
+      CREATE OR REPLACE PROCEDURE GET_PUBLIC_STATS (\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      BEGIN\r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \        SELECT\r
+
+      \            (SELECT COUNT(*) FROM DONOR WHERE STATUS = 'ACTIVE') AS
+      TOTAL_DONORS,\r
+
+      \            (SELECT COUNT(*) FROM DONATION_CAMP WHERE STATUS IN
+      ('PUBLISHED', 'ONGOING')) AS ACTIVE_CAMPS,\r
+
+      \            (SELECT NVL(SUM(UNITS_COLLECTED), 0) FROM DONATION_RECORD
+      WHERE STATUS = 'SUBMITTED') AS TOTAL_UNITS\r
+
+      \        FROM DUAL;\r
+
+      END GET_PUBLIC_STATS;\r
+
+      /\r
+
+      \r
+
+      -- Get camps by a comma-separated list of IDs (used by top-rated camps
+      endpoint)\r
+
+      CREATE OR REPLACE PROCEDURE GET_CAMPS_BY_IDS (\r
+
+      \    p_camp_ids      IN  VARCHAR2,\r
+
+      \    p_result_cursor OUT SYS_REFCURSOR\r
+
+      ) AS\r
+
+      \    v_sql VARCHAR2(4000);\r
+
+      BEGIN\r
+
+      \    v_sql := 'SELECT CAMP_ID, COMMITTEE_ID, VENUE_ID, CAMP_TITLE,
+      CAMP_DESCRIPTION, ' ||\r
+
+      \             'CAMP_DATE, START_TIME, END_TIME, CAPACITY, STATUS,
+      PUBLIC_VISIBLE ' ||\r
+
+      \             'FROM DONATION_CAMP ' ||\r
+
+      \             'WHERE CAMP_ID IN (' || p_camp_ids || ')';\r
+
+      \r
+
+      \    OPEN p_result_cursor FOR v_sql;\r
+
+      END GET_CAMPS_BY_IDS;\r
+
+      /\r
+
+      \r
+
+      -- ================================================================\r
+
+      -- Helper Function: Check if a camp is publicly visible\r
+
+      -- ================================================================\r
+
+      CREATE OR REPLACE FUNCTION IS_PUBLICLY_VISIBLE(p_camp_id IN NUMBER) RETURN
+      NUMBER IS\r
+
+      \    v_status VARCHAR2(20);\r
+
+      \    v_public_visible CHAR(1);\r
+
+      BEGIN\r
+
+      \    SELECT status, public_visible \r
+
+      \    INTO v_status, v_public_visible\r
+
+      \    FROM donation_camp\r
+
+      \    WHERE camp_id = p_camp_id;\r
+
+      \r
+
+      \    IF v_public_visible = 'Y' AND v_status IN ('PUBLISHED', 'ONGOING',
+      'COMPLETED') THEN\r
+
+      \        RETURN 1;\r
+
+      \    ELSE\r
+
+      \        RETURN 0;\r
+
+      \    END IF;\r
+
+      EXCEPTION\r
+
+      \    WHEN NO_DATA_FOUND THEN\r
+
+      \        RETURN 0;\r
+
+      END IS_PUBLICLY_VISIBLE;\r
+
+      /\r
+
+      CREATE OR REPLACE PROCEDURE GET_ACTIVE_BLOOD_BANKS(p_result_cursor OUT
+      SYS_REFCURSOR) IS\r
+
+      BEGIN\r
+
+      \    OPEN p_result_cursor FOR\r
+
+      \    SELECT BLOOD_BANK_ID, BANK_NAME, ADDRESS AS DISTRICT\r
+
+      \    FROM BLOOD_BANK\r
+
+      \    WHERE STATUS = 'ACTIVE'\r
+
+      \    ORDER BY BANK_NAME;\r
+
+      END GET_ACTIVE_BLOOD_BANKS;\r
+
+      /\r\n"
+    languageId: oracle-sql
