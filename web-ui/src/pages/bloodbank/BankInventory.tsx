@@ -4,20 +4,36 @@ import { api } from '../../lib/api';
 const BankInventory = () => {
   const [inventory, setInventory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('ALL');
+  const [bloodGroupFilter, setBloodGroupFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
     fetchInventory();
-  }, []);
+  }, [bloodGroupFilter, statusFilter]);
 
   const fetchInventory = async () => {
+    setLoading(true);
     try {
-      const res = await api.get('/blood-bank/inventory');
+      const params = new URLSearchParams();
+      if (bloodGroupFilter) params.append('bloodGroup', bloodGroupFilter);
+      if (statusFilter) params.append('status', statusFilter);
+      
+      const res = await api.get(`/blood-bank/inventory?${params.toString()}`);
       if (res.data.success) {
         setInventory(res.data.data);
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateStatus = async (id: number, newStatus: string) => {
+    try {
+      await api.patch(`/blood-bank/inventory/${id}/status`, { status: newStatus });
+      fetchInventory(); // refresh list
+    } catch (e) {
+      console.error(e);
+      alert('Failed to update status');
     }
   };
 
@@ -36,13 +52,6 @@ const BankInventory = () => {
     }
   };
 
-  const filteredInventory = inventory.filter(item => {
-    if (filter === 'ALL') return true;
-    if (filter === 'EXPIRED') return item.status === 'EXPIRED';
-    if (filter === 'AVAILABLE') return item.status === 'AVAILABLE';
-    return item.bloodGroup === filter;
-  });
-
   return (
     <div className="max-w-[1440px] mx-auto px-space-2xl py-space-xl">
       <div className="flex justify-between items-center border-b border-surface-container pb-space-md mb-space-xl">
@@ -53,16 +62,27 @@ const BankInventory = () => {
         </button>
       </div>
 
-      <div className="flex gap-space-sm mb-space-lg overflow-x-auto pb-space-xs">
-        {['ALL', 'AVAILABLE', 'EXPIRED', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(f => (
-          <button 
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-space-md py-space-xs rounded-full text-sm font-bold whitespace-nowrap transition-colors ${filter === f ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-secondary hover:bg-surface-container'}`}
-          >
-            {f}
-          </button>
-        ))}
+      <div className="flex gap-space-md mb-space-lg">
+        <select 
+          value={bloodGroupFilter} 
+          onChange={e => setBloodGroupFilter(e.target.value)}
+          className="border border-surface-container-high rounded-lg px-space-md py-space-sm bg-surface text-sm"
+        >
+          <option value="">All Blood Groups</option>
+          {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
+        </select>
+        
+        <select 
+          value={statusFilter} 
+          onChange={e => setStatusFilter(e.target.value)}
+          className="border border-surface-container-high rounded-lg px-space-md py-space-sm bg-surface text-sm"
+        >
+          <option value="">All Statuses</option>
+          <option value="AVAILABLE">Available</option>
+          <option value="EXPIRED">Expired</option>
+          <option value="ISSUED">Issued</option>
+          <option value="DISCARDED">Discarded</option>
+        </select>
       </div>
 
       {loading ? (
@@ -77,12 +97,13 @@ const BankInventory = () => {
                 <th className="p-space-md font-semibold border-b border-surface-container hidden md:table-cell">Collected</th>
                 <th className="p-space-md font-semibold border-b border-surface-container">Expiry</th>
                 <th className="p-space-md font-semibold border-b border-surface-container">Status</th>
+                <th className="p-space-md font-semibold border-b border-surface-container">Action</th>
               </tr>
             </thead>
             <tbody className="text-sm">
-              {filteredInventory.length === 0 ? (
-                <tr><td colSpan={5} className="p-space-xl text-center text-secondary">No inventory matches filter.</td></tr>
-              ) : filteredInventory.map((i) => (
+              {inventory.length === 0 ? (
+                <tr><td colSpan={6} className="p-space-xl text-center text-secondary">No inventory matches filter.</td></tr>
+              ) : inventory.map((i) => (
                 <tr key={i.bloodUnitId} className="border-b border-surface-container last:border-0 hover:bg-surface/50">
                   <td className="p-space-md font-mono text-secondary">{i.unitCode}</td>
                   <td className="p-space-md font-bold text-primary text-lg">{i.bloodGroup}</td>
@@ -96,6 +117,18 @@ const BankInventory = () => {
                     }`}>
                       {i.status}
                     </span>
+                  </td>
+                  <td className="p-space-md">
+                    <select 
+                      className="border border-surface-container rounded px-2 py-1 text-xs"
+                      value={i.status}
+                      onChange={(e) => updateStatus(i.bloodUnitId, e.target.value)}
+                    >
+                      <option value="AVAILABLE">AVAILABLE</option>
+                      <option value="EXPIRED">EXPIRED</option>
+                      <option value="ISSUED">ISSUED</option>
+                      <option value="DISCARDED">DISCARDED</option>
+                    </select>
                   </td>
                 </tr>
               ))}
