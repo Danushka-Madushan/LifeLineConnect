@@ -32,7 +32,7 @@ const Home = () => {
     api.get('/public/stats').then(res => {
       if (res.data.success) setStats(res.data.data);
     }).catch(console.error);
-    const fetchBroadcasts = async () => {
+    async function fetchBroadcasts() {
       try {
         const res = await api.get('/public/emergency-broadcasts');
         if (res.data.success) {
@@ -42,7 +42,7 @@ const Home = () => {
         console.error('Failed to fetch broadcasts', err);
       }
     };
-    const fetchAppeals = async () => {
+    async function fetchAppeals() {
       try {
         const res = await api.get('/public/emergency-appeals');
         if (res.data.success) {
@@ -57,7 +57,7 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto px-space-4xl py-space-3xl flex flex-col gap-space-4xl">
+    <div className="w-full max-w-360 mx-auto px-space-4xl py-space-3xl flex flex-col gap-space-4xl">
       {/* Task: HOME-02 - Emergency Broadcasts */}
       {broadcasts.length > 0 && (
         <section className="flex flex-col gap-space-sm">
@@ -208,4 +208,3 @@ const Home = () => {
 };
 
 export default Home;
-
