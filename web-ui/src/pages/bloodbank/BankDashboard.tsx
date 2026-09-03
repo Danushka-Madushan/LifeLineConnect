@@ -26,6 +26,12 @@ const BankDashboard = () => {
     <div className="max-w-[1440px] mx-auto px-space-2xl py-space-xl">
       <h1 className="font-heading text-3xl font-bold text-on-surface border-b border-surface-container pb-space-md mb-space-xl">Blood Bank Operations</h1>
       
+      {stats?.lowStockGroups && stats.lowStockGroups.length > 0 && (
+        <div className="mb-space-xl p-space-md rounded bg-[#e11d48]/10 border border-[#e11d48] text-[#e11d48] font-bold">
+          <span className="material-symbols-outlined align-middle mr-2">warning</span>
+          Low Stock Alert: {stats.lowStockGroups.join(', ')}
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-lg mb-space-xl">
         <div className="p-space-xl rounded-2xl bg-surface-container-lowest border border-surface-container flex flex-col gap-space-md">
           <span className="font-label text-sm text-secondary uppercase">Available Units</span>
