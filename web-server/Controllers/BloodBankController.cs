@@ -211,8 +211,28 @@ public class BloodBankController : ControllerBase
     [HttpPost("hospital-requests/{requestId}/allocate")]
     public ActionResult<ApiResponse<string>> AllocateUnits(int requestId)
     {
-        // For a full implementation, you'd pass a list of BloodUnitIds.
-        return ApiResponse<string>.Ok("Units successfully allocated to hospital request. Mock implementation executed.");
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+
+        using var cmd = connection.CreateCommand();
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+        cmd.CommandText = "ALLOCATE_UNITS_TO_REQUEST";
+        
+        cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+        cmd.Parameters.Add(new OracleParameter("p_request_id", requestId));
+        
+        var pAllocated = new OracleParameter("p_units_to_allocate", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(pAllocated);
+
+        cmd.ExecuteNonQuery();
+        
+        int allocated = Convert.ToInt32(pAllocated.Value.ToString());
+        if (allocated == 0)
+        {
+            return BadRequest(ApiResponse<string>.Error("No available blood units found for allocation, or request already fulfilled."));
+        }
+        
+        return ApiResponse<string>.Ok($"Successfully allocated {allocated} units to the hospital request.");
     }
 
     [HttpPatch("hospital-requests/{requestId}/status")]
@@ -473,4 +493,5 @@ public class BloodBankController : ControllerBase
         return File(pdf, "application/pdf", $"Hospital_Requests_Report_{DateTime.Now:yyyyMMdd}.pdf");
     }
 }
+
 
