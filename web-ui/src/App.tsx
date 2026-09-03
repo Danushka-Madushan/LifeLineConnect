@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 import Home from './pages/Home';
 import Community from './pages/Community';
 import Camps from './pages/Camps';
@@ -35,6 +35,7 @@ import Awareness from './pages/Awareness';
 import Promotional from './pages/Promotional';
 import Guidelines from './pages/Guidelines';
 import Notifications from './pages/Notifications';
+import { useAuth } from './hooks/useAuth';
 
 const Header = () => {
   const { user, logout } = useAuth();

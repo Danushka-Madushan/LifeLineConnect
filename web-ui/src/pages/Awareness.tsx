@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 
-
 export default function Awareness() {
   const [materials, setMaterials] = useState<AwarenessMaterial[]>([]);
 

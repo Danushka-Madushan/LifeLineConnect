@@ -46,7 +46,6 @@ const Community = () => {
     }).catch(console.error);
   }, []);
 
-  
 
   return (
     <div className="w-full max-w-360 mx-auto px-space-4xl py-space-3xl flex flex-col gap-space-3xl">

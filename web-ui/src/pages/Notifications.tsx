@@ -20,8 +20,6 @@ const Notifications = () => {
     fetchNotifications();
   }, []);
 
-  ;
-
   async function markRead(id: number) {
     try {
       await api.post(`/notifications/${id}/read`);
