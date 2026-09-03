@@ -337,11 +337,11 @@ public class PublicController : ControllerBase
         using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
         if (reader.Read())
         {
-            var units = Convert.ToDouble(reader["TotalUnits"]);
+            var units = Convert.ToDouble(reader["TOTAL_UNITS"]);
             var stats = new SystemStats
             {
-                TotalDonors = Convert.ToInt32(reader["TotalDonors"]),
-                ActiveCamps = Convert.ToInt32(reader["ActiveCamps"]),
+                TotalDonors = Convert.ToInt32(reader["TOTAL_DONORS"]),
+                ActiveCamps = Convert.ToInt32(reader["ACTIVE_CAMPS"]),
                 // Approx 450ml per unit
                 LitersCollected = units * 0.45
             };
