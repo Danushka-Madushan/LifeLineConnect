@@ -1,5 +1,2 @@
 docs/todo.md
-bin/
-obj/
-Bin/
-Obj/
+web-server/obj/
