@@ -2,16 +2,12 @@ import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
 const BankInventory = () => {
-  const [inventory, setInventory] = useState<any[]>([]);
+  const [inventory, setInventory] = useState<BloodUnitDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [bloodGroupFilter, setBloodGroupFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  useEffect(() => {
-    fetchInventory();
-  }, [bloodGroupFilter, statusFilter]);
-
-  const fetchInventory = async () => {
+  async function fetchInventory() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -25,9 +21,50 @@ const BankInventory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const updateStatus = async (id: number, newStatus: string) => {
+   useEffect(() => {
+    let cancelled = false;
+
+    const loadInventory = async () => {
+      try {
+        const params = new URLSearchParams();
+
+        if (bloodGroupFilter) {
+          params.append('bloodGroup', bloodGroupFilter);
+        }
+
+        if (statusFilter) {
+          params.append('status', statusFilter);
+        }
+
+        const res = await api.get(
+          `/blood-bank/inventory?${params.toString()}`
+        );
+
+        if (!cancelled && res.data.success) {
+          setInventory(res.data.data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Failed to fetch inventory:', err);
+          setInventory([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadInventory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [bloodGroupFilter, statusFilter]);
+
+  async function updateStatus(id: number, newStatus: string) {
     try {
       await api.patch(`/blood-bank/inventory/${id}/status`, { status: newStatus });
       fetchInventory(); // refresh list
@@ -37,7 +74,7 @@ const BankInventory = () => {
     }
   };
 
-  const handleDownloadPdf = async () => {
+  async function handleDownloadPdf() {
     try {
       const res = await api.get('/blood-bank/reports/inventory', { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -53,7 +90,7 @@ const BankInventory = () => {
   };
 
   return (
-    <div className="max-w-[1440px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-360 mx-auto px-space-2xl py-space-xl">
       <div className="flex justify-between items-center border-b border-surface-container pb-space-md mb-space-xl">
         <h1 className="font-heading text-3xl font-bold text-on-surface">Blood Inventory</h1>
         <button onClick={handleDownloadPdf} className="flex items-center gap-space-sm bg-surface-container-high text-on-surface px-space-md py-space-sm rounded-lg hover:bg-surface-container-highest transition-colors font-semibold">

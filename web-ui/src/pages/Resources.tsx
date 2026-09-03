@@ -3,34 +3,48 @@ import { api } from '../lib/api';
 
 const Resources = () => {
   const [activeTab, setActiveTab] = useState<'AWARENESS' | 'MEDIA' | 'GUIDELINES'>('GUIDELINES');
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<ResourceDto[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
-  }, [activeTab]);
+  let cancelled = false;
 
   const fetchData = async () => {
     setLoading(true);
-    try {
-      let endpoint = '';
-      if (activeTab === 'AWARENESS') endpoint = '/public/awareness-materials';
-      else if (activeTab === 'MEDIA') endpoint = '/public/promotional-media';
-      else if (activeTab === 'GUIDELINES') endpoint = '/public/medical-guidelines';
 
-      const res = await api.get(endpoint);
-      if (res.data.success) {
+    try {
+      const endpoints = {
+        AWARENESS: '/public/awareness-materials',
+        MEDIA: '/public/promotional-media',
+        GUIDELINES: '/public/medical-guidelines',
+      };
+
+      const res = await api.get(endpoints[activeTab]);
+
+      if (!cancelled && res.data.success) {
         setData(res.data.data);
       }
     } catch (err) {
-      console.error(err);
+      if (!cancelled) {
+        console.error(err);
+        setData([]);
+      }
     } finally {
-      setLoading(false);
+      if (!cancelled) {
+        setLoading(false);
+      }
     }
   };
 
+  fetchData();
+
+  return () => {
+    cancelled = true;
+  };
+}, [activeTab]);
+
   return (
-    <div className="max-w-[1200px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-300 mx-auto px-space-2xl py-space-xl">
       <h1 className="font-heading text-3xl font-bold text-on-surface mb-space-xl">Resources & Guidelines</h1>
 
       <div className="flex gap-space-lg mb-space-xl border-b border-surface-container">
@@ -62,7 +76,7 @@ const Resources = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-lg">
-          {data.map((item: any, i: number) => (
+          {data.map((item: ResourceDto, i: number) => (
             <div key={item.id || i} className="bg-surface-container-lowest border border-surface-container rounded-2xl p-space-lg flex flex-col gap-space-md shadow-sm">
               <h3 className="font-heading text-xl font-bold text-on-surface">{item.title}</h3>
               {item.description && <p className="text-sm text-secondary flex-1">{item.description}</p>}
