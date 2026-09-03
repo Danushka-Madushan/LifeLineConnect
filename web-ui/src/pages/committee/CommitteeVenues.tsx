@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
@@ -31,7 +32,7 @@ const CommitteeVenues = () => {
         await api.post('/committee/venues', { venueName, address, capacity });
         fetchVenues();
       } catch {
-        alert("Failed to add venue");
+        toast.error("Failed to add venue");
       }
     }
   };
