@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
@@ -26,11 +27,11 @@ const BankHospitalRequests = () => {
     try {
       const res = await api.post(`/blood-bank/hospital-requests/${requestId}/allocate`);
       if (res.data.success) {
-        alert(res.data.data || 'Allocation complete');
+        toast(res.data.data || 'Allocation complete');
         fetchRequests();
       }
     } catch {
-      alert('Allocation failed or not enough stock.');
+      toast.error('Allocation failed or not enough stock.');
     } finally {
       setAllocating(null);
     }
@@ -113,7 +114,7 @@ const BankHospitalRequests = () => {
                           await api.patch(`/blood-bank/hospital-requests/${r.requestId}/status`, { status: e.target.value });
                           fetchRequests();
                         } catch {
-                          alert('Failed to update status');
+                          toast.error('Failed to update status');
                         }
                       }}
                     >
