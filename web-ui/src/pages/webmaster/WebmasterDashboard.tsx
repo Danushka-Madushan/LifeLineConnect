@@ -110,8 +110,63 @@ const WebmasterDashboard = () => {
               <span className="font-label text-secondary">Total Threads</span>
               <span className="font-bold text-on-surface">{overview.totalCommunityThreads}</span>
             </div>
-            {/* Additional MongoDB metrics would go here */}
           </div>
+        </div>
+      </div>
+
+      <div className="bg-surface-container-lowest border border-surface-container p-space-xl rounded-2xl">
+        <h2 className="font-heading text-2xl font-bold mb-space-lg text-on-surface">Administration & Reports</h2>
+        <div className="flex gap-space-md flex-wrap">
+          <button 
+            onClick={async () => {
+              try {
+                const res = await api.get('/webmaster/users');
+                if (res.data.success) {
+                  console.table(res.data.data);
+                  alert(`Loaded ${res.data.data.length} users in console.`);
+                }
+              } catch(e) { alert("Failed to fetch users"); }
+            }}
+            className="flex items-center gap-space-sm bg-surface-container px-space-md py-space-sm rounded-lg hover:bg-surface-container-high transition-colors font-semibold"
+          >
+            <span className="material-symbols-outlined text-[20px]">manage_accounts</span> View All Users
+          </button>
+          
+          <button 
+            onClick={async () => {
+              const title = prompt("Guideline Title:");
+              if (!title) return;
+              const desc = prompt("Description:");
+              const type = prompt("Category (e.g. ELIGIBILITY, PRE_DONATION):", "PRE_DONATION");
+              try {
+                await api.post('/webmaster/guidelines', { title, description: desc, category: type, isActive: true });
+                alert("Medical guideline published successfully.");
+              } catch(e) { alert("Failed to publish guideline"); }
+            }}
+            className="flex items-center gap-space-sm bg-surface-container px-space-md py-space-sm rounded-lg hover:bg-surface-container-high transition-colors font-semibold"
+          >
+            <span className="material-symbols-outlined text-[20px]">health_and_safety</span> Publish Medical Guideline
+          </button>
+
+          <button 
+            onClick={async () => {
+              try {
+                const res = await api.get('/webmaster/reports/system', { responseType: 'blob' });
+                const url = window.URL.createObjectURL(new Blob([res.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'System_Audit_Report.pdf');
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+              } catch (e) {
+                console.error(e);
+              }
+            }}
+            className="flex items-center gap-space-sm bg-primary text-on-primary px-space-md py-space-sm rounded-lg hover:bg-primary/90 transition-colors font-semibold"
+          >
+            <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span> Export System Audit Report
+          </button>
         </div>
       </div>
     </div>
