@@ -10,16 +10,9 @@ const DonorCamps = () => {
   const [viewMode, setViewMode] = useState<'LIST' | 'MAP'>('LIST');
 
   useEffect(() => {
-    const fetchCamps = async () => {
     const fetchCampsAndEligibility = async () => {
       try {
-        const res = await api.get('/public/camps?status=PUBLISHED');
-        if (res.data.success) {
-          setCamps(res.data.data);
-        }
         let url = '/public/camps?status=PUBLISHED';
-        // Simulate geolocation request (usually window.navigator.geolocation)
-        // Hardcoding a center coordinate for demo purposes
         url += '&lat=6.9271&lng=79.8612'; 
 
         const [campsRes, eligRes] = await Promise.all([
@@ -34,7 +27,6 @@ const DonorCamps = () => {
         setLoading(false);
       }
     };
-    fetchCamps();
     fetchCampsAndEligibility();
   }, []);
 
@@ -56,7 +48,6 @@ const DonorCamps = () => {
 
   return (
     <div className="max-w-[1200px] mx-auto px-space-2xl py-space-xl">
-      <h1 className="font-heading text-3xl font-bold text-on-surface border-b border-surface-container pb-space-md mb-space-xl">Available Donation Camps</h1>
       <div className="flex justify-between items-center mb-space-lg">
         <h1 className="font-heading text-3xl font-bold text-on-surface">Available Donation Camps</h1>
         <div className="flex gap-space-xs bg-surface-container p-1 rounded-lg">
@@ -70,7 +61,6 @@ const DonorCamps = () => {
           {message}
         </div>
       )}
-      {message && <div className="bg-primary/10 text-primary p-space-md rounded-lg mb-space-lg font-bold">{message}</div>}
 
       {loading ? (
         <div className="text-center p-space-2xl"><span className="material-symbols-outlined animate-spin text-4xl text-primary">sync</span></div>
@@ -117,14 +107,11 @@ const DonorCamps = () => {
               
               <button 
                 onClick={() => handleRegister(camp.campId)}
-                disabled={registering === camp.campId}
-                className="mt-auto bg-primary text-on-primary py-space-sm rounded-lg font-bold hover:bg-primary/90 flex items-center justify-center disabled:opacity-70"
                 disabled={registering === camp.campId || (eligibility && !eligibility.isEligible)}
                 className={`mt-auto py-space-sm rounded-lg font-bold flex items-center justify-center transition-colors disabled:opacity-70 ${
                   eligibility && !eligibility.isEligible ? 'bg-surface-container-high text-secondary' : 'bg-primary text-on-primary hover:bg-primary/90'
                 }`}
               >
-                {registering === camp.campId ? <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span> : 'Register to Donate'}
                 {registering === camp.campId ? <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span> : 
                  (eligibility && !eligibility.isEligible ? 'Not Eligible to Donate' : 'Register to Donate')}
               </button>
