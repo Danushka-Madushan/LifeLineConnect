@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
@@ -65,9 +66,9 @@ const CommitteeDashboard = () => {
               const url = prompt("Media/Image URL:");
               try {
                 await api.post('/committee/awareness', { title, description: desc, url, published: true, mediaType: 'image' });
-                alert("Awareness material published to the public portal!");
+                toast("Awareness material published to the public portal!");
               } catch {
-                alert("Failed to publish.");
+                toast.error("Failed to publish.");
               }
             }}
             className="flex items-center gap-space-sm bg-surface-container px-space-md py-space-sm rounded-lg hover:bg-surface-container-high transition-colors font-semibold">
