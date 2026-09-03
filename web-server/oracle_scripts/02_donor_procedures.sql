@@ -209,3 +209,34 @@ BEGIN
     END IF;
 END CAN_SUBMIT_FEEDBACK;
 /
+
+-- Get donor status history (timeline of registrations and donations)
+CREATE OR REPLACE PROCEDURE GET_DONOR_STATUS_HISTORY (
+    p_user_id       IN  NUMBER,
+    p_result_cursor OUT SYS_REFCURSOR
+) AS
+    v_donor_id NUMBER;
+BEGIN
+    SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID = p_user_id;
+
+    OPEN p_result_cursor FOR
+        SELECT 'REGISTRATION' AS EVENT_TYPE,
+               r.REGISTERED_AT AS EVENT_DATE,
+               c.CAMP_TITLE AS EVENT_TITLE,
+               r.STATUS AS STATUS,
+               'Registered for camp' AS DETAILS
+        FROM CAMP_REGISTRATION r
+        JOIN DONATION_CAMP c ON r.CAMP_ID = c.CAMP_ID
+        WHERE r.DONOR_ID = v_donor_id
+        UNION ALL
+        SELECT 'DONATION' AS EVENT_TYPE,
+               d.DONATION_DATE AS EVENT_DATE,
+               c.CAMP_TITLE AS EVENT_TITLE,
+               d.STATUS AS STATUS,
+               'Donated ' || d.UNITS_COLLECTED || ' units' AS DETAILS
+        FROM DONATION_RECORD d
+        JOIN DONATION_CAMP c ON d.CAMP_ID = c.CAMP_ID
+        WHERE d.DONOR_ID = v_donor_id
+        ORDER BY EVENT_DATE DESC;
+END GET_DONOR_STATUS_HISTORY;
+/
