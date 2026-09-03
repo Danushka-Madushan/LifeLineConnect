@@ -2,14 +2,10 @@ import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
 const CommitteeVenues = () => {
-  const [venues, setVenues] = useState<any[]>([]);
+  const [venues, setVenues] = useState<VenueDto[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchVenues();
-  }, []);
-
-  const fetchVenues = async () => {
+  async function fetchVenues() {
     try {
       const res = await api.get('/committee/venues');
       if (res.data.success) {
@@ -18,9 +14,15 @@ const CommitteeVenues = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleAddVenue = async () => {
+  useEffect(() => {
+    fetchVenues();
+  }, []);
+
+  ;
+
+  async function handleAddVenue() {
     const venueName = prompt("Venue Name:");
     const address = prompt("Address:");
     const capacity = parseInt(prompt("Donor Capacity:") || "0");
@@ -28,14 +30,14 @@ const CommitteeVenues = () => {
       try {
         await api.post('/committee/venues', { venueName, address, capacity });
         fetchVenues();
-      } catch (e) {
+      } catch {
         alert("Failed to add venue");
       }
     }
   };
 
   return (
-    <div className="max-w-[1200px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-300 mx-auto px-space-2xl py-space-xl">
       <div className="flex justify-between items-center border-b border-surface-container pb-space-md mb-space-xl">
         <h1 className="font-heading text-3xl font-bold text-on-surface">Managed Venues</h1>
         <button onClick={handleAddVenue} className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-bold flex items-center gap-1 hover:bg-primary/90">
