@@ -16,7 +16,7 @@ const DonorDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboard = async () => {
+    async function fetchDashboard() {
       try {
         const res = await api.get('/donors/me/dashboard');
         if (res.data.success) {
@@ -34,7 +34,7 @@ const DonorDashboard = () => {
   if (loading) return <div className="p-space-2xl text-center"><span className="material-symbols-outlined animate-spin text-4xl text-primary">sync</span></div>;
 
   return (
-    <div className="max-w-[1200px] mx-auto px-space-2xl py-space-xl flex flex-col gap-space-2xl">
+    <div className="max-w-300 mx-auto px-space-2xl py-space-xl flex flex-col gap-space-2xl">
       <h1 className="font-heading text-3xl font-bold text-on-surface border-b border-surface-container pb-space-md">Donor Dashboard</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-lg">
