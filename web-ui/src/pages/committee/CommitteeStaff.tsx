@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
 const CommitteeStaff = () => {
-  const [staff, setStaff] = useState<any[]>([]);
+  const [staff, setStaff] = useState<CommitteeStaffDto[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Reusing the same endpoint logic structure (though hitting CommitteeController instead of BloodBank)
@@ -13,20 +13,20 @@ const CommitteeStaff = () => {
     fetchStaff();
   }, []);
 
-  const fetchStaff = async () => {
+  async function fetchStaff() {
     try {
       const res = await api.get('/committee/staff');
       if (res.data.success) {
-        setStaff(res.data.data.filter((s: any) => s.status === 'ACTIVE'));
+        setStaff(res.data.data.filter((s: CommitteeStaffDto) => s.status === 'ACTIVE'));
       }
-    } catch (e) {
-      console.error(e);
+    } catch {
+      console.error('Failed to fetch staff');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddStaff = async () => {
+  async function handleAddStaff() {
     const fullName = prompt("Full Name:");
     const positionTitle = prompt("Role (e.g. Coordinator, Volunteer):");
     const email = prompt("Email:");
@@ -36,25 +36,25 @@ const CommitteeStaff = () => {
       try {
         await api.post('/committee/staff', { fullName, positionTitle, email, phone });
         fetchStaff();
-      } catch (e) {
+      } catch {
         alert('Failed to add staff');
       }
     }
   };
 
-  const handleRemove = async (id: number) => {
+  async function handleRemove(id: number) {
     if (window.confirm("Remove this staff member?")) {
       try {
         await api.delete(`/committee/staff/${id}`);
         fetchStaff();
-      } catch (e) {
+      } catch {
         alert('Failed to remove staff');
       }
     }
   };
 
   return (
-    <div className="max-w-[1000px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-250 mx-auto px-space-2xl py-space-xl">
       <div className="flex justify-between items-center border-b border-surface-container pb-space-md mb-space-xl">
         <h1 className="font-heading text-3xl font-bold text-on-surface">Committee Staff</h1>
         <button onClick={handleAddStaff} className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-bold flex items-center gap-1 hover:bg-primary/90">
