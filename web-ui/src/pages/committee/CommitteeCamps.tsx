@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
@@ -30,7 +31,7 @@ const CommitteeCamps = () => {
       const res = await api.get('/committee/venues');
       if (res.data.success) setVenues(res.data.data);
     } catch {
-      alert('Failed to fetch venues');
+      toast.error('Failed to fetch venues');
     }
   };
 
@@ -52,7 +53,7 @@ const CommitteeCamps = () => {
         fetchCamps();
       }
     } catch (err) {
-      alert((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to create camp');
+      toast((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to create camp');
     } finally {
       setSubmitting(false);
     }
@@ -87,7 +88,7 @@ const CommitteeCamps = () => {
                       await api.patch(`/committee/camps/${c.campId}/status`, { status: e.target.value });
                       fetchCamps();
                     } catch {
-                      alert('Failed to update status');
+                      toast.error('Failed to update status');
                     }
                   }}
                 >
