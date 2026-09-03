@@ -24,13 +24,6 @@ const Community = () => {
   const [qas, setQas] = useState<CommunityQa[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    fetchThreads();
-    api.get('/public/community/qa').then(res => {
-      if (res.data.success) setQas(res.data.data);
-    }).catch(console.error);
-  }, []);
-
   const fetchThreads = (query = '') => {
     const url = query 
       ? `/public/community/threads/search?query=${encodeURIComponent(query)}` 
@@ -46,8 +39,17 @@ const Community = () => {
     fetchThreads(searchQuery);
   };
 
+  useEffect(() => {
+    fetchThreads();
+    api.get('/public/community/qa').then(res => {
+      if (res.data.success) setQas(res.data.data);
+    }).catch(console.error);
+  }, []);
+
+  
+
   return (
-    <div className="w-full max-w-[1440px] mx-auto px-space-4xl py-space-3xl flex flex-col gap-space-3xl">
+    <div className="w-full max-w-360 mx-auto px-space-4xl py-space-3xl flex flex-col gap-space-3xl">
       <div className="flex flex-col gap-space-sm">
         <h1 className="font-heading text-4xl font-bold text-on-surface">Community & Support</h1>
         <p className="font-body text-lg text-secondary">Join discussions and find answers to common questions about blood donation.</p>
