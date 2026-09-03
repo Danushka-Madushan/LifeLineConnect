@@ -36,9 +36,30 @@ const BankHospitalRequests = () => {
     }
   };
 
+  const handleDownloadPdf = async () => {
+    try {
+      const res = await api.get('/blood-bank/reports/hospital-requests', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'Hospital_Requests_Report.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error('Failed to download report', err);
+    }
+  };
+
   return (
     <div className="max-w-[1440px] mx-auto px-space-2xl py-space-xl">
-      <h1 className="font-heading text-3xl font-bold text-on-surface border-b border-surface-container pb-space-md mb-space-xl">Hospital Blood Requests</h1>
+      <div className="flex justify-between items-center border-b border-surface-container pb-space-md mb-space-xl">
+        <h1 className="font-heading text-3xl font-bold text-on-surface">Hospital Blood Requests</h1>
+        <button onClick={handleDownloadPdf} className="flex items-center gap-space-sm bg-surface-container-high text-on-surface px-space-md py-space-sm rounded-lg hover:bg-surface-container-highest transition-colors font-semibold">
+          <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+          Export Report
+        </button>
+      </div>
       
       {loading ? (
         <div className="text-center p-space-2xl"><span className="material-symbols-outlined animate-spin text-4xl text-primary">sync</span></div>
@@ -54,8 +75,9 @@ const BankHospitalRequests = () => {
                 <th className="p-space-md font-semibold border-b border-surface-container">Hospital</th>
                 <th className="p-space-md font-semibold border-b border-surface-container">Blood Group</th>
                 <th className="p-space-md font-semibold border-b border-surface-container">Units Req.</th>
-                <th className="p-space-md font-semibold border-b border-surface-container hidden md:table-cell">Needed By</th>
+                <th className="p-space-md font-semibold border-b border-surface-container">Needed By</th>
                 <th className="p-space-md font-semibold border-b border-surface-container">Priority</th>
+                <th className="p-space-md font-semibold border-b border-surface-container">Status</th>
                 <th className="p-space-md font-semibold border-b border-surface-container">Action</th>
               </tr>
             </thead>
@@ -74,14 +96,35 @@ const BankHospitalRequests = () => {
                       {r.priority}
                     </span>
                   </td>
-                  <td className="p-space-md">
+                  <td className="p-space-md font-bold">{r.status}</td>
+                  <td className="p-space-md flex items-center gap-2">
                     <button 
                       onClick={() => handleAllocate(r.requestId)}
-                      disabled={allocating === r.requestId}
-                      className="bg-primary text-on-primary px-space-md py-space-sm rounded font-bold hover:bg-primary/90 text-xs disabled:opacity-50"
+                      disabled={allocating === r.requestId || r.status === 'FULFILLED' || r.status === 'CLOSED' || r.status === 'CANCELLED'}
+                      className="bg-primary text-on-primary px-3 py-1 rounded font-bold hover:bg-primary/90 text-xs disabled:opacity-50 whitespace-nowrap"
                     >
-                      {allocating === r.requestId ? 'Allocating...' : 'Auto-Allocate'}
+                      {allocating === r.requestId ? '...' : 'Auto-Allocate'}
                     </button>
+                    <select 
+                      className="border border-surface-container rounded px-2 py-1 text-xs"
+                      value={r.status}
+                      onChange={async (e) => {
+                        try {
+                          await api.patch(`/blood-bank/hospital-requests/${r.requestId}/status`, { status: e.target.value });
+                          fetchRequests();
+                        } catch(err) {
+                          alert('Failed to update status');
+                        }
+                      }}
+                    >
+                      <option value="PENDING">PENDING</option>
+                      <option value="APPROVED">APPROVED</option>
+                      <option value="ALLOCATED">ALLOCATED</option>
+                      <option value="PARTIALLY_FULFILLED">PARTIALLY FULFILLED</option>
+                      <option value="FULFILLED">FULFILLED</option>
+                      <option value="CANCELLED">CANCELLED</option>
+                      <option value="CLOSED">CLOSED</option>
+                    </select>
                   </td>
                 </tr>
               ))}
