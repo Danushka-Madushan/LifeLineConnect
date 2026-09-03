@@ -237,18 +237,20 @@ public class PublicController : ControllerBase
         var campIdsStr = string.Join(",", topCampStats.Select(x => x.CampId));
         var campsDict = new Dictionary<int, DonationCamp>();
         
-        using var connection = _oracleDb.CreateConnection();
-        connection.Open();
-        var query = $@"
-            SELECT CAMP_ID, COMMITTEE_ID, VENUE_ID, CAMP_TITLE, CAMP_DESCRIPTION, 
-                   CAMP_DATE, START_TIME, END_TIME, CAPACITY, STATUS, PUBLIC_VISIBLE
-            FROM DONATION_CAMP
-            WHERE CAMP_ID IN ({campIdsStr})"; // Safe to interpolate integers
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
 
         using var command = connection.CreateCommand();
-        command.CommandText = query;
-
-        using var reader = command.ExecuteReader();
+        command.CommandType = System.Data.CommandType.StoredProcedure;
+        command.CommandText = "GET_CAMPS_BY_IDS";
+        
+        command.Parameters.Add(new OracleParameter("p_camp_ids", OracleDbType.Varchar2) { Value = campIdsStr });
+        
+        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = System.Data.ParameterDirection.Output };
+        command.Parameters.Add(pCursor);
+        
+        command.ExecuteNonQuery();
+        using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
         while (reader.Read())
         {
             var campId = Convert.ToInt32(reader["CAMP_ID"]);
