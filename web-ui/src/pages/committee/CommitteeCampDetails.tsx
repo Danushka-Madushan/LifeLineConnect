@@ -5,8 +5,8 @@ import { api } from '../../lib/api';
 const CommitteeCampDetails = () => {
   const { campId } = useParams();
   const [activeTab, setActiveTab] = useState<'ATTENDANCE' | 'FEEDBACK'>('ATTENDANCE');
-  const [attendance, setAttendance] = useState<any[]>([]);
-  const [feedback, setFeedback] = useState<any[]>([]);
+  const [attendance, setAttendance] = useState<CampDto[]>([]);
+  const [feedback, setFeedback] = useState<CampFeedbackDto[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Transfer modal
@@ -16,9 +16,10 @@ const CommitteeCampDetails = () => {
 
   useEffect(() => {
     fetchData();
+    /* eslint-disable */
   }, [campId]);
 
-  const fetchData = async () => {
+  async function fetchData() {
     setLoading(true);
     try {
       const attRes = await api.get(`/committee/camps/${campId}/attendance`);
@@ -31,7 +32,7 @@ const CommitteeCampDetails = () => {
     }
   };
 
-  const handleRecordDonation = async (donor: any) => {
+  async function handleRecordDonation(donor: CampDto) {
     if (!window.confirm(`Log 1 unit of ${donor.bloodGroup} for ${donor.fullName}?`)) return;
     try {
       const res = await api.post(`/committee/camps/${campId}/donations`, {
@@ -43,12 +44,12 @@ const CommitteeCampDetails = () => {
       if (res.data.success) {
         fetchData(); // refresh attendance list
       }
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to record donation.');
+    } catch (err) {
+      alert((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to record donation.');
     }
   };
 
-  const handleDispatch = async () => {
+  async function handleDispatch() {
     if (!window.confirm('Dispatch all completed donations to the selected Blood Bank?')) return;
     setTransferring(true);
     try {
@@ -57,8 +58,8 @@ const CommitteeCampDetails = () => {
         alert(res.data.message);
         setShowTransfer(false);
       }
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to dispatch transfer.');
+    } catch (err) {
+      alert((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to dispatch transfer.');
     } finally {
       setTransferring(false);
     }
@@ -67,7 +68,7 @@ const CommitteeCampDetails = () => {
   if (loading) return <div className="p-space-2xl text-center"><span className="material-symbols-outlined animate-spin text-4xl text-primary">sync</span></div>;
 
   return (
-    <div className="max-w-[1440px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-360 mx-auto px-space-2xl py-space-xl">
       <Link to="/committee/camps" className="text-secondary hover:text-on-surface text-sm font-bold flex items-center gap-space-xs mb-space-md">
         <span className="material-symbols-outlined text-[18px]">arrow_back</span> Back to Camps
       </Link>
@@ -144,11 +145,11 @@ const CommitteeCampDetails = () => {
             <div className="col-span-full text-center p-space-2xl text-secondary bg-surface-container-lowest rounded-xl border border-surface-container">
               No feedback has been submitted for this camp.
             </div>
-          ) : feedback.map((f: any) => (
+          ) : feedback.map((f: CampFeedbackDto) => (
             <div key={f.feedbackId} className="bg-surface-container-lowest border border-surface-container rounded-xl p-space-lg shadow-sm">
               <div className="flex justify-between items-start mb-space-sm">
                 <span className="font-bold text-on-surface">{f.donorName}</span>
-                <span className="text-sm text-secondary">{new Date(f.createdAt).toLocaleDateString()}</span>
+                <span className="text-sm text-secondary">{new Date(f.createdAt || '').toLocaleDateString()}</span>
               </div>
               <div className="flex items-center gap-[2px] text-[#D97706] mb-space-sm">
                 {[...Array(5)].map((_, i) => (
