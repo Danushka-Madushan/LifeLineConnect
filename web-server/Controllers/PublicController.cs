@@ -9,6 +9,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using System.Data;
+using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
 namespace web_server.Controllers;
 
 [ApiController]
@@ -179,29 +182,19 @@ public class PublicController : ControllerBase
         using var connection = _oracleDb.CreateConnection();
         connection.Open();
 
-        var statusFilter = string.IsNullOrEmpty(status) ? "IN ('PUBLISHED', 'ONGOING', 'COMPLETED')" : $"= '{status}'";
-
-        // If lat/lng provided, sort by simple distance formula (Pythagorean)
-        var orderBy = "ORDER BY CAMP_DATE DESC";
-        if (lat.HasValue && lng.HasValue)
-        {
-            orderBy = $"ORDER BY SQRT(POWER(v.LATITUDE - {lat.Value}, 2) + POWER(v.LONGITUDE - {lng.Value}, 2)) ASC";
-        }
-
-        var query = $@"
-            SELECT c.CAMP_ID, c.COMMITTEE_ID, c.VENUE_ID, c.CAMP_TITLE, c.CAMP_DESCRIPTION, 
-                   c.CAMP_DATE, c.START_TIME, c.END_TIME, c.CAPACITY, c.STATUS, c.PUBLIC_VISIBLE,
-                   v.LATITUDE, v.LONGITUDE
-            FROM DONATION_CAMP c
-            JOIN VENUE v ON c.VENUE_ID = v.VENUE_ID
-            WHERE c.PUBLIC_VISIBLE = 'Y' 
-              AND c.STATUS {statusFilter}
-            {orderBy}";
-
         using var command = connection.CreateCommand();
-        command.CommandText = query;
-
-        using var reader = command.ExecuteReader();
+        command.CommandType = System.Data.CommandType.StoredProcedure;
+        command.CommandText = "GET_PUBLIC_CAMPS";
+        
+        command.Parameters.Add(new OracleParameter("p_status", string.IsNullOrEmpty(status) ? (object)DBNull.Value : status));
+        command.Parameters.Add(new OracleParameter("p_lat", lat.HasValue ? (object)lat.Value : DBNull.Value));
+        command.Parameters.Add(new OracleParameter("p_lng", lng.HasValue ? (object)lng.Value : DBNull.Value));
+        
+        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+        command.Parameters.Add(pCursor);
+        
+        command.ExecuteNonQuery();
+        using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
         while (reader.Read())
         {
             camps.Add(new DonationCamp
@@ -309,14 +302,14 @@ public class PublicController : ControllerBase
         connection.Open();
 
         using var command = connection.CreateCommand();
-        command.CommandText = @"
-            SELECT 
-                (SELECT COUNT(*) FROM DONOR WHERE STATUS = 'ACTIVE') AS TotalDonors,
-                (SELECT COUNT(*) FROM DONATION_CAMP WHERE STATUS IN ('PUBLISHED', 'ONGOING')) AS ActiveCamps,
-                (SELECT NVL(SUM(UNITS_COLLECTED), 0) FROM DONATION_RECORD WHERE STATUS = 'SUBMITTED') AS TotalUnits
-            FROM DUAL";
-
-        using var reader = command.ExecuteReader();
+        command.CommandType = System.Data.CommandType.StoredProcedure;
+        command.CommandText = "GET_PUBLIC_STATS";
+        
+        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+        command.Parameters.Add(pCursor);
+        
+        command.ExecuteNonQuery();
+        using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
         if (reader.Read())
         {
             var units = Convert.ToDouble(reader["TotalUnits"]);
