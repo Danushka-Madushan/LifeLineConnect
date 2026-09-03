@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
 const DonorDonations = () => {
-  const [donations, setDonations] = useState<any[]>([]);
+  const [donations, setDonations] = useState<DonorDonationDto[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDonations = async () => {
+    async function fetchDonations() {
       try {
         const res = await api.get('/donors/me/donations');
         if (res.data.success) {
@@ -21,7 +21,7 @@ const DonorDonations = () => {
     fetchDonations();
   }, []);
 
-  const handleDownloadPdf = async () => {
+  async function handleDownloadPdf() {
     try {
       const res = await api.get('/donors/me/donations/report', { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -37,7 +37,7 @@ const DonorDonations = () => {
   };
 
   return (
-    <div className="max-w-[1200px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-300 mx-auto px-space-2xl py-space-xl">
       <div className="flex justify-between items-center border-b border-surface-container pb-space-md mb-space-xl">
         <h1 className="font-heading text-3xl font-bold text-on-surface">Donation History</h1>
         <button onClick={handleDownloadPdf} className="flex items-center gap-space-sm bg-surface-container-high text-on-surface px-space-md py-space-sm rounded-lg hover:bg-surface-container-highest transition-colors font-semibold">
