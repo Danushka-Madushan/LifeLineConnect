@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 
 export default function Guidelines() {
-  const [guidelines, setGuidelines] = useState<any[]>([]);
+  const [guidelines, setGuidelines] = useState<MedicalGuideline[]>([]);
 
   useEffect(() => {
     api.get('/public/medical-guidelines').then(res => {
