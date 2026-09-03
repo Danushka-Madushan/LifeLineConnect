@@ -7,6 +7,9 @@ using Oracle.ManagedDataAccess.Types;
 using System.Data;
 using web_server.Data;
 using web_server.Models;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace web_server.Controllers;
 
@@ -74,5 +77,59 @@ public class WebmasterController : ControllerBase
             SystemHealth = "GOOD",
             Uptime = "99.9%"
         });
+    }
+
+    [HttpGet("users")]
+    public ActionResult<ApiResponse<List<object>>> GetUsers()
+    {
+        var list = new List<object>();
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT USER_ID, EMAIL, ROLE, STATUS, CREATED_AT, LAST_LOGIN FROM SYSTEM_USER ORDER BY CREATED_AT DESC";
+        using var reader = cmd.ExecuteReader();
+        while(reader.Read())
+        {
+            list.Add(new {
+                UserId = reader["USER_ID"],
+                Email = reader["EMAIL"],
+                Role = reader["ROLE"],
+                Status = reader["STATUS"],
+                CreatedAt = reader["CREATED_AT"],
+                LastLogin = reader["LAST_LOGIN"] != DBNull.Value ? reader["LAST_LOGIN"] : null
+            });
+        }
+        return ApiResponse<List<object>>.Ok(list);
+    }
+
+    [HttpPost("guidelines")]
+    public async Task<ActionResult<ApiResponse<string>>> CreateGuideline([FromBody] web_server.Models.Mongo.MedicalGuideline req)
+    {
+        req.LastUpdated = DateTime.UtcNow;
+        var col = _mongoDb.GetCollection<web_server.Models.Mongo.MedicalGuideline>("medicalGuidelines");
+        await col.InsertOneAsync(req);
+        return ApiResponse<string>.Ok("Guideline created successfully.");
+    }
+
+    [HttpGet("reports/system")]
+    public ActionResult GenerateSystemReport()
+    {
+        var document = QuestPDF.Fluent.Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(QuestPDF.Helpers.PageSizes.A4);
+                page.Margin(2, QuestPDF.Infrastructure.Unit.Centimetre);
+                page.Header().Text("System Master Report").SemiBold().FontSize(24).FontColor(QuestPDF.Helpers.Colors.Red.Medium);
+                
+                page.Content().PaddingVertical(1, QuestPDF.Infrastructure.Unit.Centimetre).Column(x =>
+                {
+                    x.Item().Text($"Date Generated: {DateTime.Now:yyyy-MM-dd HH:mm}").FontSize(10);
+                    x.Spacing(20);
+                    x.Item().Text("This is an aggregated audit report of the LifeLineConnect system.").FontSize(12);
+                });
+            });
+        });
+        return File(document.GeneratePdf(), "application/pdf", "System_Report.pdf");
     }
 }
