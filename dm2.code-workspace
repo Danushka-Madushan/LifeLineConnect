@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "web-server"
+		},
+		{
+			"path": "web-ui"
+		},
+		{
+			"path": "docs"
+		}
+	],
+	"settings": {}
+}
