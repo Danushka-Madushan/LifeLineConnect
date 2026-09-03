@@ -1,0 +1,8 @@
+ORACLE DB
+  - USERNAME : SYSTEM
+  - PASSWORD : admin
+  - host     : localhost
+  - servicename: xe
+
+mongodbConnectionString
+  - mongodb+srv://admin:N9q5J7nB0TmjenF0@dm-cluster.kitq0xe.mongodb.net/?appName=dm-cluster
