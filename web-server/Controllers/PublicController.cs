@@ -192,7 +192,7 @@ public class PublicController : ControllerBase
             list.Add(new {
                 BloodBankId = reader["BLOOD_BANK_ID"],
                 BankName = reader["BANK_NAME"],
-                District = reader["DISTRICT"]
+                Address = reader["ADDRESS"]
             });
         }
         return ApiResponse<List<object>>.Ok(list);
