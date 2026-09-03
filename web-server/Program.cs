@@ -1,27 +1,52 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using web_server.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Add CORS services
+// Add services to the container.
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+
+// Database Contexts
+builder.Services.AddSingleton<OracleDbContext>();
+builder.Services.AddSingleton<MongoDbContext>();
+
+// Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowVite", policy =>
-    {
-        // Replace with your actual Vite local URL if different
-        policy.WithOrigins("http://localhost:5173") 
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+    options.AddPolicy("AllowVite",
+        b => b.WithOrigins("http://localhost:5173", "http://localhost:4173")
+              .AllowAnyMethod()
+              .AllowAnyHeader());
 });
+
+// Configure JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Secret"]!))
+        };
+    });
 
 var app = builder.Build();
 
-// 2. Enable CORS middleware
-// IMPORTANT: This must be called before MapGet, MapControllers, or UseAuthorization
+// Configure the HTTP request pipeline.
 app.UseCors("AllowVite");
 
-// 3. Create a test endpoint
-app.MapGet("/api/status", () => 
-{
-    return Results.Ok(new { message = "Backend is successfully connected to Vite!" });
-});
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
 
 app.Run();
