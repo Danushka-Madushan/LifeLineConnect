@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
@@ -28,10 +29,10 @@ const BankTransfers = () => {
     setProcessing(transferId);
     try {
       await api.post(`/blood-bank/transfers/${transferId}/receive`);
-      alert('Transfer received and inventory updated successfully.');
+      toast.success('Transfer received and inventory updated successfully.');
       fetchTransfers();
     } catch (err) {
-      alert((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to process transfer');
+      toast((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to process transfer');
     } finally {
       setProcessing(null);
     }
