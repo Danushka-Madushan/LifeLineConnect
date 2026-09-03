@@ -1,4 +1,5 @@
 declare global {
+  interface BloodBankDto { bloodBankId: number; bankName: string; district: string; }
   interface AuthResponseDto { token: string; user: Record<string, unknown>; }
   interface BankDashboardDto { totalUnits: number; incomingTransfers: number; pendingRequests: number; expiringSoon: number; lowStockGroups: string[]; }
   interface BloodUnitDto { bloodUnitId: number; unitCode: string; bloodGroup: string; collectionDate: string; expiryDate: string; status: string; storageLocation: string; }
