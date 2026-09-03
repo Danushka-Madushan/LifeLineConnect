@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 
 const Appeals = () => {
-  const [appeals, setAppeals] = useState<any[]>([]);
+  const [appeals, setAppeals] = useState<EmergencyAppealDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState({ query: '', urgency: '', bloodGroup: '' });
 
   useEffect(() => {
     fetchAppeals();
+    /* eslint-disable-next-line */
   }, []);
 
-  const fetchAppeals = async () => {
+  async function fetchAppeals() {
     setLoading(true);
     try {
       // Build query string
@@ -42,7 +43,7 @@ const Appeals = () => {
   };
 
   return (
-    <div className="max-w-[1440px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-360 mx-auto px-space-2xl py-space-xl">
       <h1 className="font-heading text-3xl font-bold text-on-surface mb-space-lg flex items-center gap-space-sm">
         <span className="material-symbols-outlined text-error text-[32px]">emergency</span>
         Emergency Blood Appeals
