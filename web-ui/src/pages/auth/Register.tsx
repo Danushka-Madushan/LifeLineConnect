@@ -25,7 +25,7 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setIsLoading(true);
@@ -38,8 +38,8 @@ const Register = () => {
       } else {
         setError(res.data.message || 'Registration failed');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred during registration');
+    } catch (err) {
+      setError((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'An error occurred during registration');
     } finally {
       setIsLoading(false);
     }
