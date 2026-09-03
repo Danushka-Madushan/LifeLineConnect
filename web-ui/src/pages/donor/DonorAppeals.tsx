@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
 const DonorAppeals = () => {
-  const [appeals, setAppeals] = useState<any[]>([]);
+  const [appeals, setAppeals] = useState<EmergencyAppealDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ patientReference: '', relationship: 'SELF', bloodGroup: 'O+', unitsRequired: 1, urgency: 'HIGH', location: '', neededBy: '', summary: '' });
@@ -12,7 +12,7 @@ const DonorAppeals = () => {
     fetchAppeals();
   }, []);
 
-  const fetchAppeals = async () => {
+  async function fetchAppeals() {
     try {
       const res = await api.get('/donors/me/emergency-appeals');
       if (res.data.success) {
@@ -23,7 +23,7 @@ const DonorAppeals = () => {
     }
   };
 
-  const handleSubmit = async (e: any) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     try {
@@ -33,15 +33,15 @@ const DonorAppeals = () => {
         alert('Appeal submitted and pending review.');
         fetchAppeals();
       }
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to submit appeal.');
+    } catch (err) {
+      alert((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to submit appeal.');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-[1200px] mx-auto px-space-2xl py-space-xl relative">
+    <div className="max-w-300 mx-auto px-space-2xl py-space-xl relative">
       <div className="flex justify-between items-center border-b border-surface-container pb-space-md mb-space-xl">
         <h1 className="font-heading text-3xl font-bold text-on-surface">Emergency Blood Appeals</h1>
         <button onClick={() => setShowModal(true)} className="flex items-center gap-space-sm bg-primary text-on-primary px-space-md py-space-sm rounded-lg hover:bg-primary/90 transition-colors font-semibold">
