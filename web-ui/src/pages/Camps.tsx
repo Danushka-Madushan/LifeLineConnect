@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+
 import { api } from '../lib/api';
 
 interface DonationCamp {
@@ -152,3 +153,4 @@ const Camps = () => {
 };
 
 export default Camps;
+
