@@ -2,15 +2,15 @@ import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
 const DonorCamps = () => {
-  const [camps, setCamps] = useState<any[]>([]);
+  const [camps, setCamps] = useState<DonationCampDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState<number | null>(null);
   const [message, setMessage] = useState('');
-  const [eligibility, setEligibility] = useState<any>(null);
+  const [eligibility, setEligibility] = useState<DonationCampDto | null>(null);
   const [viewMode, setViewMode] = useState<'LIST' | 'MAP'>('LIST');
 
   useEffect(() => {
-    const fetchCampsAndEligibility = async () => {
+    async function fetchCampsAndEligibility() {
       try {
         let url = '/public/camps?status=PUBLISHED';
         url += '&lat=6.9271&lng=79.8612'; 
@@ -30,7 +30,7 @@ const DonorCamps = () => {
     fetchCampsAndEligibility();
   }, []);
 
-  const handleRegister = async (campId: number) => {
+  async function handleRegister(campId: number) {
     if (!window.confirm('Are you sure you want to register for this camp?')) return;
     setRegistering(campId);
     setMessage('');
@@ -39,15 +39,15 @@ const DonorCamps = () => {
       if (res.data.success) {
         setMessage('Successfully registered for the camp! It will appear in your upcoming list.');
       }
-    } catch (err: any) {
-      setMessage(err.response?.data?.message || 'Failed to register. Are you already registered?');
+    } catch (err) {
+      setMessage((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to register. Are you already registered?');
     } finally {
       setRegistering(null);
     }
   };
 
   return (
-    <div className="max-w-[1200px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-300 mx-auto px-space-2xl py-space-xl">
       <div className="flex justify-between items-center mb-space-lg">
         <h1 className="font-heading text-3xl font-bold text-on-surface">Available Donation Camps</h1>
         <div className="flex gap-space-xs bg-surface-container p-1 rounded-lg">
@@ -69,7 +69,7 @@ const DonorCamps = () => {
           No published camps available at the moment.
         </div>
       ) : viewMode === 'MAP' ? (
-        <div className="w-full h-[600px] bg-surface-container-low rounded-xl border border-surface-container flex flex-col overflow-hidden relative">
+        <div className="w-full h-150 bg-surface-container-low rounded-xl border border-surface-container flex flex-col overflow-hidden relative">
           <div className="absolute inset-0 opacity-20 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=6.9271,79.8612&zoom=11&size=1200x600&sensor=false')] bg-cover bg-center"></div>
           <div className="z-10 absolute top-4 left-4 flex flex-col gap-2 max-w-sm">
             {camps.map(camp => (
@@ -78,7 +78,7 @@ const DonorCamps = () => {
                 <div className="text-xs text-secondary">{new Date(camp.campDate).toLocaleDateString()}</div>
                 <button 
                   onClick={() => handleRegister(camp.campId)}
-                  disabled={registering === camp.campId || (eligibility && !eligibility.isEligible)}
+                  disabled={registering === camp.campId || (eligibility ? !eligibility.isEligible : false)}
                   className={`mt-2 py-1 rounded text-xs font-bold ${eligibility && !eligibility.isEligible ? 'bg-surface-container-high text-secondary' : 'bg-primary text-on-primary'}`}
                 >
                   {eligibility && !eligibility.isEligible ? 'Not Eligible' : 'Register Here'}
@@ -107,7 +107,7 @@ const DonorCamps = () => {
               
               <button 
                 onClick={() => handleRegister(camp.campId)}
-                disabled={registering === camp.campId || (eligibility && !eligibility.isEligible)}
+                disabled={registering === camp.campId || (eligibility ? !eligibility.isEligible : false)}
                 className={`mt-auto py-space-sm rounded-lg font-bold flex items-center justify-center transition-colors disabled:opacity-70 ${
                   eligibility && !eligibility.isEligible ? 'bg-surface-container-high text-secondary' : 'bg-primary text-on-primary hover:bg-primary/90'
                 }`}
