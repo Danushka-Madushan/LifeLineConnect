@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 
@@ -123,9 +124,9 @@ const WebmasterDashboard = () => {
                 const res = await api.get('/webmaster/users');
                 if (res.data.success) {
                   console.table(res.data.data);
-                  alert(`Loaded ${res.data.data.length} users in console.`);
+                  toast(`Loaded ${res.data.data.length} users in console.`);
                 }
-              } catch { alert("Failed to fetch users"); }
+              } catch { toast.error("Failed to fetch users"); }
             }}
             className="flex items-center gap-space-sm bg-surface-container px-space-md py-space-sm rounded-lg hover:bg-surface-container-high transition-colors font-semibold"
           >
@@ -140,8 +141,8 @@ const WebmasterDashboard = () => {
               const type = prompt("Category (e.g. ELIGIBILITY, PRE_DONATION):", "PRE_DONATION");
               try {
                 await api.post('/webmaster/guidelines', { title, description: desc, category: type, isActive: true });
-                alert("Medical guideline published successfully.");
-              } catch { alert("Failed to publish guideline"); }
+                toast.success("Medical guideline published successfully.");
+              } catch { toast.error("Failed to publish guideline"); }
             }}
             className="flex items-center gap-space-sm bg-surface-container px-space-md py-space-sm rounded-lg hover:bg-surface-container-high transition-colors font-semibold"
           >
