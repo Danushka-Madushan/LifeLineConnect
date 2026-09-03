@@ -223,6 +223,40 @@ public class DonorController : ControllerBase
         return ApiResponse<List<DonorDonationDto>>.Ok(list);
     }
 
+    [HttpGet("status-history")]
+    public ActionResult<ApiResponse<List<DonorStatusHistoryDto>>> GetStatusHistory()
+    {
+        var list = new List<DonorStatusHistoryDto>();
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = System.Data.CommandType.StoredProcedure;
+        command.CommandText = "GET_DONOR_STATUS_HISTORY";
+        
+        command.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+        
+        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = System.Data.ParameterDirection.Output };
+        command.Parameters.Add(pCursor);
+        
+        command.ExecuteNonQuery();
+        using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
+        
+        while (reader.Read())
+        {
+            list.Add(new DonorStatusHistoryDto
+            {
+                EventType = reader["EVENT_TYPE"]?.ToString() ?? "",
+                EventDate = Convert.ToDateTime(reader["EVENT_DATE"]),
+                EventTitle = reader["EVENT_TITLE"]?.ToString() ?? "",
+                Status = reader["STATUS"]?.ToString() ?? "",
+                Details = reader["DETAILS"]?.ToString() ?? ""
+            });
+        }
+        
+        return ApiResponse<List<DonorStatusHistoryDto>>.Ok(list);
+    }
+
     [HttpGet("donations/report")]
     public IActionResult GenerateDonationReport()
     {
