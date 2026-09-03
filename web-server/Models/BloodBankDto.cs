@@ -21,6 +21,11 @@ namespace web_server.Models
         public string StorageLocation { get; set; } = string.Empty;
     }
 
+    public class UpdateStatusRequest
+    {
+        public string Status { get; set; } = string.Empty;
+    }
+
     public class DonationTransferDto
     {
         public int TransferId { get; set; }
