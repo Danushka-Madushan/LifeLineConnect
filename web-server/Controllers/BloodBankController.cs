@@ -54,6 +54,11 @@ public class BloodBankController : ControllerBase
                 dash.IncomingTransfers = Convert.ToInt32(reader["INCOMING_TRANSFERS"]);
                 dash.PendingRequests = Convert.ToInt32(reader["PENDING_REQUESTS"]);
                 dash.ExpiringSoon = Convert.ToInt32(reader["EXPIRING_SOON"]);
+                var lowStockStr = reader["LOW_STOCK_GROUPS"]?.ToString();
+                if (!string.IsNullOrEmpty(lowStockStr))
+                {
+                    dash.LowStockGroups = lowStockStr.Split(',').Select(g => g.Trim()).ToList();
+                }
             }
         }
 
