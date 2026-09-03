@@ -5,6 +5,9 @@ using System.Security.Claims;
 using web_server.Data;
 using web_server.Models;
 
+using System.Data;
+using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
 namespace web_server.Controllers;
 
 [ApiController]
@@ -32,15 +35,16 @@ public class NotificationController : ControllerBase
         connection!.Open();
 
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = @"
-            SELECT NOTIFICATION_ID, NOTIFICATION_TYPE, TITLE, MESSAGE, ACTION_PATH, IS_READ, CREATED_AT 
-            FROM NOTIFICATION 
-            WHERE USER_ID = :userId
-            ORDER BY CREATED_AT DESC 
-            FETCH FIRST 50 ROWS ONLY";
-        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
-
-        using var reader = cmd.ExecuteReader();
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+        cmd.CommandText = "GET_USER_NOTIFICATIONS";
+        
+        cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+        
+        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(pCursor);
+        
+        cmd.ExecuteNonQuery();
+        using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
         while (reader.Read())
         {
             list.Add(new
@@ -63,9 +67,12 @@ public class NotificationController : ControllerBase
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "UPDATE NOTIFICATION SET IS_READ = 'Y' WHERE NOTIFICATION_ID = :id AND USER_ID = :userId";
-        cmd.Parameters.Add(new OracleParameter("id", id));
-        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+        cmd.CommandText = "MARK_NOTIFICATION_READ";
+        
+        cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+        cmd.Parameters.Add(new OracleParameter("p_notification_id", id));
+        
         cmd.ExecuteNonQuery();
 
         return ApiResponse<string>.Ok("Marked as read");
