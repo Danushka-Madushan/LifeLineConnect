@@ -24,6 +24,8 @@ import CommitteeDashboard from './pages/committee/CommitteeDashboard';
 import CommitteeVenues from './pages/committee/CommitteeVenues';
 import CommitteeCamps from './pages/committee/CommitteeCamps';
 import CommitteeCampDetails from './pages/committee/CommitteeCampDetails';
+import CommitteeTransfers from './pages/committee/CommitteeTransfers';
+import CommitteeStaff from './pages/committee/CommitteeStaff';
 
 import Appeals from './pages/Appeals';
 import Resources from './pages/Resources';
@@ -154,6 +156,8 @@ const App = () => {
               <Route path="/committee/venues" element={<ProtectedRoute allowedRoles={['ORGANIZING_COMMITTEE']}><CommitteeVenues /></ProtectedRoute>} />
               <Route path="/committee/camps" element={<ProtectedRoute allowedRoles={['ORGANIZING_COMMITTEE']}><CommitteeCamps /></ProtectedRoute>} />
               <Route path="/committee/camps/:campId" element={<ProtectedRoute allowedRoles={['ORGANIZING_COMMITTEE']}><CommitteeCampDetails /></ProtectedRoute>} />
+              <Route path="/committee/transfers" element={<ProtectedRoute allowedRoles={['ORGANIZING_COMMITTEE']}><CommitteeTransfers /></ProtectedRoute>} />
+              <Route path="/committee/staff" element={<ProtectedRoute allowedRoles={['ORGANIZING_COMMITTEE']}><CommitteeStaff /></ProtectedRoute>} />
               
             </Routes>
           </main>
