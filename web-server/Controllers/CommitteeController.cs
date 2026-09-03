@@ -8,6 +8,8 @@ using System.Data;
 using System.Security.Claims;
 using web_server.Data;
 using web_server.Models;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
 
 namespace web_server.Controllers;
 
@@ -241,5 +243,190 @@ public class CommitteeController : ControllerBase
         }).ToList<object>();
 
         return ApiResponse<List<object>>.Ok(list);
+    }
+
+    [HttpPatch("camps/{campId}/status")]
+    public ActionResult<ApiResponse<string>> UpdateCampStatus(int campId, [FromBody] web_server.Models.UpdateStatusRequest req)
+    {
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "UPDATE DONATION_CAMP SET STATUS = :status WHERE CAMP_ID = :id AND COMMITTEE_ID = (SELECT COMMITTEE_ID FROM ORGANIZING_COMMITTEE WHERE USER_ID = :userId)";
+        cmd.Parameters.Add(new OracleParameter("status", req.Status));
+        cmd.Parameters.Add(new OracleParameter("id", campId));
+        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        
+        var rows = cmd.ExecuteNonQuery();
+        if (rows == 0) return ApiResponse<string>.Error("Camp not found or unauthorized");
+        return ApiResponse<string>.Ok("Camp status updated.");
+    }
+
+    [HttpPost("venues")]
+    public ActionResult<ApiResponse<object>> CreateVenue([FromBody] web_server.Models.VenueDto req)
+    {
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            INSERT INTO VENUE (COMMITTEE_ID, VENUE_NAME, ADDRESS, LATITUDE, LONGITUDE, CAPACITY, STATUS) 
+            VALUES ((SELECT COMMITTEE_ID FROM ORGANIZING_COMMITTEE WHERE USER_ID = :userId), :vn, :add, :lat, :lng, :cap, 'ACTIVE')
+            RETURNING VENUE_ID INTO :id";
+        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        cmd.Parameters.Add(new OracleParameter("vn", req.VenueName));
+        cmd.Parameters.Add(new OracleParameter("add", req.Address));
+        cmd.Parameters.Add(new OracleParameter("lat", 0)); // Mocking default
+        cmd.Parameters.Add(new OracleParameter("lng", 0));
+        cmd.Parameters.Add(new OracleParameter("cap", req.Capacity));
+        var pId = new OracleParameter("id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(pId);
+        
+        cmd.ExecuteNonQuery();
+        return ApiResponse<object>.Ok(new { VenueId = pId.Value.ToString() });
+    }
+
+    [HttpGet("transfers")]
+    public ActionResult<ApiResponse<List<object>>> GetTransfers()
+    {
+        var list = new List<object>();
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT TRANSFER_ID, TRANSFER_CODE, STATUS, DISPATCHED_AT, RECEIVED_AT
+            FROM DONATION_TRANSFER
+            WHERE COMMITTEE_ID = (SELECT COMMITTEE_ID FROM ORGANIZING_COMMITTEE WHERE USER_ID = :userId)
+            ORDER BY DISPATCHED_AT DESC";
+        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(new {
+                TransferId = reader["TRANSFER_ID"],
+                TransferCode = reader["TRANSFER_CODE"],
+                Status = reader["STATUS"],
+                DispatchedAt = reader["DISPATCHED_AT"],
+                ReceivedAt = reader["RECEIVED_AT"] != DBNull.Value ? reader["RECEIVED_AT"] : null
+            });
+        }
+        return ApiResponse<List<object>>.Ok(list);
+    }
+
+    [HttpGet("staff")]
+    public ActionResult<ApiResponse<List<web_server.Models.BankStaffDto>>> GetStaff()
+    {
+        var list = new List<web_server.Models.BankStaffDto>();
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT STAFF_ID, FULL_NAME, POSITION_TITLE, PHONE, EMAIL, ASSIGNED_FROM, STATUS
+            FROM STAFF_MEMBER 
+            WHERE COMMITTEE_ID = (SELECT COMMITTEE_ID FROM ORGANIZING_COMMITTEE WHERE USER_ID = :userId)";
+        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(new web_server.Models.BankStaffDto
+            {
+                StaffId = Convert.ToInt32(reader["STAFF_ID"]),
+                FullName = reader["FULL_NAME"].ToString()!,
+                PositionTitle = reader["POSITION_TITLE"].ToString()!,
+                Phone = reader["PHONE"].ToString()!,
+                Email = reader["EMAIL"].ToString()!,
+                AssignedFrom = Convert.ToDateTime(reader["ASSIGNED_FROM"]),
+                Status = reader["STATUS"].ToString()!
+            });
+        }
+        return ApiResponse<List<web_server.Models.BankStaffDto>>.Ok(list);
+    }
+
+    [HttpPost("staff")]
+    public ActionResult<ApiResponse<object>> AddStaff([FromBody] web_server.Models.BankStaffDto req)
+    {
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            INSERT INTO STAFF_MEMBER (COMMITTEE_ID, FULL_NAME, POSITION_TITLE, PHONE, EMAIL, ASSIGNED_FROM, STATUS) 
+            VALUES ((SELECT COMMITTEE_ID FROM ORGANIZING_COMMITTEE WHERE USER_ID = :userId), :fn, :pt, :ph, :em, CURRENT_DATE, 'ACTIVE')
+            RETURNING STAFF_ID INTO :id";
+        
+        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        cmd.Parameters.Add(new OracleParameter("fn", req.FullName));
+        cmd.Parameters.Add(new OracleParameter("pt", req.PositionTitle));
+        cmd.Parameters.Add(new OracleParameter("ph", req.Phone));
+        cmd.Parameters.Add(new OracleParameter("em", req.Email));
+        
+        var idParam = new OracleParameter("id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(idParam);
+        
+        cmd.ExecuteNonQuery();
+        return ApiResponse<object>.Ok(new { StaffId = idParam.Value.ToString() });
+    }
+
+    [HttpDelete("staff/{staffId}")]
+    public ActionResult<ApiResponse<string>> DeleteStaff(int staffId)
+    {
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "UPDATE STAFF_MEMBER SET STATUS = 'INACTIVE' WHERE STAFF_ID = :id AND COMMITTEE_ID = (SELECT COMMITTEE_ID FROM ORGANIZING_COMMITTEE WHERE USER_ID = :userId)";
+        cmd.Parameters.Add(new OracleParameter("id", staffId));
+        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        cmd.ExecuteNonQuery();
+        return ApiResponse<string>.Ok("Staff removed");
+    }
+
+    [HttpPost("awareness")]
+    public async Task<ActionResult<ApiResponse<string>>> PostAwarenessMaterial([FromBody] web_server.Models.Mongo.AwarenessMaterial req)
+    {
+        req.CreatedAt = DateTime.UtcNow;
+        var col = _mongoDb.GetCollection<web_server.Models.Mongo.AwarenessMaterial>("campaignMedia");
+        await col.InsertOneAsync(req);
+        return ApiResponse<string>.Ok("Awareness material posted.");
+    }
+
+    [HttpGet("reports/camps")]
+    public ActionResult GenerateCampsReport()
+    {
+        var camps = GetCamps().Value?.Data ?? new List<CommitteeCampDto>();
+        var document = QuestPDF.Fluent.Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(QuestPDF.Helpers.PageSizes.A4);
+                page.Margin(2, QuestPDF.Infrastructure.Unit.Centimetre);
+                page.Header().Text("Committee Camps Report").SemiBold().FontSize(24).FontColor(QuestPDF.Helpers.Colors.Red.Medium);
+                
+                page.Content().PaddingVertical(1, QuestPDF.Infrastructure.Unit.Centimetre).Column(x =>
+                {
+                    x.Item().Text($"Date Generated: {DateTime.Now:yyyy-MM-dd HH:mm}").FontSize(10);
+                    x.Spacing(20);
+                    x.Item().Table(t =>
+                    {
+                        t.ColumnsDefinition(c =>
+                        {
+                            c.RelativeColumn(2);
+                            c.RelativeColumn();
+                            c.RelativeColumn();
+                        });
+                        t.Header(h =>
+                        {
+                            h.Cell().Text("Camp").SemiBold();
+                            h.Cell().Text("Date").SemiBold();
+                            h.Cell().Text("Status").SemiBold();
+                        });
+                        foreach (var camp in camps)
+                        {
+                            t.Cell().Text(camp.CampTitle);
+                            t.Cell().Text(camp.CampDate.ToShortDateString());
+                            t.Cell().Text(camp.Status);
+                        }
+                    });
+                });
+            });
+        });
+        return File(document.GeneratePdf(), "application/pdf", "Camps_Report.pdf");
     }
 }
