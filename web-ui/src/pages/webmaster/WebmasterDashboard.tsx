@@ -25,7 +25,7 @@ const WebmasterDashboard = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchData = async () => {
+    async function fetchData() {
       try {
         const [dashRes, overRes] = await Promise.all([
           api.get('/webmaster/dashboard'),
@@ -33,8 +33,8 @@ const WebmasterDashboard = () => {
         ]);
         if (dashRes.data.success) setStats(dashRes.data.data);
         if (overRes.data.success) setOverview(overRes.data.data);
-      } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to load webmaster data. Are you authorized?');
+      } catch (err) {
+        setError((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to load webmaster data. Are you authorized?');
       }
     };
     fetchData();
@@ -59,7 +59,7 @@ const WebmasterDashboard = () => {
   }
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto px-space-4xl py-space-3xl flex flex-col gap-space-4xl">
+    <div className="w-full max-w-360 mx-auto px-space-4xl py-space-3xl flex flex-col gap-space-4xl">
       <div className="flex flex-col gap-space-sm border-b border-surface-container pb-space-lg">
         <h1 className="font-heading text-4xl font-bold text-on-surface flex items-center gap-space-sm">
           <span className="material-symbols-outlined text-[36px] text-primary">monitoring</span>
@@ -126,7 +126,7 @@ const WebmasterDashboard = () => {
                   console.table(res.data.data);
                   alert(`Loaded ${res.data.data.length} users in console.`);
                 }
-              } catch(e) { alert("Failed to fetch users"); }
+              } catch { alert("Failed to fetch users"); }
             }}
             className="flex items-center gap-space-sm bg-surface-container px-space-md py-space-sm rounded-lg hover:bg-surface-container-high transition-colors font-semibold"
           >
@@ -142,7 +142,7 @@ const WebmasterDashboard = () => {
               try {
                 await api.post('/webmaster/guidelines', { title, description: desc, category: type, isActive: true });
                 alert("Medical guideline published successfully.");
-              } catch(e) { alert("Failed to publish guideline"); }
+              } catch { alert("Failed to publish guideline"); }
             }}
             className="flex items-center gap-space-sm bg-surface-container px-space-md py-space-sm rounded-lg hover:bg-surface-container-high transition-colors font-semibold"
           >
@@ -187,4 +187,3 @@ const StatCard = ({ icon, title, value, color }: { icon: string, title: string, 
 );
 
 export default WebmasterDashboard;
-
