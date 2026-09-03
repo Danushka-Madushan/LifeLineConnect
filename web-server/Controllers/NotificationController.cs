@@ -4,9 +4,7 @@ using Oracle.ManagedDataAccess.Client;
 using System.Security.Claims;
 using web_server.Data;
 using web_server.Models;
-
 using System.Data;
-using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
 namespace web_server.Controllers;
 

@@ -1,5 +1,3 @@
-using System;
-
 namespace web_server.Models
 {
     public class RegisterDonorDto

@@ -5,9 +5,6 @@ using web_server.Data;
 using web_server.Models;
 using web_server.Models.Mongo;
 using web_server.Models.Oracle;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 using System.Data;
 using Oracle.ManagedDataAccess.Client;

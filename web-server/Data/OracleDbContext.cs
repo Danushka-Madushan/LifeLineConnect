@@ -1,6 +1,5 @@
 using System.Data;
 using Oracle.ManagedDataAccess.Client;
-using Microsoft.Extensions.Configuration;
 
 namespace web_server.Data
 {

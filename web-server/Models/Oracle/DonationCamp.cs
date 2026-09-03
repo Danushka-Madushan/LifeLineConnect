@@ -1,5 +1,3 @@
-using System;
-
 namespace web_server.Models.Oracle;
 
 public class DonationCamp

@@ -1,5 +1,4 @@
 using MongoDB.Driver;
-using Microsoft.Extensions.Configuration;
 
 namespace web_server.Data
 {

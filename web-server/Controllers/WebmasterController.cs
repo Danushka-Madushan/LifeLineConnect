@@ -8,8 +8,6 @@ using System.Data;
 using web_server.Data;
 using web_server.Models;
 using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
 
 namespace web_server.Controllers;
 
