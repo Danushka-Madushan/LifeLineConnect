@@ -172,6 +172,32 @@ public class PublicController : ControllerBase
         return ApiResponse<List<CommunityQa>>.Ok(qas);
     }
 
+        [HttpGet("blood-banks")]
+    public ActionResult<ApiResponse<List<object>>> GetActiveBloodBanks()
+    {
+        var list = new List<object>();
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.CommandText = "GET_ACTIVE_BLOOD_BANKS";
+
+        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(pCursor);
+
+        cmd.ExecuteNonQuery();
+        using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
+        while (reader.Read())
+        {
+            list.Add(new {
+                BloodBankId = reader["BLOOD_BANK_ID"],
+                BankName = reader["BANK_NAME"],
+                District = reader["DISTRICT"]
+            });
+        }
+        return ApiResponse<List<object>>.Ok(list);
+    }
+
     [HttpGet("camps")]
     public ActionResult<ApiResponse<List<DonationCamp>>> GetPublicCamps([FromQuery] double? lat, [FromQuery] double? lng, [FromQuery] string? status)
     {
@@ -325,3 +351,4 @@ public class PublicController : ControllerBase
         return ApiResponse<SystemStats>.Error("Failed to fetch stats");
     }
 }
+
