@@ -229,3 +229,60 @@ BEGIN
     COMMIT;
 END REMOVE_BANK_STAFF;
 /
+CREATE OR REPLACE PROCEDURE ALLOCATE_UNITS_TO_REQUEST(
+    p_user_id IN NUMBER,
+    p_request_id IN NUMBER,
+    p_units_to_allocate OUT NUMBER
+) IS
+    v_bank_id NUMBER;
+    v_blood_group VARCHAR2(10);
+    v_units_needed NUMBER;
+    v_allocated_count NUMBER := 0;
+BEGIN
+    -- Verify bank user
+    SELECT BLOOD_BANK_ID INTO v_bank_id
+    FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE = 'BLOOD_BANK';
+
+    -- Get request details
+    SELECT BLOOD_GROUP, (UNITS_REQUIRED - NVL(UNITS_ALLOCATED, 0))
+    INTO v_blood_group, v_units_needed
+    FROM HOSPITAL_BLOOD_REQUEST
+    WHERE REQUEST_ID = p_request_id AND BLOOD_BANK_ID = v_bank_id AND STATUS IN ('PENDING', 'PARTIALLY_ALLOCATED')
+    FOR UPDATE;
+
+    IF v_units_needed > 0 THEN
+        -- Find available units and allocate them
+        FOR u IN (
+            SELECT BLOOD_UNIT_ID 
+            FROM BLOOD_UNIT 
+            WHERE BLOOD_BANK_ID = v_bank_id 
+              AND BLOOD_GROUP = v_blood_group 
+              AND STATUS = 'AVAILABLE'
+              AND EXPIRY_DATE >= SYSDATE
+            FETCH FIRST v_units_needed ROWS ONLY
+        ) LOOP
+            UPDATE BLOOD_UNIT
+            SET STATUS = 'RESERVED'
+            WHERE BLOOD_UNIT_ID = u.BLOOD_UNIT_ID;
+
+            v_allocated_count := v_allocated_count + 1;
+        END LOOP;
+
+        IF v_allocated_count > 0 THEN
+            UPDATE HOSPITAL_BLOOD_REQUEST
+            SET UNITS_ALLOCATED = NVL(UNITS_ALLOCATED, 0) + v_allocated_count,
+                STATUS = CASE 
+                    WHEN NVL(UNITS_ALLOCATED, 0) + v_allocated_count >= UNITS_REQUIRED THEN 'ALLOCATED'
+                    ELSE 'PARTIALLY_ALLOCATED'
+                END
+            WHERE REQUEST_ID = p_request_id;
+        END IF;
+    END IF;
+
+    p_units_to_allocate := v_allocated_count;
+    COMMIT;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        p_units_to_allocate := 0;
+END ALLOCATE_UNITS_TO_REQUEST;
+/
