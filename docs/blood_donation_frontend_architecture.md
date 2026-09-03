@@ -57,7 +57,7 @@
 - [BANK-13] staff tracking
 - [BANK-14] manage/view staff assigned to the blood bank
 - [BANK-15] hospital request status tracking, such as pending, approved/allocated, fulfilled, cancelled, or closed
-- [BANK-16] reports including inventory, expiry, hospital requests, donations received, and other operational reports with filters
+- [BANK-16] reports (PDF) including inventory, expiry, hospital requests, donations received, and other operational reports with filters
 - [BANK-17] blood-bank view of donation transfers received from organizing committees
 - [BANK-18] notifications for new hospital requests, low-stock conditions, incoming camp donations, and expiry warnings
 - [BANK-19] clear dashboard summaries for total available units, low-stock groups, expiring units, pending hospital requests, and recent incoming donations
@@ -85,7 +85,7 @@
 - [COMMITTEE-20] camp attendance and operational status overview
 - [COMMITTEE-21] view donor feedback and ratings for the committee's camps
 - [COMMITTEE-22] notifications for camp registrations, camp status changes, donation-record completion, and blood-bank transfer status
-- [COMMITTEE-23] reports for camps, attendance, donations recorded, transfers, and feedback/ratings
+- [COMMITTEE-23] reports (PDF) for camps, attendance, donations recorded, transfers, and feedback/ratings
 
 ## webmaster
 - [WEBMASTER-01] webmaster login and monitoring dashboard
@@ -93,7 +93,7 @@
 - [WEBMASTER-03] global read-only summaries and statistics
 - [WEBMASTER-04] cross-role dashboards that allow the webmaster to understand the current state of the entire system
 - [WEBMASTER-05] monitoring of active/inactive/closed entities and major workflow states
-- [WEBMASTER-06] system-wide reports and filtered read-only analytics
+- [WEBMASTER-06] system-wide reports (PDF) and filtered read-only analytics
 - [WEBMASTER-07] audit/activity viewing for monitoring purposes
 - [WEBMASTER-08] no create, update, delete, approval, assignment, inventory-management, camp-management, donor-management, or request-fulfilment actions
 - [WEBMASTER-09] donor medical guidelines remain public/system content and are not treated as a webmaster administration feature; the webmaster only monitors their availability/status if such monitoring is needed
