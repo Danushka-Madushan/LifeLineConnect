@@ -77,9 +77,24 @@ const CommitteeCamps = () => {
           {camps.map((c) => (
             <div key={c.campId} className="bg-surface-container-lowest border border-surface-container rounded-2xl p-space-lg flex flex-col gap-space-sm hover:shadow-sm">
               <div className="flex justify-between items-start">
-                <span className={`px-space-sm py-[2px] rounded-full text-[10px] font-bold uppercase ${c.status === 'PUBLISHED' ? 'bg-[#059669]/10 text-[#059669]' : c.status === 'COMPLETED' ? 'bg-primary/10 text-primary' : 'bg-surface-container-high'}`}>
-                  {c.status}
-                </span>
+                <select 
+                  className={`text-[10px] font-bold uppercase rounded p-1 border border-surface-container ${c.status === 'PUBLISHED' ? 'bg-[#059669]/10 text-[#059669]' : c.status === 'COMPLETED' ? 'bg-primary/10 text-primary' : 'bg-surface-container-high'}`}
+                  value={c.status}
+                  onChange={async (e) => {
+                    try {
+                      await api.patch(`/committee/camps/${c.campId}/status`, { status: e.target.value });
+                      fetchCamps();
+                    } catch (err) {
+                      alert('Failed to update status');
+                    }
+                  }}
+                >
+                  <option value="DRAFT">DRAFT</option>
+                  <option value="PUBLISHED">PUBLISHED</option>
+                  <option value="ONGOING">ONGOING</option>
+                  <option value="COMPLETED">COMPLETED</option>
+                  <option value="CANCELLED">CANCELLED</option>
+                </select>
                 <span className="text-xs font-mono text-secondary">ID: {c.campId}</span>
               </div>
               <h3 className="font-heading text-xl font-bold text-on-surface mt-space-xs">{c.campTitle}</h3>
