@@ -20,15 +20,34 @@ const CommitteeVenues = () => {
     }
   };
 
+  const handleAddVenue = async () => {
+    const venueName = prompt("Venue Name:");
+    const address = prompt("Address:");
+    const capacity = parseInt(prompt("Donor Capacity:") || "0");
+    if (venueName && address && capacity > 0) {
+      try {
+        await api.post('/committee/venues', { venueName, address, capacity });
+        fetchVenues();
+      } catch (e) {
+        alert("Failed to add venue");
+      }
+    }
+  };
+
   return (
     <div className="max-w-[1200px] mx-auto px-space-2xl py-space-xl">
-      <h1 className="font-heading text-3xl font-bold text-on-surface border-b border-surface-container pb-space-md mb-space-xl">Managed Venues</h1>
+      <div className="flex justify-between items-center border-b border-surface-container pb-space-md mb-space-xl">
+        <h1 className="font-heading text-3xl font-bold text-on-surface">Managed Venues</h1>
+        <button onClick={handleAddVenue} className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-bold flex items-center gap-1 hover:bg-primary/90">
+          <span className="material-symbols-outlined text-[20px]">add</span> Add Venue
+        </button>
+      </div>
       
       {loading ? (
         <div className="text-center p-space-2xl"><span className="material-symbols-outlined animate-spin text-4xl text-primary">sync</span></div>
       ) : venues.length === 0 ? (
         <div className="text-center p-space-2xl text-secondary bg-surface-container-lowest rounded-xl border border-surface-container">
-          No venues registered. Contact the Webmaster to add approved venues.
+          No venues registered. Click "Add Venue" to create one.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-lg">
