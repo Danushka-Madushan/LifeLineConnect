@@ -14,7 +14,7 @@ const Resources = () => {
 
     try {
       const endpoints = {
-        AWARENESS: '/public/awareness-materials',
+        AWARENESS: '/public/camps/awareness-materials',
         MEDIA: '/public/promotional-media',
         GUIDELINES: '/public/medical-guidelines',
       };
