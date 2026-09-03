@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 
@@ -25,7 +26,7 @@ const Notifications = () => {
       await api.post(`/notifications/${id}/read`);
       setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n));
     } catch {
-      alert('Failed to mark notification as read');
+      toast.error('Failed to mark notification as read');
     }
   };
 
