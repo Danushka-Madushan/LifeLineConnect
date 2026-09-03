@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
@@ -33,7 +34,7 @@ const CommitteeStaff = () => {
         await api.post('/committee/staff', { fullName, positionTitle, email, phone });
         fetchStaff();
       } catch {
-        alert('Failed to add staff');
+        toast.error('Failed to add staff');
       }
     }
   };
@@ -44,7 +45,7 @@ const CommitteeStaff = () => {
         await api.delete(`/committee/staff/${id}`);
         fetchStaff();
       } catch {
-        alert('Failed to remove staff');
+        toast.error('Failed to remove staff');
       }
     }
   };
