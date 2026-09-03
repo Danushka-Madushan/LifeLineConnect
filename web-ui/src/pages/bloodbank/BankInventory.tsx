@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
@@ -70,7 +71,7 @@ const BankInventory = () => {
       fetchInventory(); // refresh list
     } catch (e) {
       console.error(e);
-      alert('Failed to update status');
+      toast.error('Failed to update status');
     }
   };
 
