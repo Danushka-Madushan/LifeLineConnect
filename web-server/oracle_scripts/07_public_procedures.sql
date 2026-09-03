@@ -62,3 +62,26 @@ BEGIN
     OPEN p_result_cursor FOR v_sql;
 END GET_CAMPS_BY_IDS;
 /
+
+-- ================================================================
+-- Helper Function: Check if a camp is publicly visible
+-- ================================================================
+CREATE OR REPLACE FUNCTION IS_PUBLICLY_VISIBLE(p_camp_id IN NUMBER) RETURN NUMBER IS
+    v_status VARCHAR2(20);
+    v_public_visible CHAR(1);
+BEGIN
+    SELECT status, public_visible 
+    INTO v_status, v_public_visible
+    FROM donation_camp
+    WHERE camp_id = p_camp_id;
+
+    IF v_public_visible = 'Y' AND v_status IN ('PUBLISHED', 'ONGOING', 'COMPLETED') THEN
+        RETURN 1;
+    ELSE
+        RETURN 0;
+    END IF;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN 0;
+END IS_PUBLICLY_VISIBLE;
+/
