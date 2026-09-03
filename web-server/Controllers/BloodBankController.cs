@@ -61,7 +61,7 @@ public class BloodBankController : ControllerBase
     }
 
     [HttpGet("inventory")]
-    public ActionResult<ApiResponse<List<BloodUnitDto>>> GetInventory()
+    public ActionResult<ApiResponse<List<BloodUnitDto>>> GetInventory([FromQuery] string? bloodGroup, [FromQuery] string? status)
     {
         var list = new List<BloodUnitDto>();
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
@@ -88,7 +88,35 @@ public class BloodBankController : ControllerBase
                 StorageLocation = reader["STORAGE_LOCATION"]?.ToString() ?? ""
             });
         }
+        
+        if (!string.IsNullOrEmpty(bloodGroup))
+        {
+            list = list.Where(u => u.BloodGroup.Equals(bloodGroup, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        if (!string.IsNullOrEmpty(status))
+        {
+            list = list.Where(u => u.Status.Equals(status, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+
         return ApiResponse<List<BloodUnitDto>>.Ok(list);
+    }
+
+    [HttpPatch("inventory/{unitId}/status")]
+    public ActionResult<ApiResponse<string>> UpdateUnitStatus(int unitId, [FromBody] UpdateStatusRequest req)
+    {
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "UPDATE BLOOD_UNIT SET STATUS = :status WHERE UNIT_ID = :id AND BANK_ID = (SELECT BANK_ID FROM BLOOD_BANK WHERE USER_ID = :userId)";
+        cmd.Parameters.Add(new OracleParameter("status", req.Status));
+        cmd.Parameters.Add(new OracleParameter("id", unitId));
+        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        
+        var rows = cmd.ExecuteNonQuery();
+        if (rows == 0) return ApiResponse<string>.Error("Unit not found or unauthorized.");
+        
+        return ApiResponse<string>.Ok("Status updated successfully.");
     }
 
     [HttpGet("transfers")]
@@ -177,9 +205,25 @@ public class BloodBankController : ControllerBase
     public ActionResult<ApiResponse<string>> AllocateUnits(int requestId)
     {
         // For a full implementation, you'd pass a list of BloodUnitIds.
-        // For the sake of architecture mocking/testing, we'll just return a success string.
-        // A complete PL/SQL would accept an array or perform auto-allocation (FIFO).
         return ApiResponse<string>.Ok("Units successfully allocated to hospital request. Mock implementation executed.");
+    }
+
+    [HttpPatch("hospital-requests/{requestId}/status")]
+    public ActionResult<ApiResponse<string>> UpdateRequestStatus(int requestId, [FromBody] UpdateStatusRequest req)
+    {
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "UPDATE HOSPITAL_REQUEST SET STATUS = :status WHERE REQUEST_ID = :id AND BLOOD_BANK_ID = (SELECT BANK_ID FROM BLOOD_BANK WHERE USER_ID = :userId)";
+        cmd.Parameters.Add(new OracleParameter("status", req.Status));
+        cmd.Parameters.Add(new OracleParameter("id", requestId));
+        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        
+        var rows = cmd.ExecuteNonQuery();
+        if (rows == 0) return ApiResponse<string>.Error("Request not found or unauthorized.");
+        
+        return ApiResponse<string>.Ok("Status updated successfully.");
     }
 
     [HttpGet("staff")]
@@ -213,10 +257,53 @@ public class BloodBankController : ControllerBase
         return ApiResponse<List<BankStaffDto>>.Ok(list);
     }
 
-    [HttpGet("reports/inventory")]
-    public IActionResult GenerateInventoryReport()
+    [HttpPost("staff")]
+    public ActionResult<ApiResponse<BankStaffDto>> AddStaff([FromBody] BankStaffDto req)
     {
-        var inventory = GetInventory().Value?.Data ?? new List<BloodUnitDto>();
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            INSERT INTO STAFF_MEMBER (BANK_ID, FULL_NAME, POSITION_TITLE, PHONE, EMAIL, ASSIGNED_FROM, STATUS) 
+            VALUES ((SELECT BANK_ID FROM BLOOD_BANK WHERE USER_ID = :userId), :fn, :pt, :ph, :em, CURRENT_DATE, 'ACTIVE')
+            RETURNING STAFF_ID INTO :id";
+        
+        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        cmd.Parameters.Add(new OracleParameter("fn", req.FullName));
+        cmd.Parameters.Add(new OracleParameter("pt", req.PositionTitle));
+        cmd.Parameters.Add(new OracleParameter("ph", req.Phone));
+        cmd.Parameters.Add(new OracleParameter("em", req.Email));
+        
+        var idParam = new OracleParameter("id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(idParam);
+        
+        cmd.ExecuteNonQuery();
+        req.StaffId = Convert.ToInt32(idParam.Value.ToString());
+        req.Status = "ACTIVE";
+        req.AssignedFrom = DateTime.Today;
+        return ApiResponse<BankStaffDto>.Ok(req);
+    }
+
+    [HttpDelete("staff/{staffId}")]
+    public ActionResult<ApiResponse<string>> DeleteStaff(int staffId)
+    {
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+        using var cmd = connection.CreateCommand();
+        // Soft delete
+        cmd.CommandText = "UPDATE STAFF_MEMBER SET STATUS = 'INACTIVE' WHERE STAFF_ID = :id AND BANK_ID = (SELECT BANK_ID FROM BLOOD_BANK WHERE USER_ID = :userId)";
+        cmd.Parameters.Add(new OracleParameter("id", staffId));
+        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        
+        var rows = cmd.ExecuteNonQuery();
+        if (rows == 0) return ApiResponse<string>.Error("Staff not found or unauthorized");
+        return ApiResponse<string>.Ok("Staff removed");
+    }
+
+    [HttpGet("reports/inventory")]
+    public ActionResult GenerateInventoryReport()
+    {
+        var inventory = GetInventory(null, null).Value?.Data ?? new List<BloodUnitDto>();
         
         var document = Document.Create(container =>
         {
@@ -271,5 +358,110 @@ public class BloodBankController : ControllerBase
 
         var pdfBytes = document.GeneratePdf();
         return File(pdfBytes, "application/pdf", $"Inventory_Report_{DateTime.Now:yyyyMMdd}.pdf");
+    }
+
+    [HttpGet("reports/expiry")]
+    public ActionResult GenerateExpiryReport()
+    {
+        var inventory = GetInventory(null, null).Value?.Data ?? new List<BloodUnitDto>();
+        var expiring = inventory.Where(i => i.ExpiryDate <= DateTime.Now.AddDays(7) && i.Status == "AVAILABLE").OrderBy(i => i.ExpiryDate).ToList();
+        
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(2, Unit.Centimetre);
+                page.Header().Text("Blood Bank Expiry Report (Next 7 Days)").SemiBold().FontSize(24).FontColor(Colors.Red.Medium);
+                
+                page.Content().PaddingVertical(1, Unit.Centimetre).Column(x =>
+                {
+                    x.Item().Text($"Date Generated: {DateTime.Now:yyyy-MM-dd HH:mm}").FontSize(10);
+                    x.Spacing(20);
+
+                    x.Item().Table(t =>
+                    {
+                        t.ColumnsDefinition(c =>
+                        {
+                            c.RelativeColumn();
+                            c.RelativeColumn();
+                            c.RelativeColumn();
+                            c.RelativeColumn();
+                        });
+
+                        t.Header(h =>
+                        {
+                            h.Cell().Text("Unit Code").SemiBold();
+                            h.Cell().Text("Blood Group").SemiBold();
+                            h.Cell().Text("Expiry Date").SemiBold();
+                            h.Cell().Text("Days Left").SemiBold();
+                        });
+
+                        foreach (var u in expiring)
+                        {
+                            t.Cell().Text(u.UnitCode);
+                            t.Cell().Text(u.BloodGroup);
+                            t.Cell().Text(u.ExpiryDate.ToShortDateString());
+                            t.Cell().Text(Math.Max(0, (u.ExpiryDate - DateTime.Now).Days).ToString());
+                        }
+                    });
+                });
+            });
+        });
+
+        var pdf = document.GeneratePdf();
+        return File(pdf, "application/pdf", $"Expiry_Report_{DateTime.Now:yyyyMMdd}.pdf");
+    }
+
+    [HttpGet("reports/hospital-requests")]
+    public ActionResult GenerateHospitalRequestsReport()
+    {
+        var requests = GetHospitalRequests().Value?.Data ?? new List<HospitalRequestDto>();
+        
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(2, Unit.Centimetre);
+                page.Header().Text("Hospital Requests Report").SemiBold().FontSize(24).FontColor(Colors.Red.Medium);
+                
+                page.Content().PaddingVertical(1, Unit.Centimetre).Column(x =>
+                {
+                    x.Item().Text($"Date Generated: {DateTime.Now:yyyy-MM-dd HH:mm}").FontSize(10);
+                    x.Spacing(20);
+
+                    x.Item().Table(t =>
+                    {
+                        t.ColumnsDefinition(c =>
+                        {
+                            c.RelativeColumn(2);
+                            c.RelativeColumn();
+                            c.RelativeColumn();
+                            c.RelativeColumn();
+                        });
+
+                        t.Header(h =>
+                        {
+                            h.Cell().Text("Hospital").SemiBold();
+                            h.Cell().Text("Blood Group").SemiBold();
+                            h.Cell().Text("Priority").SemiBold();
+                            h.Cell().Text("Status").SemiBold();
+                        });
+
+                        foreach (var r in requests)
+                        {
+                            t.Cell().Text(r.HospitalName);
+                            t.Cell().Text(r.BloodGroup);
+                            t.Cell().Text(r.Priority);
+                            t.Cell().Text(r.Status);
+                        }
+                    });
+                });
+            });
+        });
+
+        var pdf = document.GeneratePdf();
+        return File(pdf, "application/pdf", $"Hospital_Requests_Report_{DateTime.Now:yyyyMMdd}.pdf");
     }
 }
