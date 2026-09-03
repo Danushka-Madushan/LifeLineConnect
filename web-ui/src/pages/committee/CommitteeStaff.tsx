@@ -5,10 +5,6 @@ const CommitteeStaff = () => {
   const [staff, setStaff] = useState<CommitteeStaffDto[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Reusing the same endpoint logic structure (though hitting CommitteeController instead of BloodBank)
-  // Let's assume there's a GET /committee/staff endpoint. Wait, did I write GET /committee/staff? 
-  // Ah! I only wrote POST and DELETE! Let me quickly add GET /committee/staff to the controller!
-  // I will write it first in the UI, then fix the backend.
   useEffect(() => {
     fetchStaff();
   }, []);
