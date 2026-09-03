@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
 
 const CommitteeCamps = () => {
-  const [camps, setCamps] = useState<any[]>([]);
-  const [venues, setVenues] = useState<any[]>([]);
+  const [camps, setCamps] = useState<DonationCampDto[]>([]);
+  const [venues, setVenues] = useState<DonationCampDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -16,7 +16,7 @@ const CommitteeCamps = () => {
     fetchVenues();
   }, []);
 
-  const fetchCamps = async () => {
+  async function fetchCamps() {
     try {
       const res = await api.get('/committee/camps');
       if (res.data.success) setCamps(res.data.data);
@@ -25,14 +25,16 @@ const CommitteeCamps = () => {
     }
   };
 
-  const fetchVenues = async () => {
+  async function fetchVenues() {
     try {
       const res = await api.get('/committee/venues');
       if (res.data.success) setVenues(res.data.data);
-    } catch (err) {}
+    } catch {
+      alert('Failed to fetch venues');
+    }
   };
 
-  const handleSubmit = async (e: any) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     try {
@@ -49,15 +51,15 @@ const CommitteeCamps = () => {
         setShowModal(false);
         fetchCamps();
       }
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to create camp');
+    } catch (err) {
+      alert((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to create camp');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-[1440px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-360 mx-auto px-space-2xl py-space-xl">
       <div className="flex justify-between items-center border-b border-surface-container pb-space-md mb-space-xl">
         <h1 className="font-heading text-3xl font-bold text-on-surface">Manage Donation Camps</h1>
         <button onClick={() => setShowModal(true)} className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-bold hover:bg-primary/90 flex items-center gap-space-sm">
@@ -84,7 +86,7 @@ const CommitteeCamps = () => {
                     try {
                       await api.patch(`/committee/camps/${c.campId}/status`, { status: e.target.value });
                       fetchCamps();
-                    } catch (err) {
+                    } catch {
                       alert('Failed to update status');
                     }
                   }}
