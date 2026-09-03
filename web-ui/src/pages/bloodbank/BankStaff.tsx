@@ -2,25 +2,25 @@ import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
 const BankStaff = () => {
-  const [staff, setStaff] = useState<any[]>([]);
+  const [staff, setStaff] = useState<BankStaffDto[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStaff();
   }, []);
 
-  const fetchStaff = async () => {
+  async function fetchStaff() {
     try {
       const res = await api.get('/blood-bank/staff');
       if (res.data.success) {
-        setStaff(res.data.data.filter((s: any) => s.status === 'ACTIVE'));
+        setStaff(res.data.data.filter((s: BankStaffDto) => s.status === 'ACTIVE'));
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddStaff = async () => {
+  async function handleAddStaff() {
     const fullName = prompt("Full Name:");
     const positionTitle = prompt("Position Title (e.g. Phlebotomist, Manager):");
     const email = prompt("Email:");
@@ -30,25 +30,25 @@ const BankStaff = () => {
       try {
         await api.post('/blood-bank/staff', { fullName, positionTitle, email, phone });
         fetchStaff();
-      } catch (e) {
+      } catch {
         alert('Failed to add staff');
       }
     }
   };
 
-  const handleRemove = async (id: number) => {
+  async function handleRemove(id: number) {
     if (window.confirm("Remove this staff member?")) {
       try {
         await api.delete(`/blood-bank/staff/${id}`);
         fetchStaff();
-      } catch (e) {
+      } catch {
         alert('Failed to remove staff');
       }
     }
   };
 
   return (
-    <div className="max-w-[1000px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-250 mx-auto px-space-2xl py-space-xl">
       <div className="flex justify-between items-center border-b border-surface-container pb-space-md mb-space-xl">
         <h1 className="font-heading text-3xl font-bold text-on-surface">Assigned Medical Staff</h1>
         <button onClick={handleAddStaff} className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-bold flex items-center gap-1 hover:bg-primary/90">
