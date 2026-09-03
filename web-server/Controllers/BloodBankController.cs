@@ -108,13 +108,15 @@ public class BloodBankController : ControllerBase
         connection!.Open();
 
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "UPDATE BLOOD_UNIT SET STATUS = :status WHERE UNIT_ID = :id AND BANK_ID = (SELECT BANK_ID FROM BLOOD_BANK WHERE USER_ID = :userId)";
-        cmd.Parameters.Add(new OracleParameter("status", req.Status));
-        cmd.Parameters.Add(new OracleParameter("id", unitId));
-        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+        cmd.CommandText = "UPDATE_UNIT_STATUS";
+        
+        cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+        cmd.Parameters.Add(new OracleParameter("p_unit_id", unitId));
+        cmd.Parameters.Add(new OracleParameter("p_status", req.Status));
         
         var rows = cmd.ExecuteNonQuery();
-        if (rows == 0) return ApiResponse<string>.Error("Unit not found or unauthorized.");
+        
         
         return ApiResponse<string>.Ok("Status updated successfully.");
     }
@@ -215,13 +217,15 @@ public class BloodBankController : ControllerBase
         connection!.Open();
 
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "UPDATE HOSPITAL_REQUEST SET STATUS = :status WHERE REQUEST_ID = :id AND BLOOD_BANK_ID = (SELECT BANK_ID FROM BLOOD_BANK WHERE USER_ID = :userId)";
-        cmd.Parameters.Add(new OracleParameter("status", req.Status));
-        cmd.Parameters.Add(new OracleParameter("id", requestId));
-        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+        cmd.CommandText = "UPDATE_REQUEST_STATUS";
         
-        var rows = cmd.ExecuteNonQuery();
-        if (rows == 0) return ApiResponse<string>.Error("Request not found or unauthorized.");
+        cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+        cmd.Parameters.Add(new OracleParameter("p_request_id", requestId));
+        cmd.Parameters.Add(new OracleParameter("p_status", req.Status));
+        
+        cmd.ExecuteNonQuery();
+        
         
         return ApiResponse<string>.Ok("Status updated successfully.");
     }
@@ -263,22 +267,20 @@ public class BloodBankController : ControllerBase
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = @"
-            INSERT INTO STAFF_MEMBER (BANK_ID, FULL_NAME, POSITION_TITLE, PHONE, EMAIL, ASSIGNED_FROM, STATUS) 
-            VALUES ((SELECT BANK_ID FROM BLOOD_BANK WHERE USER_ID = :userId), :fn, :pt, :ph, :em, CURRENT_DATE, 'ACTIVE')
-            RETURNING STAFF_ID INTO :id";
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+        cmd.CommandText = "ADD_BANK_STAFF";
         
-        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
-        cmd.Parameters.Add(new OracleParameter("fn", req.FullName));
-        cmd.Parameters.Add(new OracleParameter("pt", req.PositionTitle));
-        cmd.Parameters.Add(new OracleParameter("ph", req.Phone));
-        cmd.Parameters.Add(new OracleParameter("em", req.Email));
+        cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+        cmd.Parameters.Add(new OracleParameter("p_full_name", req.FullName));
+        cmd.Parameters.Add(new OracleParameter("p_position", req.PositionTitle));
+        cmd.Parameters.Add(new OracleParameter("p_phone", req.Phone));
+        cmd.Parameters.Add(new OracleParameter("p_email", req.Email));
         
-        var idParam = new OracleParameter("id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
-        cmd.Parameters.Add(idParam);
+        var pStaffId = new OracleParameter("p_staff_id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(pStaffId);
         
         cmd.ExecuteNonQuery();
-        req.StaffId = Convert.ToInt32(idParam.Value.ToString());
+        req.StaffId = Convert.ToInt32(pStaffId.Value.ToString());
         req.Status = "ACTIVE";
         req.AssignedFrom = DateTime.Today;
         return ApiResponse<BankStaffDto>.Ok(req);
@@ -290,13 +292,14 @@ public class BloodBankController : ControllerBase
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
         using var cmd = connection.CreateCommand();
-        // Soft delete
-        cmd.CommandText = "UPDATE STAFF_MEMBER SET STATUS = 'INACTIVE' WHERE STAFF_ID = :id AND BANK_ID = (SELECT BANK_ID FROM BLOOD_BANK WHERE USER_ID = :userId)";
-        cmd.Parameters.Add(new OracleParameter("id", staffId));
-        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+        cmd.CommandText = "REMOVE_BANK_STAFF";
+        
+        cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+        cmd.Parameters.Add(new OracleParameter("p_staff_id", staffId));
         
         var rows = cmd.ExecuteNonQuery();
-        if (rows == 0) return ApiResponse<string>.Error("Staff not found or unauthorized");
+        
         return ApiResponse<string>.Ok("Staff removed");
     }
 
