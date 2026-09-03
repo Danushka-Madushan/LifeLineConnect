@@ -45,7 +45,7 @@ const Camps = () => {
     }).catch(console.error);
   }, []);
 
-  const handleViewFeedback = async (campId: number) => {
+  async function handleViewFeedback(campId: number) {
     if (selectedCampId === campId) {
       setSelectedCampId(null);
       return;
@@ -62,7 +62,7 @@ const Camps = () => {
   };
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto px-space-4xl py-space-3xl flex flex-col gap-space-4xl">
+    <div className="w-full max-w-360 mx-auto px-space-4xl py-space-3xl flex flex-col gap-space-4xl">
       <div className="flex flex-col gap-space-sm">
         <h1 className="font-heading text-4xl font-bold text-on-surface">Donation Camps</h1>
         <p className="font-body text-lg text-secondary">Find upcoming blood donation events near you.</p>
@@ -153,4 +153,3 @@ const Camps = () => {
 };
 
 export default Camps;
-
