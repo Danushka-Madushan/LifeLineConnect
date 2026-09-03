@@ -11,6 +11,7 @@ import DonorDashboard from './pages/donor/DonorDashboard';
 import DonorProfile from './pages/donor/DonorProfile';
 import DonorCamps from './pages/donor/DonorCamps';
 import DonorDonations from './pages/donor/DonorDonations';
+import { DonorStatusHistory } from './pages/donor/DonorStatusHistory';
 import DonorAppeals from './pages/donor/DonorAppeals';
 import DonorFeedback from './pages/donor/DonorFeedback';
 
@@ -26,9 +27,13 @@ import CommitteeCamps from './pages/committee/CommitteeCamps';
 import CommitteeCampDetails from './pages/committee/CommitteeCampDetails';
 import CommitteeTransfers from './pages/committee/CommitteeTransfers';
 import CommitteeStaff from './pages/committee/CommitteeStaff';
+import CommitteeAwareness from './pages/committee/CommitteeAwareness';
 
 import Appeals from './pages/Appeals';
 import Resources from './pages/Resources';
+import Awareness from './pages/Awareness';
+import Promotional from './pages/Promotional';
+import Guidelines from './pages/Guidelines';
 import Notifications from './pages/Notifications';
 
 const Header = () => {
@@ -120,6 +125,9 @@ const App = () => {
               <Route path="/camps" element={<Camps />} />
               <Route path="/appeals" element={<Appeals />} />
               <Route path="/resources" element={<Resources />} />
+              <Route path="/awareness" element={<Awareness />} />
+              <Route path="/promotional" element={<Promotional />} />
+              <Route path="/guidelines" element={<Guidelines />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               
@@ -141,7 +149,9 @@ const App = () => {
               <Route path="/donor/profile" element={<ProtectedRoute allowedRoles={['DONOR']}><DonorProfile /></ProtectedRoute>} />
               <Route path="/donor/camps" element={<ProtectedRoute allowedRoles={['DONOR']}><DonorCamps /></ProtectedRoute>} />
               <Route path="/donor/donations" element={<ProtectedRoute allowedRoles={['DONOR']}><DonorDonations /></ProtectedRoute>} />
+              <Route path="/donor/history" element={<ProtectedRoute allowedRoles={['DONOR']}><DonorStatusHistory /></ProtectedRoute>} />
               <Route path="/donor/appeals" element={<ProtectedRoute allowedRoles={['DONOR']}><DonorAppeals /></ProtectedRoute>} />
+              <Route path="/donor/guidelines" element={<ProtectedRoute allowedRoles={['DONOR']}><Guidelines /></ProtectedRoute>} />
               <Route path="/donor/feedback" element={<ProtectedRoute allowedRoles={['DONOR']}><DonorFeedback /></ProtectedRoute>} />
               
               {/* Blood Bank Routes */}
@@ -158,6 +168,7 @@ const App = () => {
               <Route path="/committee/camps/:campId" element={<ProtectedRoute allowedRoles={['ORGANIZING_COMMITTEE']}><CommitteeCampDetails /></ProtectedRoute>} />
               <Route path="/committee/transfers" element={<ProtectedRoute allowedRoles={['ORGANIZING_COMMITTEE']}><CommitteeTransfers /></ProtectedRoute>} />
               <Route path="/committee/staff" element={<ProtectedRoute allowedRoles={['ORGANIZING_COMMITTEE']}><CommitteeStaff /></ProtectedRoute>} />
+              <Route path="/committee/awareness" element={<ProtectedRoute allowedRoles={['ORGANIZING_COMMITTEE']}><CommitteeAwareness /></ProtectedRoute>} />
               
             </Routes>
           </main>
