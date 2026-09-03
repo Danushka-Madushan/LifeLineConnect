@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { api } from '../../lib/api';
 
+export interface CampFeedbackDto {
+  [key: string]: string | number | boolean | null | undefined | CampFeedbackDto | CampFeedbackDto[];
+}
+
 const DonorFeedback = () => {
   const [campId, setCampId] = useState('');
   const [rating, setRating] = useState(5);
@@ -8,7 +12,7 @@ const DonorFeedback = () => {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
 
-  const handleSubmit = async (e: any) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     setMessage('');
@@ -21,15 +25,15 @@ const DonorFeedback = () => {
         setComment('');
         setRating(5);
       }
-    } catch (err: any) {
-      setMessage(err.response?.data?.message || 'Failed to submit feedback.');
+    } catch (err) {
+      setMessage((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to submit feedback.');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-[600px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-150 mx-auto px-space-2xl py-space-xl">
       <h1 className="font-heading text-3xl font-bold text-on-surface border-b border-surface-container pb-space-md mb-space-xl">Submit Feedback</h1>
       
       {message && (
