@@ -15,7 +15,7 @@ export function DonorStatusHistory() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchHistory = async () => {
+    async function fetchHistory() {
       try {
         const res = await api.get('/donors/me/status-history');
         if (res.data.success) {
