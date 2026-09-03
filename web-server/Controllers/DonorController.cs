@@ -34,6 +34,31 @@ public class DonorController : ControllerBase
         return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
     }
 
+        [HttpGet("me/eligibility")]
+    public ActionResult<ApiResponse<object>> GetEligibility()
+    {
+        var userId = GetCurrentUserId();
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+
+        using var cmd = new OracleCommand("CHECK_DONOR_ELIGIBILITY", connection);
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.Parameters.Add("p_user_id", OracleDbType.Decimal).Value = userId;
+        var pEligible = new OracleParameter("p_eligible", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+        var pReason = new OracleParameter("p_reason", OracleDbType.Varchar2, 200) { Direction = ParameterDirection.Output };
+        var pNextDate = new OracleParameter("p_next_date", OracleDbType.Date) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(pEligible);
+        cmd.Parameters.Add(pReason);
+        cmd.Parameters.Add(pNextDate);
+        cmd.ExecuteNonQuery();
+
+        return ApiResponse<object>.Ok(new {
+            IsEligible = Convert.ToInt32(pEligible.Value.ToString()) == 1,
+            Reason = pReason.Value.ToString(),
+            NextEligibleDate = Convert.ToDateTime(pNextDate.Value.ToString())
+        });
+    }
+
     [HttpGet("dashboard")]
     public ActionResult<ApiResponse<DonorDashboardDto>> GetDashboard()
     {
