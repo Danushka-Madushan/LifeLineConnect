@@ -2,15 +2,11 @@ import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
 const BankTransfers = () => {
-  const [transfers, setTransfers] = useState<any[]>([]);
+  const [transfers, setTransfers] = useState<DonationTransferDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchTransfers();
-  }, []);
-
-  const fetchTransfers = async () => {
+  async function fetchTransfers() {
     try {
       const res = await api.get('/blood-bank/transfers');
       if (res.data.success) {
@@ -19,24 +15,30 @@ const BankTransfers = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleReceive = async (transferId: number) => {
+  useEffect(() => {
+    fetchTransfers();
+  }, []);
+
+  ;
+
+  async function handleReceive(transferId: number) {
     if (!window.confirm('Confirm receipt of this transfer? This will unpack units into available inventory.')) return;
     setProcessing(transferId);
     try {
       await api.post(`/blood-bank/transfers/${transferId}/receive`);
       alert('Transfer received and inventory updated successfully.');
       fetchTransfers();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to process transfer');
+    } catch (err) {
+      alert((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to process transfer');
     } finally {
       setProcessing(null);
     }
   };
 
   return (
-    <div className="max-w-[1440px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-360 mx-auto px-space-2xl py-space-xl">
       <h1 className="font-heading text-3xl font-bold text-on-surface border-b border-surface-container pb-space-md mb-space-xl">Incoming Donations (Transfers)</h1>
       
       {loading ? (
