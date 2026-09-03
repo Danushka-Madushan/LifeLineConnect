@@ -5,6 +5,13 @@ using web_server.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+DotNetEnv.Env.Load();
+builder.Configuration["ConnectionStrings:OracleDb"] = Environment.GetEnvironmentVariable("ORACLE_DB_CONN") ?? builder.Configuration["ConnectionStrings:OracleDb"];
+builder.Configuration["ConnectionStrings:MongoDb"] = Environment.GetEnvironmentVariable("MONGO_DB_CONN") ?? builder.Configuration["ConnectionStrings:MongoDb"];
+builder.Configuration["ConnectionStrings:MongoDbDatabaseName"] = Environment.GetEnvironmentVariable("MONGO_DB_NAME") ?? builder.Configuration["ConnectionStrings:MongoDbDatabaseName"];
+builder.Configuration["JwtSettings:Secret"] = Environment.GetEnvironmentVariable("JWT_SECRET") ?? builder.Configuration["JwtSettings:Secret"];
+
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
