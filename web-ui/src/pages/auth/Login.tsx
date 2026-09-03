@@ -12,7 +12,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setIsLoading(true);
@@ -34,8 +34,8 @@ const Login = () => {
       } else {
         setError(res.data.message || 'Login failed');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred during login');
+    } catch (err) {
+      setError((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'An error occurred during login');
     } finally {
       setIsLoading(false);
     }
