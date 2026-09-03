@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+
 import { api } from '../../lib/api';
 
 interface DashboardStats {
@@ -186,3 +187,4 @@ const StatCard = ({ icon, title, value, color }: { icon: string, title: string, 
 );
 
 export default WebmasterDashboard;
+
