@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
@@ -30,11 +31,11 @@ const DonorAppeals = () => {
       const res = await api.post('/donors/me/emergency-appeals', form);
       if (res.data.success) {
         setShowModal(false);
-        alert('Appeal submitted and pending review.');
+        toast('Appeal submitted and pending review.');
         fetchAppeals();
       }
     } catch (err) {
-      alert((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to submit appeal.');
+      toast((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to submit appeal.');
     } finally {
       setSubmitting(false);
     }
