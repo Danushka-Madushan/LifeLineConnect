@@ -1,4 +1,5 @@
 import React from 'react';
+import { Toaster } from 'react-hot-toast';
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Home from './pages/Home';
@@ -115,6 +116,7 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
 const App = () => {
   return (
     <AuthProvider>
+      <Toaster position="top-right" />
       <BrowserRouter>
         <div className="min-h-screen flex flex-col bg-surface font-body text-on-surface">
           <Header />
