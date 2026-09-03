@@ -251,13 +251,15 @@ public class CommitteeController : ControllerBase
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "UPDATE DONATION_CAMP SET STATUS = :status WHERE CAMP_ID = :id AND COMMITTEE_ID = (SELECT COMMITTEE_ID FROM ORGANIZING_COMMITTEE WHERE USER_ID = :userId)";
-        cmd.Parameters.Add(new OracleParameter("status", req.Status));
-        cmd.Parameters.Add(new OracleParameter("id", campId));
-        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+        cmd.CommandText = "UPDATE_CAMP_STATUS";
         
-        var rows = cmd.ExecuteNonQuery();
-        if (rows == 0) return ApiResponse<string>.Error("Camp not found or unauthorized");
+        cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+        cmd.Parameters.Add(new OracleParameter("p_camp_id", campId));
+        cmd.Parameters.Add(new OracleParameter("p_status", req.Status));
+        
+        cmd.ExecuteNonQuery();
+        
         return ApiResponse<string>.Ok("Camp status updated.");
     }
 
@@ -267,21 +269,19 @@ public class CommitteeController : ControllerBase
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = @"
-            INSERT INTO VENUE (COMMITTEE_ID, VENUE_NAME, ADDRESS, LATITUDE, LONGITUDE, CAPACITY, STATUS) 
-            VALUES ((SELECT COMMITTEE_ID FROM ORGANIZING_COMMITTEE WHERE USER_ID = :userId), :vn, :add, :lat, :lng, :cap, 'ACTIVE')
-            RETURNING VENUE_ID INTO :id";
-        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
-        cmd.Parameters.Add(new OracleParameter("vn", req.VenueName));
-        cmd.Parameters.Add(new OracleParameter("add", req.Address));
-        cmd.Parameters.Add(new OracleParameter("lat", 0)); // Mocking default
-        cmd.Parameters.Add(new OracleParameter("lng", 0));
-        cmd.Parameters.Add(new OracleParameter("cap", req.Capacity));
-        var pId = new OracleParameter("id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
-        cmd.Parameters.Add(pId);
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+        cmd.CommandText = "CREATE_VENUE";
+        
+        cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+        cmd.Parameters.Add(new OracleParameter("p_venue_name", req.VenueName));
+        cmd.Parameters.Add(new OracleParameter("p_address", req.Address));
+        cmd.Parameters.Add(new OracleParameter("p_capacity", req.Capacity));
+        
+        var pVenueId = new OracleParameter("p_venue_id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(pVenueId);
         
         cmd.ExecuteNonQuery();
-        return ApiResponse<object>.Ok(new { VenueId = pId.Value.ToString() });
+        return ApiResponse<object>.Ok(new { VenueId = pVenueId.Value.ToString() });
     }
 
     [HttpGet("transfers")]
@@ -291,13 +291,16 @@ public class CommitteeController : ControllerBase
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = @"
-            SELECT TRANSFER_ID, TRANSFER_CODE, STATUS, DISPATCHED_AT, RECEIVED_AT
-            FROM DONATION_TRANSFER
-            WHERE COMMITTEE_ID = (SELECT COMMITTEE_ID FROM ORGANIZING_COMMITTEE WHERE USER_ID = :userId)
-            ORDER BY DISPATCHED_AT DESC";
-        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
-        using var reader = cmd.ExecuteReader();
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+        cmd.CommandText = "GET_COMMITTEE_TRANSFERS";
+        
+        cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+        
+        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(pCursor);
+        
+        cmd.ExecuteNonQuery();
+        using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
         while (reader.Read())
         {
             list.Add(new {
@@ -318,13 +321,16 @@ public class CommitteeController : ControllerBase
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = @"
-            SELECT STAFF_ID, FULL_NAME, POSITION_TITLE, PHONE, EMAIL, ASSIGNED_FROM, STATUS
-            FROM STAFF_MEMBER 
-            WHERE COMMITTEE_ID = (SELECT COMMITTEE_ID FROM ORGANIZING_COMMITTEE WHERE USER_ID = :userId)";
-        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+        cmd.CommandText = "GET_COMMITTEE_STAFF";
         
-        using var reader = cmd.ExecuteReader();
+        cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+        
+        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(pCursor);
+        
+        cmd.ExecuteNonQuery();
+        using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
         while (reader.Read())
         {
             list.Add(new web_server.Models.BankStaffDto
@@ -347,22 +353,21 @@ public class CommitteeController : ControllerBase
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = @"
-            INSERT INTO STAFF_MEMBER (COMMITTEE_ID, FULL_NAME, POSITION_TITLE, PHONE, EMAIL, ASSIGNED_FROM, STATUS) 
-            VALUES ((SELECT COMMITTEE_ID FROM ORGANIZING_COMMITTEE WHERE USER_ID = :userId), :fn, :pt, :ph, :em, CURRENT_DATE, 'ACTIVE')
-            RETURNING STAFF_ID INTO :id";
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+        cmd.CommandText = "ADD_COMMITTEE_STAFF";
         
-        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
-        cmd.Parameters.Add(new OracleParameter("fn", req.FullName));
-        cmd.Parameters.Add(new OracleParameter("pt", req.PositionTitle));
-        cmd.Parameters.Add(new OracleParameter("ph", req.Phone));
-        cmd.Parameters.Add(new OracleParameter("em", req.Email));
+        cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+        cmd.Parameters.Add(new OracleParameter("p_full_name", req.FullName));
+        cmd.Parameters.Add(new OracleParameter("p_position", req.PositionTitle));
+        cmd.Parameters.Add(new OracleParameter("p_phone", req.Phone));
+        cmd.Parameters.Add(new OracleParameter("p_email", req.Email));
         
-        var idParam = new OracleParameter("id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
-        cmd.Parameters.Add(idParam);
+        var pStaffId = new OracleParameter("p_staff_id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(pStaffId);
         
         cmd.ExecuteNonQuery();
-        return ApiResponse<object>.Ok(new { StaffId = idParam.Value.ToString() });
+        req.StaffId = Convert.ToInt32(pStaffId.Value.ToString());
+        return ApiResponse<object>.Ok(new { StaffId = req.StaffId });
     }
 
     [HttpDelete("staff/{staffId}")]
@@ -371,9 +376,12 @@ public class CommitteeController : ControllerBase
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "UPDATE STAFF_MEMBER SET STATUS = 'INACTIVE' WHERE STAFF_ID = :id AND COMMITTEE_ID = (SELECT COMMITTEE_ID FROM ORGANIZING_COMMITTEE WHERE USER_ID = :userId)";
-        cmd.Parameters.Add(new OracleParameter("id", staffId));
-        cmd.Parameters.Add(new OracleParameter("userId", GetCurrentUserId()));
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+        cmd.CommandText = "REMOVE_COMMITTEE_STAFF";
+        
+        cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+        cmd.Parameters.Add(new OracleParameter("p_staff_id", staffId));
+        
         cmd.ExecuteNonQuery();
         return ApiResponse<string>.Ok("Staff removed");
     }
