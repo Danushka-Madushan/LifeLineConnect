@@ -46,3 +46,19 @@ BEGIN
         FROM DUAL;
 END GET_PUBLIC_STATS;
 /
+
+-- Get camps by a comma-separated list of IDs (used by top-rated camps endpoint)
+CREATE OR REPLACE PROCEDURE GET_CAMPS_BY_IDS (
+    p_camp_ids      IN  VARCHAR2,
+    p_result_cursor OUT SYS_REFCURSOR
+) AS
+    v_sql VARCHAR2(4000);
+BEGIN
+    v_sql := 'SELECT CAMP_ID, COMMITTEE_ID, VENUE_ID, CAMP_TITLE, CAMP_DESCRIPTION, ' ||
+             'CAMP_DATE, START_TIME, END_TIME, CAPACITY, STATUS, PUBLIC_VISIBLE ' ||
+             'FROM DONATION_CAMP ' ||
+             'WHERE CAMP_ID IN (' || p_camp_ids || ')';
+
+    OPEN p_result_cursor FOR v_sql;
+END GET_CAMPS_BY_IDS;
+/
