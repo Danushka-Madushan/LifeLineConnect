@@ -1,0 +1,134 @@
+# Frontend
+
+## homepage
+- clear 3 distinctive entry buttons for **Donors**, **Blood Banks**, and **Organizing Committees**; each section must be visually separated and understandable before login
+- emergency broadcasts for urgent blood-bank requests
+- emergency blood appeal notices for patients/people who need blood outside the normal blood-bank inventory flow
+- search emergency appeals by blood type, urgency, and location
+- camp awareness materials
+- promotional media
+- donor medical guidelines
+- donor community discussion threads
+- search discussion threads
+- Q&A / frequently asked donor questions
+- top-rated donation camps based on donor ratings
+- view all feedback and ratings for a specific blood donation camp
+- public donation camp catalogue with camp date, time, location, organizer, supported blood needs, availability/status, and basic awareness information
+- clear navigation to registration/login without forcing users to choose a role before understanding the system
+- public status indicators for camps, blood appeals, and emergency requests so closed/fulfilled items are not presented as active
+
+## doners section
+- individual registration with normal profile details plus NIC for identification
+- donor login and personal dashboard
+- manage donor profile and contact information
+- check donation health eligibility before registering for a donation
+- show eligibility result clearly with the reason/status and the next eligible donation date when applicable
+- browse and find the nearest suitable donation camp via map
+- view camp details and navigate to the selected camp location
+- register/express attendance for an available donation camp
+- view upcoming registered camps
+- donation history check
+- donation history report (PDF)
+- donation records become visible after the organizing committee completes and submits the donation record
+- donor feedback and ratings can be posted only for a relevant camp after a completed donation
+- view previously submitted feedback and ratings
+- donor medical guidelines
+- browse emergency blood appeals
+- search emergency appeals by blood type, urgency, and location
+- submit an emergency blood appeal for a patient/self when the system allows donor-side appeals; the appeal must have a visible status such as pending, active, fulfilled, or closed
+- participate in donor community discussion threads
+- create questions/posts and view Q&A content
+- notifications for camp registration/status, donation completion, eligibility availability, appeal updates, and relevant system announcements
+- donor-facing status history so the user can understand whether an action is pending, confirmed, completed, cancelled, or closed
+
+## blood banks section
+- blood-bank login and dedicated dashboard
+- track blood inventory by blood group, unit, status, and relevant storage/expiry information
+- blood group unit management
+- search and filter inventory/records
+- receive and manage hospital blood requests
+- hospital requests must remain a **blood-bank responsibility**; organizing committees do not directly fulfil hospital requests
+- view incoming donations assigned to the blood bank by organizing committees
+- receive/register donated units into blood-bank inventory after a camp donation transfer is completed
+- track the source of each received donation at a high level, including the related donation camp and donation batch/record
+- manage blood-unit availability status, including available, reserved/allocated, issued, expired, and otherwise unavailable states
+- track blood units approaching expiration
+- track expired blood units
+- staff tracking
+- manage/view staff assigned to the blood bank
+- hospital request status tracking, such as pending, approved/allocated, fulfilled, cancelled, or closed
+- reports including inventory, expiry, hospital requests, donations received, and other operational reports with filters
+- blood-bank view of donation transfers received from organizing committees
+- notifications for new hospital requests, low-stock conditions, incoming camp donations, and expiry warnings
+- clear dashboard summaries for total available units, low-stock groups, expiring units, pending hospital requests, and recent incoming donations
+
+## organizing comittee section
+- organizing-committee login and dedicated dashboard
+- organize donation camps
+- create/register donation camps with date, time, venue, capacity, organizer details, and required/target blood groups when applicable
+- manage camp lifecycle: draft, published/open, ongoing, completed, cancelled, and closed
+- venue management
+- manage/view venues used by donation camps and prevent conflicting camp scheduling in the frontend
+- publish camp awareness materials
+- manage camp information shown in the public donation camp catalogue
+- donor registration/attendance list for each camp
+- record donations for donors who actually donate at the camp
+- ensure a completed donation record is associated with both the donor and the relevant donation camp
+- donation record entry and review before final submission
+- once a donation record is completed, the donor's next donation eligibility information is updated by the system and reflected in the donor UI
+- connect completed camp donations with a selected blood bank for transfer
+- create/manage a donation transfer to a blood bank and track transfer status
+- do not directly manage blood-bank inventory; the committee only manages the camp-side donation and transfer workflow
+- view whether transferred donations have been received by the selected blood bank
+- staff tracking
+- manage/view committee staff assigned to each camp
+- camp attendance and operational status overview
+- view donor feedback and ratings for the committee's camps
+- notifications for camp registrations, camp status changes, donation-record completion, and blood-bank transfer status
+- reports for camps, attendance, donations recorded, transfers, and feedback/ratings
+
+## webmaster
+- webmaster login and monitoring dashboard
+- overall system monitoring across donors, blood banks, organizing committees, camps, donations, blood inventory summaries, hospital requests, emergency appeals, and system activity
+- global read-only summaries and statistics
+- cross-role dashboards that allow the webmaster to understand the current state of the entire system
+- monitoring of active/inactive/closed entities and major workflow states
+- system-wide reports and filtered read-only analytics
+- audit/activity viewing for monitoring purposes
+- no create, update, delete, approval, assignment, inventory-management, camp-management, donor-management, or request-fulfilment actions
+- donor medical guidelines remain public/system content and are not treated as a webmaster administration feature; the webmaster only monitors their availability/status if such monitoring is needed
+
+## common for all
+- donation camp catalogue
+- role-aware navigation so each authenticated role only sees features relevant to that role
+- shared authentication screens for login/logout and session handling
+- consistent dashboard layout, page structure, status badges, tables/cards, search, filtering, pagination, and empty states
+- responsive frontend for desktop and tablet/mobile-sized screens
+- clear confirmation dialogs for irreversible or important actions
+- consistent loading, success, error, empty, pending, cancelled, completed, and closed states
+- notification center for role-relevant updates
+- searchable public content where appropriate
+- map-based camp and location views where location is relevant
+- accessible forms with validation, clear labels, and user-friendly error messages
+- every workflow should expose its current status and next meaningful action instead of making users infer what happened
+- public pages must never expose private donor information, internal staff information, or sensitive operational details
+- donor identity information such as NIC must be collected and displayed only where required by the donor workflow; it should not appear in public pages, camp catalogues, discussions, ratings, or appeals
+- role boundaries must remain strict in the UI: donors do not manage banks, banks do not manage camps, committees do not manage bank inventory, and the webmaster remains read-only
+- emergency blood appeals and hospital blood requests are treated as two different frontend concepts:
+  - **Emergency blood appeal:** a patient/person-facing urgent request visible through public/donor-facing areas
+  - **Hospital blood request:** an institutional request handled inside the blood-bank workflow
+- donation flow across roles:
+  - donor finds/registers for a camp
+  - organizing committee records the completed donation
+  - committee assigns the resulting donation batch/units to a blood bank for transfer
+  - blood bank receives the transfer and adds the units to inventory
+  - blood bank can then allocate/issue inventory against hospital requests according to the system workflow
+- feedback flow across roles:
+  - donor completes a donation
+  - completed donation enables camp feedback/rating
+  - feedback is visible publicly in aggregated/form-appropriate form
+  - committee can review feedback for its camps
+  - webmaster can monitor feedback system-wide
+- frontend should prioritize a minimal number of primary actions per screen; advanced search, filters, reports, and secondary actions should be progressively revealed rather than shown everywhere
+- terminology must remain consistent throughout the frontend: use **Donor**, **Blood Bank**, **Organizing Committee**, **Donation Camp**, **Donation Record**, **Blood Unit**, **Hospital Request**, and **Emergency Blood Appeal**
+- the frontend is a role-based workflow interface, not a collection of unrelated CRUD pages; every screen should correspond to a real user task or a meaningful monitoring view
