@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 
 const BankHospitalRequests = () => {
-  const [requests, setRequests] = useState<any[]>([]);
+  const [requests, setRequests] = useState<HospitalRequestDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [allocating, setAllocating] = useState<number | null>(null);
 
@@ -10,7 +10,7 @@ const BankHospitalRequests = () => {
     fetchRequests();
   }, []);
 
-  const fetchRequests = async () => {
+  async function fetchRequests() {
     try {
       const res = await api.get('/blood-bank/hospital-requests');
       if (res.data.success) {
@@ -21,7 +21,7 @@ const BankHospitalRequests = () => {
     }
   };
 
-  const handleAllocate = async (requestId: number) => {
+  async function handleAllocate(requestId: number) {
     setAllocating(requestId);
     try {
       const res = await api.post(`/blood-bank/hospital-requests/${requestId}/allocate`);
@@ -29,14 +29,14 @@ const BankHospitalRequests = () => {
         alert(res.data.data || 'Allocation complete');
         fetchRequests();
       }
-    } catch (err) {
+    } catch {
       alert('Allocation failed or not enough stock.');
     } finally {
       setAllocating(null);
     }
   };
 
-  const handleDownloadPdf = async () => {
+  async function handleDownloadPdf() {
     try {
       const res = await api.get('/blood-bank/reports/hospital-requests', { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -52,7 +52,7 @@ const BankHospitalRequests = () => {
   };
 
   return (
-    <div className="max-w-[1440px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-360 mx-auto px-space-2xl py-space-xl">
       <div className="flex justify-between items-center border-b border-surface-container pb-space-md mb-space-xl">
         <h1 className="font-heading text-3xl font-bold text-on-surface">Hospital Blood Requests</h1>
         <button onClick={handleDownloadPdf} className="flex items-center gap-space-sm bg-surface-container-high text-on-surface px-space-md py-space-sm rounded-lg hover:bg-surface-container-highest transition-colors font-semibold">
@@ -112,7 +112,7 @@ const BankHospitalRequests = () => {
                         try {
                           await api.patch(`/blood-bank/hospital-requests/${r.requestId}/status`, { status: e.target.value });
                           fetchRequests();
-                        } catch(err) {
+                        } catch {
                           alert('Failed to update status');
                         }
                       }}
