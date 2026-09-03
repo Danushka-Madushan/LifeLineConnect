@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../../lib/api';
@@ -11,7 +12,8 @@ const CommitteeCampDetails = () => {
   
   // Transfer modal
   const [showTransfer, setShowTransfer] = useState(false);
-  const [transferBankId, setTransferBankId] = useState('1'); // Mock ID for demo
+  const [transferBankId, setTransferBankId] = useState('');
+  const [bloodBanks, setBloodBanks] = useState<BloodBankDto[]>([]);
   const [transferring, setTransferring] = useState(false);
 
   useEffect(() => {
@@ -25,6 +27,9 @@ const CommitteeCampDetails = () => {
       const attRes = await api.get(`/committee/camps/${campId}/attendance`);
       if (attRes.data.success) setAttendance(attRes.data.data);
       
+      const banksRes = await api.get('/public/blood-banks');
+      if (banksRes.data.success) { setBloodBanks(banksRes.data.data); if (banksRes.data.data.length > 0) setTransferBankId(banksRes.data.data[0].bloodBankId.toString()); }
+
       const feedRes = await api.get(`/committee/camps/${campId}/feedback`);
       if (feedRes.data.success) setFeedback(feedRes.data.data);
     } finally {
@@ -45,7 +50,7 @@ const CommitteeCampDetails = () => {
         fetchData(); // refresh attendance list
       }
     } catch (err) {
-      alert((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to record donation.');
+      toast((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to record donation.');
     }
   };
 
@@ -55,11 +60,11 @@ const CommitteeCampDetails = () => {
     try {
       const res = await api.post(`/committee/camps/${campId}/transfers`, { bloodBankId: parseInt(transferBankId) });
       if (res.data.success) {
-        alert(res.data.message);
+        toast(res.data.message);
         setShowTransfer(false);
       }
     } catch (err) {
-      alert((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to dispatch transfer.');
+      toast((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to dispatch transfer.');
     } finally {
       setTransferring(false);
     }
@@ -173,11 +178,15 @@ const CommitteeCampDetails = () => {
             </p>
             <div className="flex flex-col gap-space-xs mb-space-lg">
               <label className="text-xs font-bold">Select Destination Blood Bank</label>
-              <select value={transferBankId} onChange={e => setTransferBankId(e.target.value)} className="border border-surface-container-high rounded p-2">
-                {/* Mocked Blood Banks. In reality, you'd fetch /api/public/blood-banks */}
-                <option value="1">Central National Blood Bank (ID: 1)</option>
-                <option value="2">Kandy Regional Blood Center (ID: 2)</option>
-              </select>
+              <select 
+                  value={transferBankId} 
+                  onChange={(e) => setTransferBankId(e.target.value)}
+                  className="bg-surface-container-lowest border border-surface-container rounded-lg px-space-md py-space-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary text-sm flex-1"
+                >
+                  {bloodBanks.map((b: BloodBankDto) => (
+                    <option key={b.bloodBankId} value={b.bloodBankId}>{b.bankName} ({b.district})</option>
+                  ))}
+                </select>
             </div>
             <div className="flex justify-end gap-space-md">
               <button onClick={() => setShowTransfer(false)} className="px-space-md py-space-sm rounded font-bold hover:bg-surface-container text-sm">Cancel</button>
