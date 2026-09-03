@@ -184,7 +184,7 @@ const CommitteeCampDetails = () => {
                   className="bg-surface-container-lowest border border-surface-container rounded-lg px-space-md py-space-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary text-sm flex-1"
                 >
                   {bloodBanks.map((b: BloodBankDto) => (
-                    <option key={b.bloodBankId} value={b.bloodBankId}>{b.bankName} ({b.district})</option>
+                    <option key={b.bloodBankId} value={b.bloodBankId}>{b.bankName} ({b.address})</option>
                   ))}
                 </select>
             </div>
