@@ -3,7 +3,7 @@ import { api } from '../lib/api';
 
 
 export default function Awareness() {
-  const [materials, setMaterials] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<AwarenessMaterial[]>([]);
 
   useEffect(() => {
     api.get('/public/camps/awareness-materials').then(res => {
