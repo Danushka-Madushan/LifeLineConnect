@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
 
 const CommitteeDashboard = () => {
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<CommitteeDashboardDto | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboard = async () => {
+    async function fetchDashboard() {
       try {
         const res = await api.get('/committee/dashboard');
         if (res.data.success) {
@@ -23,7 +23,7 @@ const CommitteeDashboard = () => {
   if (loading) return <div className="p-space-2xl text-center"><span className="material-symbols-outlined animate-spin text-4xl text-primary">sync</span></div>;
 
   return (
-    <div className="max-w-[1440px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-360 mx-auto px-space-2xl py-space-xl">
       <h1 className="font-heading text-3xl font-bold text-on-surface border-b border-surface-container pb-space-md mb-space-xl">Organizing Committee Hub</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-lg mb-space-xl">
@@ -66,7 +66,7 @@ const CommitteeDashboard = () => {
               try {
                 await api.post('/committee/awareness', { title, description: desc, url, published: true, mediaType: 'image' });
                 alert("Awareness material published to the public portal!");
-              } catch(e) {
+              } catch {
                 alert("Failed to publish.");
               }
             }}
