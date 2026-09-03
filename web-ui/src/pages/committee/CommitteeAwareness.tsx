@@ -7,7 +7,7 @@ export default function CommitteeAwareness() {
   const [campId, setCampId] = useState('');
   const [status, setStatus] = useState('');
 
-  const handlePost = async (e: React.FormEvent) => {
+  async function handlePost(e: React.FormEvent) {
     e.preventDefault();
     try {
       const res = await api.post('/committee/awareness', {
@@ -22,7 +22,7 @@ export default function CommitteeAwareness() {
         setContent('');
         setCampId('');
       }
-    } catch (err) {
+    } catch {
       setStatus('Failed to publish material.');
     }
   };
