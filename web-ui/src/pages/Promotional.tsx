@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 
 export default function Promotional() {
-  const [media, setMedia] = useState<any[]>([]);
+  const [media, setMedia] = useState<PromotionalMedia[]>([]);
 
   useEffect(() => {
     api.get('/public/promotional-media').then(res => {
