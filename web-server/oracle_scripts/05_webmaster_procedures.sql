@@ -1,0 +1,36 @@
+-- ================================================================
+-- Webmaster Procedures
+-- Blood Donation System — Oracle 21c PL/SQL
+-- ================================================================
+
+-- Get Webmaster Dashboard Statistics
+CREATE OR REPLACE PROCEDURE GET_WEBMASTER_DASHBOARD (
+    p_result_cursor OUT SYS_REFCURSOR
+) AS
+BEGIN
+    OPEN p_result_cursor FOR
+        SELECT
+            (SELECT COUNT(*) FROM DONOR WHERE STATUS = 'ACTIVE') AS TOTAL_DONORS,
+            (SELECT COUNT(*) FROM BLOOD_BANK WHERE STATUS = 'ACTIVE') AS TOTAL_BANKS,
+            (SELECT COUNT(*) FROM ORGANIZING_COMMITTEE WHERE STATUS = 'ACTIVE') AS TOTAL_COMMITTEES,
+            (SELECT COUNT(*) FROM DONATION_CAMP WHERE STATUS = 'ONGOING') AS ONGOING_CAMPS,
+            (SELECT COUNT(*) FROM DONATION_CAMP WHERE STATUS = 'COMPLETED') AS COMPLETED_CAMPS,
+            (SELECT COUNT(*) FROM DONATION_RECORD WHERE STATUS = 'SUBMITTED') AS TOTAL_DONATIONS,
+            (SELECT COUNT(*) FROM HOSPITAL_BLOOD_REQUEST WHERE STATUS = 'PENDING') AS PENDING_REQUESTS
+        FROM DUAL;
+END GET_WEBMASTER_DASHBOARD;
+/
+
+-- Get all users for administration
+CREATE OR REPLACE PROCEDURE GET_ALL_USERS (
+    p_result_cursor OUT SYS_REFCURSOR
+) AS
+BEGIN
+    OPEN p_result_cursor FOR
+        SELECT u.USER_ID, u.EMAIL, r.ROLE_CODE AS ROLE, u.ACCOUNT_STATUS AS STATUS,
+               u.CREATED_AT, u.LAST_LOGIN_AT AS LAST_LOGIN
+        FROM APP_USER u
+        JOIN USER_ROLE_LINK r ON u.USER_ID = r.USER_ID
+        ORDER BY u.CREATED_AT DESC;
+END GET_ALL_USERS;
+/
