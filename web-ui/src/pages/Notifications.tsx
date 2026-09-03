@@ -2,14 +2,10 @@ import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 
 const Notifications = () => {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<NotificationDto[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
-
-  const fetchNotifications = async () => {
+  async function fetchNotifications() {
     try {
       const res = await api.get('/notifications');
       if (res.data.success) {
@@ -18,17 +14,25 @@ const Notifications = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const markRead = async (id: number) => {
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  ;
+
+  async function markRead(id: number) {
     try {
       await api.post(`/notifications/${id}/read`);
       setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n));
-    } catch (e) {}
+    } catch {
+      alert('Failed to mark notification as read');
+    }
   };
 
   return (
-    <div className="max-w-[800px] mx-auto px-space-2xl py-space-xl">
+    <div className="max-w-200 mx-auto px-space-2xl py-space-xl">
       <h1 className="font-heading text-3xl font-bold text-on-surface mb-space-xl">Your Notifications</h1>
 
       {loading ? (
