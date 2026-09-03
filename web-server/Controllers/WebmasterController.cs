@@ -86,8 +86,14 @@ public class WebmasterController : ControllerBase
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT USER_ID, EMAIL, ROLE, STATUS, CREATED_AT, LAST_LOGIN FROM SYSTEM_USER ORDER BY CREATED_AT DESC";
-        using var reader = cmd.ExecuteReader();
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+        cmd.CommandText = "GET_ALL_USERS";
+        
+        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(pCursor);
+        
+        cmd.ExecuteNonQuery();
+        using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
         while(reader.Read())
         {
             list.Add(new {
