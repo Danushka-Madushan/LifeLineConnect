@@ -2274,3 +2274,242 @@ cells:
 
       /\r\n"
     languageId: oracle-sql
+  - kind: 2
+    value: "-- ================================================================\r
+
+      -- Webmaster Refactor Procedures\r
+
+      -- Blood Donation System — Oracle 21c PL/SQL\r
+
+      -- ================================================================\r
+
+      \r
+
+      -- Seed Webmaster\r
+
+      CREATE OR REPLACE PROCEDURE SEED_WEBMASTER (\r
+
+      \    p_password_hash IN VARCHAR2\r
+
+      ) AS\r
+
+      \    v_count NUMBER;\r
+
+      \    v_user_id NUMBER;\r
+
+      BEGIN\r
+
+      \    SELECT COUNT(*) INTO v_count FROM USER_ROLE_LINK WHERE ROLE_CODE =
+      'WEBMASTER';\r
+
+      \    IF v_count > 0 THEN\r
+
+      \        RAISE_APPLICATION_ERROR(-20001, 'Webmaster already exists.');\r
+
+      \    END IF;\r
+
+      \r
+
+      \    INSERT INTO APP_USER (USERNAME, EMAIL, PASSWORD_HASH,
+      ACCOUNT_STATUS)\r
+
+      \    VALUES ('admin', 'admin@lifeline.com', p_password_hash, 'ACTIVE')\r
+
+      \    RETURNING USER_ID INTO v_user_id;\r
+
+      \r
+
+      \    INSERT INTO USER_ROLE_LINK (USER_ID, ROLE_CODE)\r
+
+      \    VALUES (v_user_id, 'WEBMASTER');\r
+
+      \r
+
+      \    COMMIT;\r
+
+      EXCEPTION\r
+
+      \    WHEN OTHERS THEN\r
+
+      \        ROLLBACK;\r
+
+      \        RAISE;\r
+
+      END SEED_WEBMASTER;\r
+
+      /\r
+
+      \r
+
+      -- Register Blood Bank\r
+
+      CREATE OR REPLACE PROCEDURE REGISTER_BLOOD_BANK (\r
+
+      \    p_username   IN VARCHAR2,\r
+
+      \    p_email      IN VARCHAR2,\r
+
+      \    p_hash       IN VARCHAR2,\r
+
+      \    p_bank_code  IN VARCHAR2,\r
+
+      \    p_name       IN VARCHAR2,\r
+
+      \    p_phone      IN VARCHAR2,\r
+
+      \    p_address    IN VARCHAR2\r
+
+      ) AS\r
+
+      \    v_user_id NUMBER;\r
+
+      \    v_bank_id NUMBER;\r
+
+      BEGIN\r
+
+      \    INSERT INTO APP_USER (USERNAME, EMAIL, PASSWORD_HASH,
+      ACCOUNT_STATUS)\r
+
+      \    VALUES (p_username, p_email, p_hash, 'ACTIVE')\r
+
+      \    RETURNING USER_ID INTO v_user_id;\r
+
+      \r
+
+      \    INSERT INTO BLOOD_BANK (BANK_CODE, BANK_NAME, PHONE, EMAIL,
+      ADDRESS)\r
+
+      \    VALUES (p_bank_code, p_name, p_phone, p_email, p_address)\r
+
+      \    RETURNING BLOOD_BANK_ID INTO v_bank_id;\r
+
+      \r
+
+      \    INSERT INTO USER_ROLE_LINK (USER_ID, ROLE_CODE, BLOOD_BANK_ID)\r
+
+      \    VALUES (v_user_id, 'BLOOD_BANK', v_bank_id);\r
+
+      \r
+
+      \    COMMIT;\r
+
+      EXCEPTION\r
+
+      \    WHEN OTHERS THEN\r
+
+      \        ROLLBACK;\r
+
+      \        RAISE;\r
+
+      END REGISTER_BLOOD_BANK;\r
+
+      /\r
+
+      \r
+
+      -- Register Committee\r
+
+      CREATE OR REPLACE PROCEDURE REGISTER_COMMITTEE (\r
+
+      \    p_username       IN VARCHAR2,\r
+
+      \    p_email          IN VARCHAR2,\r
+
+      \    p_hash           IN VARCHAR2,\r
+
+      \    p_committee_code IN VARCHAR2,\r
+
+      \    p_name           IN VARCHAR2,\r
+
+      \    p_phone          IN VARCHAR2,\r
+
+      \    p_address        IN VARCHAR2\r
+
+      ) AS\r
+
+      \    v_user_id NUMBER;\r
+
+      \    v_comm_id NUMBER;\r
+
+      BEGIN\r
+
+      \    INSERT INTO APP_USER (USERNAME, EMAIL, PASSWORD_HASH,
+      ACCOUNT_STATUS)\r
+
+      \    VALUES (p_username, p_email, p_hash, 'ACTIVE')\r
+
+      \    RETURNING USER_ID INTO v_user_id;\r
+
+      \r
+
+      \    INSERT INTO ORGANIZING_COMMITTEE (COMMITTEE_CODE, COMMITTEE_NAME,
+      PHONE, EMAIL, ADDRESS)\r
+
+      \    VALUES (p_committee_code, p_name, p_phone, p_email, p_address)\r
+
+      \    RETURNING COMMITTEE_ID INTO v_comm_id;\r
+
+      \r
+
+      \    INSERT INTO USER_ROLE_LINK (USER_ID, ROLE_CODE, COMMITTEE_ID)\r
+
+      \    VALUES (v_user_id, 'ORGANIZING_COMMITTEE', v_comm_id);\r
+
+      \r
+
+      \    COMMIT;\r
+
+      EXCEPTION\r
+
+      \    WHEN OTHERS THEN\r
+
+      \        ROLLBACK;\r
+
+      \        RAISE;\r
+
+      END REGISTER_COMMITTEE;\r
+
+      /\r
+
+      \r
+
+      -- Delete User (Soft Delete)\r
+
+      CREATE OR REPLACE PROCEDURE DELETE_USER (\r
+
+      \    p_user_id IN NUMBER\r
+
+      ) AS\r
+
+      BEGIN\r
+
+      \    -- Remove the role link so they can no longer act as that role\r
+
+      \    DELETE FROM USER_ROLE_LINK WHERE USER_ID = p_user_id;\r
+
+      \    \r
+
+      \    -- Mark user as deleted\r
+
+      \    UPDATE APP_USER\r
+
+      \    SET ACCOUNT_STATUS = 'DELETED'\r
+
+      \    WHERE USER_ID = p_user_id;\r
+
+      \r
+
+      \    COMMIT;\r
+
+      EXCEPTION\r
+
+      \    WHEN OTHERS THEN\r
+
+      \        ROLLBACK;\r
+
+      \        RAISE;\r
+
+      END DELETE_USER;\r
+
+      /\r\n"
+    languageId: oracle-sql
