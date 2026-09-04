@@ -442,4 +442,40 @@ public class DonorController : ControllerBase
         await col.InsertOneAsync(req);
         return ApiResponse<string>.Ok("Q&A created successfully.");
     }
+
+    [HttpPost("community/threads/{threadId}/replies")]
+    public async Task<ActionResult<ApiResponse<string>>> CreateReply(string threadId, [FromBody] BsonDocument req)
+    {
+        var repliesCol = _mongoDb.GetCollection<BsonDocument>("communityReplies");
+        var doc = new BsonDocument
+        {
+            { "threadId", threadId },
+            { "content", req.GetValue("content", "").AsString },
+            { "authorName", User.Identity?.Name ?? "Anonymous Donor" },
+            { "createdAt", DateTime.UtcNow }
+        };
+        await repliesCol.InsertOneAsync(doc);
+
+        // Increment repliesCount on the parent thread
+        var threadsCol = _mongoDb.GetCollection<BsonDocument>("communityThreads");
+        var filter = Builders<BsonDocument>.Filter.Eq("_id", new MongoDB.Bson.ObjectId(threadId));
+        var update = Builders<BsonDocument>.Update.Inc("repliesCount", 1);
+        await threadsCol.UpdateOneAsync(filter, update);
+
+        return ApiResponse<string>.Ok("Reply posted successfully.");
+    }
+
+    [HttpPost("community/qa/{qaId}/answer")]
+    public async Task<ActionResult<ApiResponse<string>>> AnswerQa(string qaId, [FromBody] BsonDocument req)
+    {
+        var col = _mongoDb.GetCollection<BsonDocument>("communityQa");
+        var filter = Builders<BsonDocument>.Filter.Eq("_id", new MongoDB.Bson.ObjectId(qaId));
+        var update = Builders<BsonDocument>.Update.Set("answer", req.GetValue("answer", "").AsString);
+        var result = await col.UpdateOneAsync(filter, update);
+
+        if (result.ModifiedCount == 0)
+            return BadRequest(ApiResponse<string>.Error("Question not found."));
+
+        return ApiResponse<string>.Ok("Answer submitted successfully.");
+    }
 }
