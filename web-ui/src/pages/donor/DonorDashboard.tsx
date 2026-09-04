@@ -14,6 +14,32 @@ interface DashboardStats {
 const DonorDashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showMedicalCheck, setShowMedicalCheck] = useState(false);
+  const [medicalCheckForm, setMedicalCheckForm] = useState({
+    feelingWell: true,
+    recentAntibiotics: false,
+    recentTattoo: false
+  });
+  const [submittingMedical, setSubmittingMedical] = useState(false);
+  const [medicalError, setMedicalError] = useState('');
+
+  const submitMedicalCheck = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmittingMedical(true);
+    setMedicalError('');
+    try {
+      await api.post('/donors/me/medical-check', medicalCheckForm);
+      setShowMedicalCheck(false);
+      const res = await api.get('/donors/me/dashboard');
+      if (res.data.success) setStats(res.data.data);
+    } catch (err: unknown) {
+      setMedicalError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to submit medical check');
+      const res = await api.get('/donors/me/dashboard');
+      if (res.data.success) setStats(res.data.data);
+    } finally {
+      setSubmittingMedical(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchDashboard() {
@@ -50,6 +76,14 @@ const DonorDashboard = () => {
             </span>
           </div>
           <p className="text-sm font-semibold">{stats?.eligibilityReason}</p>
+          {stats?.eligibilityReason.includes('medical check') && (
+            <button 
+              onClick={() => setShowMedicalCheck(true)}
+              className="mt-space-sm bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-bold hover:opacity-90 transition-opacity"
+            >
+              Take Medical Check
+            </button>
+          )}
           <p className="text-xs text-secondary mt-auto pt-space-md">Next eligible date: {new Date(stats?.nextEligibleDate || '').toLocaleDateString()}</p>
         </div>
 
@@ -99,6 +133,66 @@ const DonorDashboard = () => {
           )}
         </div>
       </div>
+
+      {showMedicalCheck && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-space-md">
+          <div className="bg-surface p-space-xl rounded-2xl w-full max-w-md">
+            <h2 className="font-heading text-xl font-bold mb-space-md">Medical Questionnaire</h2>
+            {medicalError && <div className="text-error mb-space-md text-sm">{medicalError}</div>}
+            <form onSubmit={submitMedicalCheck} className="flex flex-col gap-space-md">
+              <label className="flex flex-col gap-space-xs text-sm font-semibold">
+                Are you feeling well today?
+                <select 
+                  className="p-space-sm border border-surface-container rounded-lg bg-surface"
+                  value={medicalCheckForm.feelingWell.toString()}
+                  onChange={e => setMedicalCheckForm({...medicalCheckForm, feelingWell: e.target.value === 'true'})}
+                >
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-space-xs text-sm font-semibold">
+                Have you taken antibiotics in the last 7 days?
+                <select 
+                  className="p-space-sm border border-surface-container rounded-lg bg-surface"
+                  value={medicalCheckForm.recentAntibiotics.toString()}
+                  onChange={e => setMedicalCheckForm({...medicalCheckForm, recentAntibiotics: e.target.value === 'true'})}
+                >
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-space-xs text-sm font-semibold">
+                Have you had a tattoo or piercing in the last 6 months?
+                <select 
+                  className="p-space-sm border border-surface-container rounded-lg bg-surface"
+                  value={medicalCheckForm.recentTattoo.toString()}
+                  onChange={e => setMedicalCheckForm({...medicalCheckForm, recentTattoo: e.target.value === 'true'})}
+                >
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </label>
+              <div className="flex justify-end gap-space-md mt-space-md">
+                <button 
+                  type="button" 
+                  onClick={() => setShowMedicalCheck(false)}
+                  className="px-space-md py-space-sm rounded-lg font-bold text-secondary hover:bg-surface-container transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={submittingMedical}
+                  className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {submittingMedical ? 'Submitting...' : 'Submit'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
