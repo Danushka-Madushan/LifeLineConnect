@@ -25,7 +25,7 @@ BEGIN
 END GET_DONOR_DASHBOARD;
 /
 
--- Check donor eligibility (56-day rule)
+-- Check donor eligibility (56-day rule and medical check)
 CREATE OR REPLACE PROCEDURE CHECK_DONOR_ELIGIBILITY (
     p_user_id   IN  NUMBER,
     p_eligible  OUT NUMBER,
@@ -35,8 +35,13 @@ CREATE OR REPLACE PROCEDURE CHECK_DONOR_ELIGIBILITY (
     v_donor_id       NUMBER;
     v_last_donation  DATE;
     v_days_since     NUMBER;
+    v_med_status     VARCHAR2(20);
+    v_med_last       TIMESTAMP WITH LOCAL TIME ZONE;
+    v_date_eligible  NUMBER;
 BEGIN
-    SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID = p_user_id;
+    SELECT DONOR_ID, MEDICAL_CHECK_STATUS, LAST_MEDICAL_CHECK_AT 
+    INTO v_donor_id, v_med_status, v_med_last 
+    FROM DONOR WHERE USER_ID = p_user_id;
 
     BEGIN
         SELECT MAX(DONATION_DATE) INTO v_last_donation
@@ -48,19 +53,30 @@ BEGIN
     END;
 
     IF v_last_donation IS NULL THEN
-        p_eligible := 1;
+        v_date_eligible := 1;
         p_reason := 'No previous donations on record. You are eligible.';
         p_next_date := TRUNC(SYSDATE);
     ELSE
         v_days_since := TRUNC(SYSDATE) - TRUNC(v_last_donation);
         IF v_days_since >= 56 THEN
-            p_eligible := 1;
+            v_date_eligible := 1;
             p_reason := 'You are eligible to donate.';
             p_next_date := TRUNC(SYSDATE);
         ELSE
+            v_date_eligible := 0;
             p_eligible := 0;
             p_next_date := TRUNC(v_last_donation) + 56;
             p_reason := 'You must wait ' || (56 - v_days_since) || ' more days. Next eligible date: ' || TO_CHAR(p_next_date, 'YYYY-MM-DD');
+            RETURN;
+        END IF;
+    END IF;
+
+    IF v_date_eligible = 1 THEN
+        IF v_med_status = 'PASSED' AND v_med_last >= (SYSDATE - 7) THEN
+            p_eligible := 1;
+        ELSE
+            p_eligible := 0;
+            p_reason := 'Pending pre-donation medical check. Please complete the questionnaire.';
         END IF;
     END IF;
 END CHECK_DONOR_ELIGIBILITY;
