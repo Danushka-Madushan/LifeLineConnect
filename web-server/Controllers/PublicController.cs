@@ -172,7 +172,26 @@ public class PublicController : ControllerBase
         return ApiResponse<List<CommunityQa>>.Ok(qas);
     }
 
-        [HttpGet("blood-banks")]
+    [HttpGet("community/threads/{threadId}/replies")]
+    public async Task<ActionResult<ApiResponse<List<object>>>> GetThreadReplies(string threadId)
+    {
+        var repliesCol = _mongoDb.GetCollection<BsonDocument>("communityReplies");
+        var filter = Builders<BsonDocument>.Filter.Eq("threadId", threadId);
+        var docs = await repliesCol.Find(filter)
+                                   .Sort(Builders<BsonDocument>.Sort.Ascending("createdAt"))
+                                   .ToListAsync();
+
+        var list = docs.Select(d => new {
+            Id = d["_id"].ToString(),
+            Content = d.GetValue("content", "").AsString,
+            AuthorName = d.GetValue("authorName", "Anonymous").AsString,
+            CreatedAt = d.GetValue("createdAt", BsonNull.Value).IsBsonNull ? DateTime.MinValue : d["createdAt"].ToUniversalTime()
+        }).ToList<object>();
+
+        return ApiResponse<List<object>>.Ok(list);
+    }
+
+    [HttpGet("blood-banks")]
     public ActionResult<ApiResponse<List<object>>> GetActiveBloodBanks()
     {
         var list = new List<object>();
