@@ -20,6 +20,55 @@ interface OverviewStats {
   uptime: string;
 }
 
+interface UserDto {
+  userId: number;
+  email: string;
+  role: string;
+  status: string;
+  createdAt: string;
+  lastLogin: string | null;
+}
+
+interface WebmasterBankDto {
+  bankId: number;
+  bankCode: string;
+  bankName: string;
+  phone: string;
+  email: string;
+  address: string;
+  status: string;
+}
+
+interface WebmasterCommitteeDto {
+  committeeId: number;
+  committeeCode: string;
+  committeeName: string;
+  phone: string;
+  email: string;
+  address: string;
+  status: string;
+}
+
+interface ThreadDto {
+  id: string;
+  title: string;
+  content: string;
+  authorName: string;
+  category: string;
+  repliesCount: number;
+  createdAt: string;
+}
+
+interface QaDto {
+  id: string;
+  question: string;
+  answer: string;
+  authorName: string;
+  category: string;
+  helpfulCount: number;
+  createdAt: string;
+}
+
 const WebmasterDashboard = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'banks' | 'committees' | 'community'>('overview');
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -27,11 +76,11 @@ const WebmasterDashboard = () => {
   const [error, setError] = useState('');
 
   // Data states
-  const [users, setUsers] = useState<any[]>([]);
-  const [banks, setBanks] = useState<any[]>([]);
-  const [committees, setCommittees] = useState<any[]>([]);
-  const [threads, setThreads] = useState<any[]>([]);
-  const [qas, setQas] = useState<any[]>([]);
+  const [users, setUsers] = useState<UserDto[]>([]);
+  const [banks, setBanks] = useState<WebmasterBankDto[]>([]);
+  const [committees, setCommittees] = useState<WebmasterCommitteeDto[]>([]);
+  const [threads, setThreads] = useState<ThreadDto[]>([]);
+  const [qas, setQas] = useState<QaDto[]>([]);
 
   // Modal states
   const [showBankModal, setShowBankModal] = useState(false);
@@ -70,17 +119,6 @@ const WebmasterDashboard = () => {
     } catch { toast.error("Failed to fetch community data"); }
   };
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'users') fetchUsers();
-    else if (activeTab === 'banks') fetchBanks();
-    else if (activeTab === 'committees') fetchCommittees();
-    else if (activeTab === 'community') fetchCommunity();
-  }, [activeTab]);
-
   const fetchDashboardData = async () => {
     try {
       const [dashRes, overRes] = await Promise.all([
@@ -93,6 +131,17 @@ const WebmasterDashboard = () => {
       setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to load dashboard data.');
     }
   };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'users') fetchUsers();
+    else if (activeTab === 'banks') fetchBanks();
+    else if (activeTab === 'committees') fetchCommittees();
+    else if (activeTab === 'community') fetchCommunity();
+  }, [activeTab]);
 
   const handleDeleteUser = async (id: number) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
@@ -171,10 +220,10 @@ const WebmasterDashboard = () => {
       </div>
 
       <div className="flex gap-space-md border-b border-surface-container pb-space-md">
-        {['overview', 'users', 'banks', 'committees', 'community'].map(tab => (
+        {(['overview', 'users', 'banks', 'committees', 'community'] as const).map(tab => (
           <button 
             key={tab}
-            onClick={() => setActiveTab(tab as any)}
+            onClick={() => setActiveTab(tab)}
             className={`px-space-md py-space-sm rounded-lg font-semibold capitalize ${
               activeTab === tab ? 'bg-primary text-on-primary' : 'bg-surface-container hover:bg-surface-container-high'
             }`}
@@ -340,7 +389,7 @@ const WebmasterDashboard = () => {
                   {threads.map(t => (
                     <tr key={t.id} className="border-b border-surface-container/50">
                       <td className="p-space-sm font-semibold">{t.title}</td>
-                      <td className="p-space-sm">{t.authorId}</td>
+                      <td className="p-space-sm">{t.authorName}</td>
                       <td className="p-space-sm text-sm">{t.category}</td>
                       <td className="p-space-sm">
                         <button onClick={() => handleDeleteThread(t.id)} className="text-error hover:underline text-sm font-semibold">Delete</button>
@@ -368,9 +417,9 @@ const WebmasterDashboard = () => {
                 <tbody>
                   {qas.map(q => (
                     <tr key={q.id} className="border-b border-surface-container/50">
-                      <td className="p-space-sm">{q.questionText}</td>
-                      <td className="p-space-sm">{q.authorId}</td>
-                      <td className="p-space-sm text-sm">{q.isAnswered ? 'Answered' : 'Open'}</td>
+                      <td className="p-space-sm">{q.question}</td>
+                      <td className="p-space-sm">{q.authorName}</td>
+                      <td className="p-space-sm text-sm">{(q.answer && q.answer !== 'Pending answer from community...') ? 'Answered' : 'Open'}</td>
                       <td className="p-space-sm">
                         <button onClick={() => handleDeleteQA(q.id)} className="text-error hover:underline text-sm font-semibold">Delete</button>
                       </td>
