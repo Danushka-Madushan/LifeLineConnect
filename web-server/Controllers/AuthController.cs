@@ -152,39 +152,27 @@ public class AuthController : ControllerBase
     {
         try
         {
-            using var connection = _oracleDb.CreateConnection() as OracleConnection;
-            connection!.Open();
-            
-            // Check if webmaster already exists
-            using var checkCmd = new OracleCommand("SELECT COUNT(*) FROM USER_ROLE_LINK WHERE ROLE_CODE = 'WEBMASTER'", connection);
-            var count = Convert.ToInt32(checkCmd.ExecuteScalar());
-            if (count > 0)
-            {
-                return BadRequest(ApiResponse<string>.Error("Webmaster already exists."));
-            }
-
-            using var trans = connection.BeginTransaction();
-            
             var hash = BCrypt.Net.BCrypt.HashPassword("admin123");
-            using var insertUser = new OracleCommand(@"
-                INSERT INTO APP_USER (USERNAME, EMAIL, PASSWORD_HASH, ACCOUNT_STATUS)
-                VALUES ('admin', 'admin@lifeline.com', :hash, 'ACTIVE') RETURNING USER_ID INTO :id", connection);
-            
-            insertUser.Parameters.Add("hash", OracleDbType.Varchar2).Value = hash;
-            var outId = new OracleParameter("id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
-            insertUser.Parameters.Add(outId);
-            insertUser.ExecuteNonQuery();
 
-            var userId = Convert.ToInt32(outId.Value.ToString());
+            using var connection = _oracleDb.CreateConnection() as OracleConnection;
+            if (connection == null) return StatusCode(500, "Database connection error");
+            connection.Open();
 
-            using var insertRole = new OracleCommand(@"
-                INSERT INTO USER_ROLE_LINK (USER_ID, ROLE_CODE) 
-                VALUES (:userId, 'WEBMASTER')", connection);
-            insertRole.Parameters.Add("userId", OracleDbType.Decimal).Value = userId;
-            insertRole.ExecuteNonQuery();
+            using var cmd = new OracleCommand("SEED_WEBMASTER", connection);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Add("p_password_hash", OracleDbType.Varchar2).Value = hash;
 
-            trans.Commit();
+            cmd.ExecuteNonQuery();
+
             return ApiResponse<string>.Ok("Webmaster seeded successfully! Username: admin, Password: admin123");
+        }
+        catch (OracleException ex)
+        {
+            if (ex.Number == 20001) // Custom application error
+            {
+                return BadRequest(ApiResponse<string>.Error(ex.Message));
+            }
+            return StatusCode(500, ApiResponse<string>.Error("Failed to seed webmaster: " + ex.Message));
         }
         catch (Exception ex)
         {
