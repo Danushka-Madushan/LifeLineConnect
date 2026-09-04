@@ -136,4 +136,146 @@ public class WebmasterController : ControllerBase
         });
         return File(document.GeneratePdf(), "application/pdf", "System_Report.pdf");
     }
+
+    public class RegisterBankDto
+    {
+        public string Username { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Password { get; set; } = "";
+        public string BankCode { get; set; } = "";
+        public string BankName { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string Address { get; set; } = "";
+    }
+
+    [HttpPost("register-bank")]
+    public ActionResult<ApiResponse<string>> RegisterBank([FromBody] RegisterBankDto dto)
+    {
+        try
+        {
+            if (dto.Password.Length < 8) return BadRequest(ApiResponse<string>.Error("Password must be at least 8 characters."));
+            
+            using var connection = _oracleDb.CreateConnection() as OracleConnection;
+            connection!.Open();
+            using var trans = connection.BeginTransaction();
+            
+            var hash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            
+            // 1. Create App User
+            using var insertUser = new OracleCommand(@"
+                INSERT INTO APP_USER (USERNAME, EMAIL, PASSWORD_HASH, ACCOUNT_STATUS)
+                VALUES (:u, :e, :h, 'ACTIVE') RETURNING USER_ID INTO :id", connection);
+            insertUser.Parameters.Add("u", OracleDbType.Varchar2).Value = dto.Username.ToLowerInvariant();
+            insertUser.Parameters.Add("e", OracleDbType.Varchar2).Value = dto.Email.ToLowerInvariant();
+            insertUser.Parameters.Add("h", OracleDbType.Varchar2).Value = hash;
+            var outId = new OracleParameter("id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+            insertUser.Parameters.Add(outId);
+            insertUser.ExecuteNonQuery();
+            var userId = Convert.ToInt32(outId.Value.ToString());
+
+            // 2. Create Blood Bank
+            using var insertBank = new OracleCommand(@"
+                INSERT INTO BLOOD_BANK (BANK_CODE, BANK_NAME, PHONE, EMAIL, ADDRESS)
+                VALUES (:c, :n, :p, :e, :a) RETURNING BLOOD_BANK_ID INTO :bid", connection);
+            insertBank.Parameters.Add("c", OracleDbType.Varchar2).Value = dto.BankCode;
+            insertBank.Parameters.Add("n", OracleDbType.Varchar2).Value = dto.BankName;
+            insertBank.Parameters.Add("p", OracleDbType.Varchar2).Value = dto.Phone;
+            insertBank.Parameters.Add("e", OracleDbType.Varchar2).Value = dto.Email;
+            insertBank.Parameters.Add("a", OracleDbType.Varchar2).Value = dto.Address;
+            var outBankId = new OracleParameter("bid", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+            insertBank.Parameters.Add(outBankId);
+            insertBank.ExecuteNonQuery();
+            var bankId = Convert.ToInt32(outBankId.Value.ToString());
+
+            // 3. Link Role
+            using var insertRole = new OracleCommand(@"
+                INSERT INTO USER_ROLE_LINK (USER_ID, ROLE_CODE, BLOOD_BANK_ID) 
+                VALUES (:uid, 'BLOOD_BANK', :bid)", connection);
+            insertRole.Parameters.Add("uid", OracleDbType.Decimal).Value = userId;
+            insertRole.Parameters.Add("bid", OracleDbType.Decimal).Value = bankId;
+            insertRole.ExecuteNonQuery();
+
+            trans.Commit();
+            return ApiResponse<string>.Ok("Blood bank account created successfully.");
+        }
+        catch (OracleException ex) when (ex.Number == 1)
+        {
+            return BadRequest(ApiResponse<string>.Error("Username, email, or Bank Code already exists."));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<string>.Error("Failed to register bank: " + ex.Message));
+        }
+    }
+
+    public class RegisterCommitteeDto
+    {
+        public string Username { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Password { get; set; } = "";
+        public string CommitteeCode { get; set; } = "";
+        public string CommitteeName { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string Address { get; set; } = "";
+    }
+
+    [HttpPost("register-committee")]
+    public ActionResult<ApiResponse<string>> RegisterCommittee([FromBody] RegisterCommitteeDto dto)
+    {
+        try
+        {
+            if (dto.Password.Length < 8) return BadRequest(ApiResponse<string>.Error("Password must be at least 8 characters."));
+
+            using var connection = _oracleDb.CreateConnection() as OracleConnection;
+            connection!.Open();
+            using var trans = connection.BeginTransaction();
+            
+            var hash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            
+            // 1. Create App User
+            using var insertUser = new OracleCommand(@"
+                INSERT INTO APP_USER (USERNAME, EMAIL, PASSWORD_HASH, ACCOUNT_STATUS)
+                VALUES (:u, :e, :h, 'ACTIVE') RETURNING USER_ID INTO :id", connection);
+            insertUser.Parameters.Add("u", OracleDbType.Varchar2).Value = dto.Username.ToLowerInvariant();
+            insertUser.Parameters.Add("e", OracleDbType.Varchar2).Value = dto.Email.ToLowerInvariant();
+            insertUser.Parameters.Add("h", OracleDbType.Varchar2).Value = hash;
+            var outId = new OracleParameter("id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+            insertUser.Parameters.Add(outId);
+            insertUser.ExecuteNonQuery();
+            var userId = Convert.ToInt32(outId.Value.ToString());
+
+            // 2. Create Committee
+            using var insertComm = new OracleCommand(@"
+                INSERT INTO ORGANIZING_COMMITTEE (COMMITTEE_CODE, COMMITTEE_NAME, PHONE, EMAIL, ADDRESS)
+                VALUES (:c, :n, :p, :e, :a) RETURNING COMMITTEE_ID INTO :cid", connection);
+            insertComm.Parameters.Add("c", OracleDbType.Varchar2).Value = dto.CommitteeCode;
+            insertComm.Parameters.Add("n", OracleDbType.Varchar2).Value = dto.CommitteeName;
+            insertComm.Parameters.Add("p", OracleDbType.Varchar2).Value = dto.Phone;
+            insertComm.Parameters.Add("e", OracleDbType.Varchar2).Value = dto.Email;
+            insertComm.Parameters.Add("a", OracleDbType.Varchar2).Value = dto.Address;
+            var outCommId = new OracleParameter("cid", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+            insertComm.Parameters.Add(outCommId);
+            insertComm.ExecuteNonQuery();
+            var commId = Convert.ToInt32(outCommId.Value.ToString());
+
+            // 3. Link Role
+            using var insertRole = new OracleCommand(@"
+                INSERT INTO USER_ROLE_LINK (USER_ID, ROLE_CODE, COMMITTEE_ID) 
+                VALUES (:uid, 'ORGANIZING_COMMITTEE', :cid)", connection);
+            insertRole.Parameters.Add("uid", OracleDbType.Decimal).Value = userId;
+            insertRole.Parameters.Add("cid", OracleDbType.Decimal).Value = commId;
+            insertRole.ExecuteNonQuery();
+
+            trans.Commit();
+            return ApiResponse<string>.Ok("Committee account created successfully.");
+        }
+        catch (OracleException ex) when (ex.Number == 1)
+        {
+            return BadRequest(ApiResponse<string>.Error("Username, email, or Committee Code already exists."));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<string>.Error("Failed to register committee: " + ex.Message));
+        }
+    }
 }

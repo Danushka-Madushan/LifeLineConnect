@@ -147,6 +147,51 @@ public class AuthController : ControllerBase
         return ApiResponse<AuthResponseDto>.Ok(new AuthResponseDto { Token = token, User = userPrincipal }, "Login successful");
     }
 
+    [HttpPost("seed-webmaster")]
+    public ActionResult<ApiResponse<string>> SeedWebmaster()
+    {
+        try
+        {
+            using var connection = _oracleDb.CreateConnection() as OracleConnection;
+            connection!.Open();
+            
+            // Check if webmaster already exists
+            using var checkCmd = new OracleCommand("SELECT COUNT(*) FROM USER_ROLE_LINK WHERE ROLE_CODE = 'WEBMASTER'", connection);
+            var count = Convert.ToInt32(checkCmd.ExecuteScalar());
+            if (count > 0)
+            {
+                return BadRequest(ApiResponse<string>.Error("Webmaster already exists."));
+            }
+
+            using var trans = connection.BeginTransaction();
+            
+            var hash = BCrypt.Net.BCrypt.HashPassword("admin123");
+            using var insertUser = new OracleCommand(@"
+                INSERT INTO APP_USER (USERNAME, EMAIL, PASSWORD_HASH, ACCOUNT_STATUS)
+                VALUES ('admin', 'admin@lifeline.com', :hash, 'ACTIVE') RETURNING USER_ID INTO :id", connection);
+            
+            insertUser.Parameters.Add("hash", OracleDbType.Varchar2).Value = hash;
+            var outId = new OracleParameter("id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+            insertUser.Parameters.Add(outId);
+            insertUser.ExecuteNonQuery();
+
+            var userId = Convert.ToInt32(outId.Value.ToString());
+
+            using var insertRole = new OracleCommand(@"
+                INSERT INTO USER_ROLE_LINK (USER_ID, ROLE_CODE) 
+                VALUES (:userId, 'WEBMASTER')", connection);
+            insertRole.Parameters.Add("userId", OracleDbType.Decimal).Value = userId;
+            insertRole.ExecuteNonQuery();
+
+            trans.Commit();
+            return ApiResponse<string>.Ok("Webmaster seeded successfully! Username: admin, Password: admin123");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<string>.Error("Failed to seed webmaster: " + ex.Message));
+        }
+    }
+
     [HttpGet("me")]
     public ActionResult<ApiResponse<UserPrincipalDto>> GetMe()
     {
