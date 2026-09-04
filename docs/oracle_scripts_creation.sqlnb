@@ -198,7 +198,7 @@ cells:
 
       \r
 
-      -- Check donor eligibility (56-day rule)\r
+      -- Check donor eligibility (56-day rule and medical check)\r
 
       CREATE OR REPLACE PROCEDURE CHECK_DONOR_ELIGIBILITY (\r
 
@@ -218,10 +218,19 @@ cells:
 
       \    v_days_since     NUMBER;\r
 
+      \    v_med_status     VARCHAR2(20);\r
+
+      \    v_med_last       TIMESTAMP WITH LOCAL TIME ZONE;\r
+
+      \    v_date_eligible  NUMBER;\r
+
       BEGIN\r
 
-      \    SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID =
-      p_user_id;\r
+      \    SELECT DONOR_ID, MEDICAL_CHECK_STATUS, LAST_MEDICAL_CHECK_AT \r
+
+      \    INTO v_donor_id, v_med_status, v_med_last \r
+
+      \    FROM DONOR WHERE USER_ID = p_user_id;\r
 
       \r
 
@@ -245,7 +254,7 @@ cells:
 
       \    IF v_last_donation IS NULL THEN\r
 
-      \        p_eligible := 1;\r
+      \        v_date_eligible := 1;\r
 
       \        p_reason := 'No previous donations on record. You are
       eligible.';\r
@@ -258,7 +267,7 @@ cells:
 
       \        IF v_days_since >= 56 THEN\r
 
-      \            p_eligible := 1;\r
+      \            v_date_eligible := 1;\r
 
       \            p_reason := 'You are eligible to donate.';\r
 
@@ -266,12 +275,35 @@ cells:
 
       \        ELSE\r
 
+      \            v_date_eligible := 0;\r
+
       \            p_eligible := 0;\r
 
       \            p_next_date := TRUNC(v_last_donation) + 56;\r
 
       \            p_reason := 'You must wait ' || (56 - v_days_since) || ' more
       days. Next eligible date: ' || TO_CHAR(p_next_date, 'YYYY-MM-DD');\r
+
+      \            RETURN;\r
+
+      \        END IF;\r
+
+      \    END IF;\r
+
+      \r
+
+      \    IF v_date_eligible = 1 THEN\r
+
+      \        IF v_med_status = 'PASSED' AND v_med_last >= (SYSDATE - 7) THEN\r
+
+      \            p_eligible := 1;\r
+
+      \        ELSE\r
+
+      \            p_eligible := 0;\r
+
+      \            p_reason := 'Pending pre-donation medical check. Please
+      complete the questionnaire.';\r
 
       \        END IF;\r
 
@@ -2510,6 +2542,31 @@ cells:
       \        RAISE;\r
 
       END DELETE_USER;\r
+
+      /\r\n"
+    languageId: oracle-sql
+  - kind: 2
+    value: "CREATE OR REPLACE PROCEDURE SUBMIT_MEDICAL_CHECK(\r
+
+      \    p_user_id IN NUMBER,\r
+
+      \    p_status IN VARCHAR2\r
+
+      ) AS\r
+
+      BEGIN\r
+
+      \    UPDATE DONOR\r
+
+      \    SET MEDICAL_CHECK_STATUS = p_status,\r
+
+      \        LAST_MEDICAL_CHECK_AT = CURRENT_TIMESTAMP\r
+
+      \    WHERE USER_ID = p_user_id;\r
+
+      \    COMMIT;\r
+
+      END SUBMIT_MEDICAL_CHECK;\r
 
       /\r\n"
     languageId: oracle-sql
