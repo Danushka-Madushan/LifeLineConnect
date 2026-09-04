@@ -30,8 +30,14 @@ const Register = () => {
     setError('');
     setIsLoading(true);
 
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const res = await api.post('/auth/donors/register', formData);
+      const res = await api.post('/auth/donors/register', { ...formData, email: formData.email.toLowerCase() });
       if (res.data.success) {
         login(res.data.data.token, res.data.data.user);
         navigate('/donor/dashboard');
@@ -75,7 +81,7 @@ const Register = () => {
 
           <div className="flex flex-col gap-space-xs">
             <label className="font-label text-sm font-semibold text-on-surface">Password</label>
-            <input name="password" type="password" value={formData.password} onChange={handleChange} required className="px-space-md py-space-sm border border-surface-container-high rounded-lg focus:outline-none focus:border-primary bg-surface" />
+            <input name="password" type="password" value={formData.password} onChange={handleChange} required minLength={8} className="px-space-md py-space-sm border border-surface-container-high rounded-lg focus:outline-none focus:border-primary bg-surface" />
           </div>
 
           <div className="flex flex-col gap-space-xs">
