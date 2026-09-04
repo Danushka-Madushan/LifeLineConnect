@@ -155,47 +155,25 @@ public class WebmasterController : ControllerBase
         {
             if (dto.Password.Length < 8) return BadRequest(ApiResponse<string>.Error("Password must be at least 8 characters."));
             
-            using var connection = _oracleDb.CreateConnection() as OracleConnection;
-            connection!.Open();
-            using var trans = connection.BeginTransaction();
-            
             var hash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             
-            // 1. Create App User
-            using var insertUser = new OracleCommand(@"
-                INSERT INTO APP_USER (USERNAME, EMAIL, PASSWORD_HASH, ACCOUNT_STATUS)
-                VALUES (:u, :e, :h, 'ACTIVE') RETURNING USER_ID INTO :id", connection);
-            insertUser.Parameters.Add("u", OracleDbType.Varchar2).Value = dto.Username.ToLowerInvariant();
-            insertUser.Parameters.Add("e", OracleDbType.Varchar2).Value = dto.Email.ToLowerInvariant();
-            insertUser.Parameters.Add("h", OracleDbType.Varchar2).Value = hash;
-            var outId = new OracleParameter("id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
-            insertUser.Parameters.Add(outId);
-            insertUser.ExecuteNonQuery();
-            var userId = Convert.ToInt32(outId.Value.ToString());
+            using var connection = _oracleDb.CreateConnection() as OracleConnection;
+            if (connection == null) return StatusCode(500, "Database connection error");
+            connection.Open();
+            
+            using var cmd = new OracleCommand("REGISTER_BLOOD_BANK", connection);
+            cmd.CommandType = CommandType.StoredProcedure;
+            
+            cmd.Parameters.Add("p_username", OracleDbType.Varchar2).Value = dto.Username.ToLowerInvariant();
+            cmd.Parameters.Add("p_email", OracleDbType.Varchar2).Value = dto.Email.ToLowerInvariant();
+            cmd.Parameters.Add("p_hash", OracleDbType.Varchar2).Value = hash;
+            cmd.Parameters.Add("p_bank_code", OracleDbType.Varchar2).Value = dto.BankCode;
+            cmd.Parameters.Add("p_name", OracleDbType.Varchar2).Value = dto.BankName;
+            cmd.Parameters.Add("p_phone", OracleDbType.Varchar2).Value = dto.Phone;
+            cmd.Parameters.Add("p_address", OracleDbType.Varchar2).Value = dto.Address;
+            
+            cmd.ExecuteNonQuery();
 
-            // 2. Create Blood Bank
-            using var insertBank = new OracleCommand(@"
-                INSERT INTO BLOOD_BANK (BANK_CODE, BANK_NAME, PHONE, EMAIL, ADDRESS)
-                VALUES (:c, :n, :p, :e, :a) RETURNING BLOOD_BANK_ID INTO :bid", connection);
-            insertBank.Parameters.Add("c", OracleDbType.Varchar2).Value = dto.BankCode;
-            insertBank.Parameters.Add("n", OracleDbType.Varchar2).Value = dto.BankName;
-            insertBank.Parameters.Add("p", OracleDbType.Varchar2).Value = dto.Phone;
-            insertBank.Parameters.Add("e", OracleDbType.Varchar2).Value = dto.Email;
-            insertBank.Parameters.Add("a", OracleDbType.Varchar2).Value = dto.Address;
-            var outBankId = new OracleParameter("bid", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
-            insertBank.Parameters.Add(outBankId);
-            insertBank.ExecuteNonQuery();
-            var bankId = Convert.ToInt32(outBankId.Value.ToString());
-
-            // 3. Link Role
-            using var insertRole = new OracleCommand(@"
-                INSERT INTO USER_ROLE_LINK (USER_ID, ROLE_CODE, BLOOD_BANK_ID) 
-                VALUES (:uid, 'BLOOD_BANK', :bid)", connection);
-            insertRole.Parameters.Add("uid", OracleDbType.Decimal).Value = userId;
-            insertRole.Parameters.Add("bid", OracleDbType.Decimal).Value = bankId;
-            insertRole.ExecuteNonQuery();
-
-            trans.Commit();
             return ApiResponse<string>.Ok("Blood bank account created successfully.");
         }
         catch (OracleException ex) when (ex.Number == 1)
@@ -226,47 +204,25 @@ public class WebmasterController : ControllerBase
         {
             if (dto.Password.Length < 8) return BadRequest(ApiResponse<string>.Error("Password must be at least 8 characters."));
 
-            using var connection = _oracleDb.CreateConnection() as OracleConnection;
-            connection!.Open();
-            using var trans = connection.BeginTransaction();
-            
             var hash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             
-            // 1. Create App User
-            using var insertUser = new OracleCommand(@"
-                INSERT INTO APP_USER (USERNAME, EMAIL, PASSWORD_HASH, ACCOUNT_STATUS)
-                VALUES (:u, :e, :h, 'ACTIVE') RETURNING USER_ID INTO :id", connection);
-            insertUser.Parameters.Add("u", OracleDbType.Varchar2).Value = dto.Username.ToLowerInvariant();
-            insertUser.Parameters.Add("e", OracleDbType.Varchar2).Value = dto.Email.ToLowerInvariant();
-            insertUser.Parameters.Add("h", OracleDbType.Varchar2).Value = hash;
-            var outId = new OracleParameter("id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
-            insertUser.Parameters.Add(outId);
-            insertUser.ExecuteNonQuery();
-            var userId = Convert.ToInt32(outId.Value.ToString());
+            using var connection = _oracleDb.CreateConnection() as OracleConnection;
+            if (connection == null) return StatusCode(500, "Database connection error");
+            connection.Open();
+            
+            using var cmd = new OracleCommand("REGISTER_COMMITTEE", connection);
+            cmd.CommandType = CommandType.StoredProcedure;
+            
+            cmd.Parameters.Add("p_username", OracleDbType.Varchar2).Value = dto.Username.ToLowerInvariant();
+            cmd.Parameters.Add("p_email", OracleDbType.Varchar2).Value = dto.Email.ToLowerInvariant();
+            cmd.Parameters.Add("p_hash", OracleDbType.Varchar2).Value = hash;
+            cmd.Parameters.Add("p_committee_code", OracleDbType.Varchar2).Value = dto.CommitteeCode;
+            cmd.Parameters.Add("p_name", OracleDbType.Varchar2).Value = dto.CommitteeName;
+            cmd.Parameters.Add("p_phone", OracleDbType.Varchar2).Value = dto.Phone;
+            cmd.Parameters.Add("p_address", OracleDbType.Varchar2).Value = dto.Address;
+            
+            cmd.ExecuteNonQuery();
 
-            // 2. Create Committee
-            using var insertComm = new OracleCommand(@"
-                INSERT INTO ORGANIZING_COMMITTEE (COMMITTEE_CODE, COMMITTEE_NAME, PHONE, EMAIL, ADDRESS)
-                VALUES (:c, :n, :p, :e, :a) RETURNING COMMITTEE_ID INTO :cid", connection);
-            insertComm.Parameters.Add("c", OracleDbType.Varchar2).Value = dto.CommitteeCode;
-            insertComm.Parameters.Add("n", OracleDbType.Varchar2).Value = dto.CommitteeName;
-            insertComm.Parameters.Add("p", OracleDbType.Varchar2).Value = dto.Phone;
-            insertComm.Parameters.Add("e", OracleDbType.Varchar2).Value = dto.Email;
-            insertComm.Parameters.Add("a", OracleDbType.Varchar2).Value = dto.Address;
-            var outCommId = new OracleParameter("cid", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
-            insertComm.Parameters.Add(outCommId);
-            insertComm.ExecuteNonQuery();
-            var commId = Convert.ToInt32(outCommId.Value.ToString());
-
-            // 3. Link Role
-            using var insertRole = new OracleCommand(@"
-                INSERT INTO USER_ROLE_LINK (USER_ID, ROLE_CODE, COMMITTEE_ID) 
-                VALUES (:uid, 'ORGANIZING_COMMITTEE', :cid)", connection);
-            insertRole.Parameters.Add("uid", OracleDbType.Decimal).Value = userId;
-            insertRole.Parameters.Add("cid", OracleDbType.Decimal).Value = commId;
-            insertRole.ExecuteNonQuery();
-
-            trans.Commit();
             return ApiResponse<string>.Ok("Committee account created successfully.");
         }
         catch (OracleException ex) when (ex.Number == 1)
@@ -277,5 +233,94 @@ public class WebmasterController : ControllerBase
         {
             return StatusCode(500, ApiResponse<string>.Error("Failed to register committee: " + ex.Message));
         }
+    }
+
+    [HttpDelete("users/{id}")]
+    public ActionResult<ApiResponse<string>> DeleteUser(int id)
+    {
+        try
+        {
+            using var connection = _oracleDb.CreateConnection() as OracleConnection;
+            if (connection == null) return StatusCode(500, "Database connection error");
+            connection.Open();
+
+            using var cmd = new OracleCommand("DELETE_USER", connection);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Add("p_user_id", OracleDbType.Decimal).Value = id;
+            cmd.ExecuteNonQuery();
+
+            return ApiResponse<string>.Ok("User deleted successfully.");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<string>.Error("Failed to delete user: " + ex.Message));
+        }
+    }
+
+    [HttpGet("banks")]
+    public ActionResult<ApiResponse<List<object>>> GetBanks()
+    {
+        var list = new List<object>();
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+        using var cmd = new OracleCommand("SELECT BLOOD_BANK_ID, BANK_CODE, BANK_NAME, PHONE, EMAIL, ADDRESS, STATUS FROM BLOOD_BANK", connection);
+        using var reader = cmd.ExecuteReader();
+        while(reader.Read())
+        {
+            list.Add(new {
+                BankId = reader["BLOOD_BANK_ID"],
+                BankCode = reader["BANK_CODE"],
+                BankName = reader["BANK_NAME"],
+                Phone = reader["PHONE"],
+                Email = reader["EMAIL"],
+                Address = reader["ADDRESS"],
+                Status = reader["STATUS"]
+            });
+        }
+        return ApiResponse<List<object>>.Ok(list);
+    }
+
+    [HttpGet("committees")]
+    public ActionResult<ApiResponse<List<object>>> GetCommittees()
+    {
+        var list = new List<object>();
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+        using var cmd = new OracleCommand("SELECT COMMITTEE_ID, COMMITTEE_CODE, COMMITTEE_NAME, PHONE, EMAIL, ADDRESS, STATUS FROM ORGANIZING_COMMITTEE", connection);
+        using var reader = cmd.ExecuteReader();
+        while(reader.Read())
+        {
+            list.Add(new {
+                CommitteeId = reader["COMMITTEE_ID"],
+                CommitteeCode = reader["COMMITTEE_CODE"],
+                CommitteeName = reader["COMMITTEE_NAME"],
+                Phone = reader["PHONE"],
+                Email = reader["EMAIL"],
+                Address = reader["ADDRESS"],
+                Status = reader["STATUS"]
+            });
+        }
+        return ApiResponse<List<object>>.Ok(list);
+    }
+
+    [HttpDelete("community/threads/{threadId}")]
+    public async Task<ActionResult<ApiResponse<string>>> DeleteThread(string threadId)
+    {
+        var threadsCol = _mongoDb.GetCollection<BsonDocument>("communityThreads");
+        await threadsCol.DeleteOneAsync(Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(threadId)));
+        
+        var repliesCol = _mongoDb.GetCollection<BsonDocument>("communityReplies");
+        await repliesCol.DeleteManyAsync(Builders<BsonDocument>.Filter.Eq("threadId", threadId));
+
+        return ApiResponse<string>.Ok("Thread deleted successfully.");
+    }
+
+    [HttpDelete("community/qa/{qaId}")]
+    public async Task<ActionResult<ApiResponse<string>>> DeleteQA(string qaId)
+    {
+        var qaCol = _mongoDb.GetCollection<BsonDocument>("communityQa");
+        await qaCol.DeleteOneAsync(Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(qaId)));
+        
+        return ApiResponse<string>.Ok("QA deleted successfully.");
     }
 }
