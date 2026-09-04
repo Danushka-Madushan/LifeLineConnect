@@ -257,9 +257,21 @@ const Community = () => {
                   <div className="flex items-center justify-between mt-space-md">
                     <span className="font-label text-xs text-white bg-primary-container px-2 py-1 rounded">{qa.category}</span>
                     <div className="flex items-center gap-space-md">
-                      <span className="font-label text-xs text-secondary flex items-center gap-1">
+                      <button
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          try {
+                            await api.post(`/donors/me/community/qa/${qa.id}/helpful`);
+                            setQas(qas.map(q => q.id === qa.id ? { ...q, helpfulCount: q.helpfulCount + 1 } : q));
+                            toast.success('Thanks for your feedback!');
+                          } catch {
+                            toast.error('Please log in as a Donor to vote.');
+                          }
+                        }}
+                        className="font-label text-xs text-secondary hover:text-primary transition-colors flex items-center gap-1 cursor-pointer"
+                      >
                         <span className="material-symbols-outlined text-[14px]">thumb_up</span> {qa.helpfulCount} found this helpful
-                      </span>
+                      </button>
                       {qa.answer === 'Pending answer from community...' && (
                         <button
                           onClick={(e) => { e.preventDefault(); setAnsweringQaId(qa.id); setAnswerContent(''); }}

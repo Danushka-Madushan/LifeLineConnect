@@ -481,4 +481,14 @@ public class DonorController : ControllerBase
 
         return ApiResponse<string>.Ok("Answer submitted successfully.");
     }
+
+    [HttpPost("community/qa/{qaId}/helpful")]
+    public async Task<ActionResult<ApiResponse<string>>> MarkQaHelpful(string qaId)
+    {
+        var col = _mongoDb.GetCollection<BsonDocument>("communityQa");
+        var filter = Builders<BsonDocument>.Filter.Eq("_id", new MongoDB.Bson.ObjectId(qaId));
+        var update = Builders<BsonDocument>.Update.Inc("helpfulCount", 1);
+        await col.UpdateOneAsync(filter, update);
+        return ApiResponse<string>.Ok("Marked as helpful.");
+    }
 }
