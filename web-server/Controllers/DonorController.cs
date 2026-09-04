@@ -446,6 +446,33 @@ public class DonorController : ControllerBase
     public class ReplyRequestDto { public string Content { get; set; } = ""; }
     public class AnswerRequestDto { public string Answer { get; set; } = ""; }
 
+    public class MedicalCheckDto
+    {
+        public bool FeelingWell { get; set; }
+        public bool RecentAntibiotics { get; set; }
+        public bool RecentTattoo { get; set; }
+    }
+
+    [HttpPost("medical-check")]
+    public ActionResult<ApiResponse<object>> SubmitMedicalCheck([FromBody] MedicalCheckDto req)
+    {
+        var status = (req.FeelingWell && !req.RecentAntibiotics && !req.RecentTattoo) ? "PASSED" : "FAILED";
+
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+
+        using var cmd = new OracleCommand("SUBMIT_MEDICAL_CHECK", connection);
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.Parameters.Add("p_user_id", OracleDbType.Decimal).Value = GetCurrentUserId();
+        cmd.Parameters.Add("p_status", OracleDbType.Varchar2).Value = status;
+        cmd.ExecuteNonQuery();
+
+        if (status == "PASSED")
+            return ApiResponse<object>.Ok(new { Status = status }, "Medical check passed.");
+        else
+            return BadRequest(ApiResponse<object>.Error("Medical check failed. You are not eligible to donate at this time."));
+    }
+
     [HttpPost("community/threads/{threadId}/replies")]
     public async Task<ActionResult<ApiResponse<string>>> CreateReply(string threadId, [FromBody] ReplyRequestDto req)
     {
