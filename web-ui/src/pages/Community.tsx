@@ -70,7 +70,6 @@ const Community = () => {
     api.get('/public/community/qa').then(res => {
       if (res.data.success) setQas(res.data.data);
     }).catch(console.error);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handlePostThread(e: React.FormEvent) {
@@ -256,7 +255,7 @@ const Community = () => {
                 <div className="pt-space-md mt-space-md border-t border-surface-container-high">
                   <p className="font-body text-sm text-on-surface-variant leading-relaxed">{qa.answer}</p>
                   <div className="flex items-center justify-between mt-space-md">
-                    <span className="font-label text-xs text-primary bg-primary-container px-2 py-1 rounded">{qa.category}</span>
+                    <span className="font-label text-xs text-white bg-primary-container px-2 py-1 rounded">{qa.category}</span>
                     <div className="flex items-center gap-space-md">
                       <span className="font-label text-xs text-secondary flex items-center gap-1">
                         <span className="material-symbols-outlined text-[14px]">thumb_up</span> {qa.helpfulCount} found this helpful
