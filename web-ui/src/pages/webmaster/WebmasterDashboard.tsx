@@ -90,57 +90,155 @@ const WebmasterDashboard = () => {
   const fetchUsers = async () => {
     try {
       const res = await api.get('/webmaster/users');
-      if (res.data.success) setUsers(res.data.data);
-    } catch { toast.error("Failed to fetch users"); }
+      if (res.data.success) {
+        setUsers(res.data.data);
+      }
+    } catch {
+      toast.error('Failed to fetch users');
+    }
   };
 
   const fetchBanks = async () => {
     try {
       const res = await api.get('/webmaster/banks');
-      if (res.data.success) setBanks(res.data.data);
-    } catch { toast.error("Failed to fetch banks"); }
+      if (res.data.success) {
+        setBanks(res.data.data);
+      }
+    } catch {
+      toast.error('Failed to fetch banks');
+    }
   };
 
   const fetchCommittees = async () => {
     try {
       const res = await api.get('/webmaster/committees');
-      if (res.data.success) setCommittees(res.data.data);
-    } catch { toast.error("Failed to fetch committees"); }
+      if (res.data.success) {
+        setCommittees(res.data.data);
+      }
+    } catch {
+      toast.error('Failed to fetch committees');
+    }
   };
 
   const fetchCommunity = async () => {
     try {
       const [tRes, qRes] = await Promise.all([
         api.get('/public/community/threads'),
-        api.get('/public/community/qa')
+        api.get('/public/community/qa'),
       ]);
-      if (tRes.data.success) setThreads(tRes.data.data);
-      if (qRes.data.success) setQas(qRes.data.data);
-    } catch { toast.error("Failed to fetch community data"); }
-  };
 
-  const fetchDashboardData = async () => {
-    try {
-      const [dashRes, overRes] = await Promise.all([
-        api.get('/webmaster/dashboard'),
-        api.get('/webmaster/overview')
-      ]);
-      if (dashRes.data.success) setStats(dashRes.data.data);
-      if (overRes.data.success) setOverview(overRes.data.data);
-    } catch (err) {
-      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to load dashboard data.');
+      if (tRes.data.success) {
+        setThreads(tRes.data.data);
+      }
+
+      if (qRes.data.success) {
+        setQas(qRes.data.data);
+      }
+    } catch {
+      toast.error('Failed to fetch community data');
     }
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    let cancelled = false;
+
+    const loadDashboard = async () => {
+      try {
+        const [dashRes, overRes] = await Promise.all([
+          api.get('/webmaster/dashboard'),
+          api.get('/webmaster/overview'),
+        ]);
+
+        if (cancelled) return;
+
+        if (dashRes.data.success) {
+          setStats(dashRes.data.data);
+        }
+
+        if (overRes.data.success) {
+          setOverview(overRes.data.data);
+        }
+      } catch (err) {
+        if (cancelled) return;
+
+        setError(
+          (err as {
+            response?: {
+              data?: { message?: string };
+            }
+          }).response?.data?.message || 'Failed to load dashboard data.'
+        );
+      }
+    };
+
+    loadDashboard();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'users') fetchUsers();
-    else if (activeTab === 'banks') fetchBanks();
-    else if (activeTab === 'committees') fetchCommittees();
-    else if (activeTab === 'community') fetchCommunity();
+    let cancelled = false;
+
+    const loadTabData = async () => {
+      try {
+        if (activeTab === 'users') {
+          const res = await api.get('/webmaster/users');
+
+          if (!cancelled && res.data.success) {
+            setUsers(res.data.data);
+          }
+        } else if (activeTab === 'banks') {
+          const res = await api.get('/webmaster/banks');
+
+          if (!cancelled && res.data.success) {
+            setBanks(res.data.data);
+          }
+        } else if (activeTab === 'committees') {
+          const res = await api.get('/webmaster/committees');
+
+          if (!cancelled && res.data.success) {
+            setCommittees(res.data.data);
+          }
+        } else if (activeTab === 'community') {
+          const [tRes, qRes] = await Promise.all([
+            api.get('/public/community/threads'),
+            api.get('/public/community/qa'),
+          ]);
+
+          if (!cancelled) {
+            if (tRes.data.success) {
+              setThreads(tRes.data.data);
+            }
+
+            if (qRes.data.success) {
+              setQas(qRes.data.data);
+            }
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          if (activeTab === 'users') {
+            toast.error('Failed to fetch users');
+          } else if (activeTab === 'banks') {
+            toast.error('Failed to fetch banks');
+          } else if (activeTab === 'committees') {
+            toast.error('Failed to fetch committees');
+          } else if (activeTab === 'community') {
+            toast.error('Failed to fetch community data');
+          }
+        }
+      }
+    };
+
+    if (activeTab !== 'overview') {
+      loadTabData();
+    }
+
+    return () => {
+      cancelled = true;
+    };
   }, [activeTab]);
 
   const handleDeleteUser = async (id: number) => {
@@ -221,12 +319,11 @@ const WebmasterDashboard = () => {
 
       <div className="flex gap-space-md border-b border-surface-container pb-space-md">
         {(['overview', 'users', 'banks', 'committees', 'community'] as const).map(tab => (
-          <button 
+          <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-space-md py-space-sm rounded-lg font-semibold capitalize ${
-              activeTab === tab ? 'bg-primary text-on-primary' : 'bg-surface-container hover:bg-surface-container-high'
-            }`}
+            className={`px-space-md py-space-sm rounded-lg font-semibold capitalize ${activeTab === tab ? 'bg-primary text-on-primary' : 'bg-surface-container hover:bg-surface-container-high'
+              }`}
           >
             {tab}
           </button>
@@ -480,14 +577,14 @@ const RegisterBankModal = ({ onClose }: { onClose: () => void }) => {
     <ModalWrapper title="Register Blood Bank" onClose={onClose}>
       <form onSubmit={onSubmit} className="flex flex-col gap-space-md">
         <div className="grid grid-cols-2 gap-space-md">
-          <input required placeholder="Username" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
-          <input required type="email" placeholder="Email" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-          <input required type="password" placeholder="Password (8+ chars)" className="p-space-sm border border-outline rounded-lg bg-transparent" minLength={8} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
-          <input required placeholder="Bank Code (e.g. NBTS-01)" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.bankCode} onChange={e => setFormData({...formData, bankCode: e.target.value})} />
+          <input required placeholder="Username" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} />
+          <input required type="email" placeholder="Email" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+          <input required type="password" placeholder="Password (8+ chars)" className="p-space-sm border border-outline rounded-lg bg-transparent" minLength={8} value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
+          <input required placeholder="Bank Code (e.g. NBTS-01)" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.bankCode} onChange={e => setFormData({ ...formData, bankCode: e.target.value })} />
         </div>
-        <input required placeholder="Bank Name" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.bankName} onChange={e => setFormData({...formData, bankName: e.target.value})} />
-        <input required placeholder="Phone" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
-        <textarea required placeholder="Address" className="p-space-sm border border-outline rounded-lg bg-transparent" rows={2} value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+        <input required placeholder="Bank Name" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.bankName} onChange={e => setFormData({ ...formData, bankName: e.target.value })} />
+        <input required placeholder="Phone" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+        <textarea required placeholder="Address" className="p-space-sm border border-outline rounded-lg bg-transparent" rows={2} value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
         <div className="flex justify-end pt-space-md">
           <button type="submit" disabled={loading} className="bg-primary text-on-primary px-space-lg py-space-sm rounded-lg font-semibold disabled:opacity-50">
             {loading ? 'Registering...' : 'Register'}
@@ -521,14 +618,14 @@ const RegisterCommModal = ({ onClose }: { onClose: () => void }) => {
     <ModalWrapper title="Register Organizing Committee" onClose={onClose}>
       <form onSubmit={onSubmit} className="flex flex-col gap-space-md">
         <div className="grid grid-cols-2 gap-space-md">
-          <input required placeholder="Username" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
-          <input required type="email" placeholder="Email" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-          <input required type="password" placeholder="Password (8+ chars)" className="p-space-sm border border-outline rounded-lg bg-transparent" minLength={8} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
-          <input required placeholder="Committee Code" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.committeeCode} onChange={e => setFormData({...formData, committeeCode: e.target.value})} />
+          <input required placeholder="Username" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} />
+          <input required type="email" placeholder="Email" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+          <input required type="password" placeholder="Password (8+ chars)" className="p-space-sm border border-outline rounded-lg bg-transparent" minLength={8} value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
+          <input required placeholder="Committee Code" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.committeeCode} onChange={e => setFormData({ ...formData, committeeCode: e.target.value })} />
         </div>
-        <input required placeholder="Committee Name" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.committeeName} onChange={e => setFormData({...formData, committeeName: e.target.value})} />
-        <input required placeholder="Phone" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
-        <textarea required placeholder="Address" className="p-space-sm border border-outline rounded-lg bg-transparent" rows={2} value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+        <input required placeholder="Committee Name" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.committeeName} onChange={e => setFormData({ ...formData, committeeName: e.target.value })} />
+        <input required placeholder="Phone" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+        <textarea required placeholder="Address" className="p-space-sm border border-outline rounded-lg bg-transparent" rows={2} value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
         <div className="flex justify-end pt-space-md">
           <button type="submit" disabled={loading} className="bg-primary text-on-primary px-space-lg py-space-sm rounded-lg font-semibold disabled:opacity-50">
             {loading ? 'Registering...' : 'Register'}
@@ -561,14 +658,14 @@ const CreateGuidelineModal = ({ onClose }: { onClose: () => void }) => {
   return (
     <ModalWrapper title="Publish Medical Guideline" onClose={onClose}>
       <form onSubmit={onSubmit} className="flex flex-col gap-space-md">
-        <input required placeholder="Guideline Title" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
-        <select className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+        <input required placeholder="Guideline Title" className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+        <select className="p-space-sm border border-outline rounded-lg bg-transparent" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
           <option value="PRE_DONATION">Pre-Donation</option>
           <option value="ELIGIBILITY">Eligibility Criteria</option>
           <option value="POST_DONATION">Post-Donation Care</option>
           <option value="GENERAL">General Information</option>
         </select>
-        <textarea required placeholder="Guideline Description" className="p-space-sm border border-outline rounded-lg bg-transparent" rows={5} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+        <textarea required placeholder="Guideline Description" className="p-space-sm border border-outline rounded-lg bg-transparent" rows={5} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
         <div className="flex justify-end pt-space-md">
           <button type="submit" disabled={loading} className="bg-primary text-on-primary px-space-lg py-space-sm rounded-lg font-semibold disabled:opacity-50">
             {loading ? 'Publishing...' : 'Publish Guideline'}
