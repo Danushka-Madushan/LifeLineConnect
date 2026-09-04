@@ -28,6 +28,10 @@ public class AuthController : ControllerBase
     {
         try
         {
+            if (dto.Password.Length < 8)
+                return BadRequest(ApiResponse<AuthResponseDto>.Error("Password must be at least 8 characters."));
+
+            dto.Email = dto.Email.ToLowerInvariant();
             var hash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             
             using var connection = _oracleDb.CreateConnection() as OracleConnection;
@@ -87,7 +91,7 @@ public class AuthController : ControllerBase
         using var cmd = new OracleCommand("AUTHENTICATE_USER", connection);
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.Parameters.Add("p_username", OracleDbType.Varchar2).Value = dto.Username;
+        cmd.Parameters.Add("p_username", OracleDbType.Varchar2).Value = dto.Username.ToLowerInvariant();
         var pUserId = new OracleParameter("p_user_id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
         var pHash = new OracleParameter("p_password_hash", OracleDbType.Varchar2, 500) { Direction = ParameterDirection.Output };
         var pStatus = new OracleParameter("p_account_status", OracleDbType.Varchar2, 20) { Direction = ParameterDirection.Output };
