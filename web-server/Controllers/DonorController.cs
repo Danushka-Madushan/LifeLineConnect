@@ -443,14 +443,17 @@ public class DonorController : ControllerBase
         return ApiResponse<string>.Ok("Q&A created successfully.");
     }
 
+    public class ReplyRequestDto { public string Content { get; set; } = ""; }
+    public class AnswerRequestDto { public string Answer { get; set; } = ""; }
+
     [HttpPost("community/threads/{threadId}/replies")]
-    public async Task<ActionResult<ApiResponse<string>>> CreateReply(string threadId, [FromBody] BsonDocument req)
+    public async Task<ActionResult<ApiResponse<string>>> CreateReply(string threadId, [FromBody] ReplyRequestDto req)
     {
         var repliesCol = _mongoDb.GetCollection<BsonDocument>("communityReplies");
         var doc = new BsonDocument
         {
             { "threadId", threadId },
-            { "content", req.GetValue("content", "").AsString },
+            { "content", req.Content },
             { "authorName", User.Identity?.Name ?? "Anonymous Donor" },
             { "createdAt", DateTime.UtcNow }
         };
@@ -466,11 +469,11 @@ public class DonorController : ControllerBase
     }
 
     [HttpPost("community/qa/{qaId}/answer")]
-    public async Task<ActionResult<ApiResponse<string>>> AnswerQa(string qaId, [FromBody] BsonDocument req)
+    public async Task<ActionResult<ApiResponse<string>>> AnswerQa(string qaId, [FromBody] AnswerRequestDto req)
     {
         var col = _mongoDb.GetCollection<BsonDocument>("communityQa");
         var filter = Builders<BsonDocument>.Filter.Eq("_id", new MongoDB.Bson.ObjectId(qaId));
-        var update = Builders<BsonDocument>.Update.Set("answer", req.GetValue("answer", "").AsString);
+        var update = Builders<BsonDocument>.Update.Set("answer", req.Answer);
         var result = await col.UpdateOneAsync(filter, update);
 
         if (result.ModifiedCount == 0)
