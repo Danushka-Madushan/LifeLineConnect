@@ -191,6 +191,9 @@ public class CommitteeController : ControllerBase
     [HttpPost("camps/{campId}/donations")]
     public ActionResult<ApiResponse<string>> RecordDonation(int campId, [FromBody] RecordDonationDto req)
     {
+        if (string.IsNullOrWhiteSpace(req.BloodGroup))
+            return BadRequest(ApiResponse<string>.Error("Blood group is strictly required to record a donation."));
+
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
 
