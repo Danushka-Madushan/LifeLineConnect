@@ -5,6 +5,9 @@ import { api } from '../../lib/api';
 const CommitteeVenues = () => {
   const [venues, setVenues] = useState<VenueDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({ venueName: '', address: '', capacity: 100 });
 
   async function fetchVenues() {
     try {
@@ -21,27 +24,29 @@ const CommitteeVenues = () => {
     fetchVenues();
   }, []);
 
-  ;
-
-  async function handleAddVenue() {
-    const venueName = prompt("Venue Name:");
-    const address = prompt("Address:");
-    const capacity = parseInt(prompt("Donor Capacity:") || "0");
-    if (venueName && address && capacity > 0) {
-      try {
-        await api.post('/committee/venues', { venueName, address, capacity });
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const res = await api.post('/committee/venues', form);
+      if (res.data.success) {
+        setShowModal(false);
+        setForm({ venueName: '', address: '', capacity: 100 });
+        toast.success("Venue added successfully");
         fetchVenues();
-      } catch {
-        toast.error("Failed to add venue");
       }
+    } catch {
+      toast.error("Failed to add venue");
+    } finally {
+      setSubmitting(false);
     }
-  };
+  }
 
   return (
     <div className="max-w-300 mx-auto px-space-2xl py-space-xl">
       <div className="flex justify-between items-center border-b border-surface-container pb-space-md mb-space-xl">
         <h1 className="font-heading text-3xl font-bold text-on-surface">Managed Venues</h1>
-        <button onClick={handleAddVenue} className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-bold flex items-center gap-1 hover:bg-primary/90">
+        <button onClick={() => setShowModal(true)} className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-bold flex items-center gap-1 hover:bg-primary/90">
           <span className="material-symbols-outlined text-[20px]">add</span> Add Venue
         </button>
       </div>
@@ -69,6 +74,32 @@ const CommitteeVenues = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-space-md backdrop-blur-sm">
+          <div className="bg-surface-container-lowest w-full max-w-md rounded-2xl p-space-xl shadow-lg border border-surface-container">
+            <h2 className="font-heading text-2xl font-bold text-on-surface mb-space-lg">Add New Venue</h2>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-space-md">
+              <div className="flex flex-col gap-space-xs">
+                <label className="text-xs font-bold text-secondary">Venue Name</label>
+                <input required value={form.venueName} onChange={e => setForm({...form, venueName: e.target.value})} className="border border-surface-container rounded-lg p-2 bg-transparent" />
+              </div>
+              <div className="flex flex-col gap-space-xs">
+                <label className="text-xs font-bold text-secondary">Address</label>
+                <input required value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="border border-surface-container rounded-lg p-2 bg-transparent" />
+              </div>
+              <div className="flex flex-col gap-space-xs">
+                <label className="text-xs font-bold text-secondary">Capacity (Donors)</label>
+                <input type="number" required min="1" value={form.capacity} onChange={e => setForm({...form, capacity: parseInt(e.target.value) || 0})} className="border border-surface-container rounded-lg p-2 bg-transparent" />
+              </div>
+              <div className="flex justify-end gap-space-md mt-space-md">
+                <button type="button" onClick={() => setShowModal(false)} className="px-space-md py-space-sm rounded-lg font-bold hover:bg-surface-container">Cancel</button>
+                <button type="submit" disabled={submitting} className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-bold hover:bg-primary/90">{submitting ? 'Adding...' : 'Add Venue'}</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
