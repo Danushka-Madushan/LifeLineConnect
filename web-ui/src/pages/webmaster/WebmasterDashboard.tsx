@@ -578,6 +578,7 @@ const WebmasterDashboard = () => {
       {showBankModal && <RegisterBankModal onClose={() => { setShowBankModal(false); fetchBanks(); }} />}
       {showCommModal && <RegisterCommModal onClose={() => { setShowCommModal(false); fetchCommittees(); }} />}
       {showGuidelineModal && <CreateGuidelineModal onClose={() => setShowGuidelineModal(false)} />}
+      <ConfirmModal {...confirmConfig} onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })} />
     </div>
   );
 };
@@ -729,8 +730,7 @@ const StatCard = ({ icon, title, value, color }: { icon: string, title: string, 
       <span className="font-label text-xs uppercase tracking-wider text-secondary">{title}</span>
       <span className="font-heading text-2xl font-bold text-on-surface">{value?.toLocaleString() ?? 0}</span>
     </div>
-    <ConfirmModal {...confirmConfig} onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })} />
-</div>
+  </div>
 );
 
 export default WebmasterDashboard;
