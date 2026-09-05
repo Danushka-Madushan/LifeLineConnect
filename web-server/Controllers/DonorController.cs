@@ -34,7 +34,7 @@ public class DonorController : ControllerBase
         return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
     }
 
-        [HttpGet("me/eligibility")]
+        [HttpGet("eligibility")]
     public ActionResult<ApiResponse<object>> GetEligibility()
     {
         var userId = GetCurrentUserId();
