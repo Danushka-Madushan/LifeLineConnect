@@ -323,4 +323,47 @@ public class WebmasterController : ControllerBase
         
         return ApiResponse<string>.Ok("QA deleted successfully.");
     }
+
+    [HttpGet("backup")]
+    public IActionResult DownloadDatabaseBackup()
+    {
+        try
+        {
+            using var connection = _oracleDb.CreateConnection() as OracleConnection;
+            if (connection == null) return StatusCode(500, "Database connection error");
+            connection.Open();
+
+            using var cmd = new OracleCommand("GENERATE_SCHEMA_BACKUP", connection);
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            var pDumpFile = new OracleParameter("p_dump_file", OracleDbType.Varchar2, 255)
+            {
+                Direction = ParameterDirection.Output
+            };
+            var pDirPath = new OracleParameter("p_dir_path", OracleDbType.Varchar2, 4000)
+            {
+                Direction = ParameterDirection.Output
+            };
+
+            cmd.Parameters.Add(pDumpFile);
+            cmd.Parameters.Add(pDirPath);
+
+            cmd.ExecuteNonQuery();
+
+            string dumpFile = pDumpFile.Value.ToString() ?? "";
+            string dirPath = pDirPath.Value.ToString() ?? "";
+            string path = System.IO.Path.Combine(dirPath, dumpFile);
+
+            if (System.IO.File.Exists(path))
+            {
+                return PhysicalFile(path, "application/octet-stream", dumpFile);
+            }
+
+            return NotFound(ApiResponse<string>.Error("Backup file not found on server."));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<string>.Error("Failed to generate backup: " + ex.Message));
+        }
+    }
 }

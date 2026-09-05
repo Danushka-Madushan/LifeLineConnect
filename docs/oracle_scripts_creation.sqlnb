@@ -2570,3 +2570,83 @@ cells:
 
       /\r\n"
     languageId: oracle-sql
+  - kind: 2
+    value: "CREATE OR REPLACE PROCEDURE GENERATE_SCHEMA_BACKUP (\r
+
+      \    p_dump_file OUT VARCHAR2,\r
+
+      \    p_dir_path OUT VARCHAR2\r
+
+      ) AS\r
+
+      \    v_schema VARCHAR2(100);\r
+
+      \    v_dp_job NUMBER;\r
+
+      \    v_job_state VARCHAR2(30);\r
+
+      BEGIN\r
+
+      \    v_schema := SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA');\r
+
+      \    p_dump_file := 'LIFELINE_BKP_' || TO_CHAR(SYSDATE,
+      'YYYYMMDD_HH24MISS') || '.dmp';\r
+
+      \    \r
+
+      \    SELECT DIRECTORY_PATH INTO p_dir_path \r
+
+      \    FROM ALL_DIRECTORIES \r
+
+      \    WHERE DIRECTORY_NAME = 'DATA_PUMP_DIR';\r
+
+      \r
+
+      \    v_dp_job := DBMS_DATAPUMP.OPEN(\r
+
+      \        operation => 'EXPORT',\r
+
+      \        job_mode => 'SCHEMA',\r
+
+      \        remote_link => NULL,\r
+
+      \        job_name => NULL,\r
+
+      \        version => 'COMPATIBLE'\r
+
+      \    );\r
+
+      \    \r
+
+      \    DBMS_DATAPUMP.ADD_FILE(\r
+
+      \        handle => v_dp_job,\r
+
+      \        filename => p_dump_file,\r
+
+      \        directory => 'DATA_PUMP_DIR'\r
+
+      \    );\r
+
+      \    \r
+
+      \    DBMS_DATAPUMP.METADATA_FILTER(\r
+
+      \        handle => v_dp_job,\r
+
+      \        name => 'SCHEMA_EXPR',\r
+
+      \        value => 'IN (''' || v_schema || ''')'\r
+
+      \    );\r
+
+      \    \r
+
+      \    DBMS_DATAPUMP.START_JOB(v_dp_job);\r
+
+      \    DBMS_DATAPUMP.WAIT_FOR_JOB(v_dp_job, v_job_state);\r
+
+      END;\r
+
+      /\r\n"
+    languageId: oracle-sql
