@@ -16,6 +16,11 @@ const CommitteeCampDetails = () => {
   const [bloodBanks, setBloodBanks] = useState<BloodBankDto[]>([]);
   const [transferring, setTransferring] = useState(false);
 
+  // Blood group modal
+  const [showBloodGroupModal, setShowBloodGroupModal] = useState(false);
+  const [selectedDonor, setSelectedDonor] = useState<CampDto | null>(null);
+  const [selectedBloodGroup, setSelectedBloodGroup] = useState('A+');
+
   useEffect(() => {
     fetchData();
     /* eslint-disable */
@@ -37,26 +42,12 @@ const CommitteeCampDetails = () => {
     }
   };
 
-  async function handleRecordDonation(donor: CampDto) {
-    let finalBloodGroup = donor.bloodGroup;
-    if (!finalBloodGroup || finalBloodGroup.trim() === '') {
-      const input = prompt(`Please enter the blood group for ${donor.fullName} (A+, A-, B+, B-, AB+, AB-, O+, O-):`);
-      if (!input) return; // User cancelled
-      finalBloodGroup = input.trim().toUpperCase();
-      const validGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-      if (!validGroups.includes(finalBloodGroup)) {
-        toast.error("Invalid blood group entered. Please try again.");
-        return;
-      }
-    } else {
-      if (!window.confirm(`Log 1 unit of ${finalBloodGroup} for ${donor.fullName}?`)) return;
-    }
-
+  async function submitDonation(donor: CampDto, bloodGroup: string) {
     try {
       const res = await api.post(`/committee/camps/${campId}/donations`, {
         registrationId: donor.registrationId,
         donorId: donor.donorId,
-        bloodGroup: finalBloodGroup,
+        bloodGroup: bloodGroup,
         units: 1
       });
       if (res.data.success) {
@@ -66,7 +57,26 @@ const CommitteeCampDetails = () => {
     } catch (err) {
       toast.error((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to record donation.');
     }
+  }
+
+  async function handleRecordDonation(donor: CampDto) {
+    if (!donor.bloodGroup || donor.bloodGroup.trim() === '') {
+      setSelectedDonor(donor);
+      setShowBloodGroupModal(true);
+    } else {
+      if (!window.confirm(`Log 1 unit of ${donor.bloodGroup} for ${donor.fullName}?`)) return;
+      submitDonation(donor, donor.bloodGroup);
+    }
   };
+
+  function handleBloodGroupSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (selectedDonor && selectedBloodGroup) {
+      submitDonation(selectedDonor, selectedBloodGroup);
+      setShowBloodGroupModal(false);
+      setSelectedDonor(null);
+    }
+  }
 
   async function handleDispatch() {
     if (!window.confirm('Dispatch all completed donations to the selected Blood Bank?')) return;
@@ -208,6 +218,26 @@ const CommitteeCampDetails = () => {
                 {transferring ? 'Dispatching...' : 'Dispatch Now'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showBloodGroupModal && selectedDonor && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-space-md backdrop-blur-sm">
+          <div className="bg-surface-container-lowest w-full max-w-md rounded-2xl p-space-xl shadow-lg border border-surface-container">
+            <h2 className="font-heading text-xl font-bold mb-4">Select Blood Group</h2>
+            <form onSubmit={handleBloodGroupSubmit} className="flex flex-col gap-4">
+              <p className="text-sm">Please select the blood group for {selectedDonor.fullName}:</p>
+              <select className="p-2 border border-surface-container rounded bg-surface" value={selectedBloodGroup} onChange={(e) => setSelectedBloodGroup(e.target.value)}>
+                {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
+                  <option key={bg} value={bg}>{bg}</option>
+                ))}
+              </select>
+              <div className="flex justify-end gap-2 mt-4">
+                <button type="button" onClick={() => { setShowBloodGroupModal(false); setSelectedDonor(null); }} className="px-4 py-2 bg-surface-container rounded font-bold">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-primary text-white rounded font-bold">Confirm</button>
+              </div>
+            </form>
           </div>
         </div>
       )}

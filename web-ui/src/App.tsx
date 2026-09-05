@@ -48,22 +48,22 @@ const Header = () => {
           <span className="material-symbols-outlined text-[28px]">bloodtype</span>
           LifeLineConnect
         </Link>
-        <nav className="hidden md:flex gap-space-lg font-label text-sm font-semibold">
-          <Link to="/camps" className="text-secondary hover:text-on-surface transition-colors">Camps</Link>
-          <Link to="/appeals" className="text-secondary hover:text-on-surface transition-colors">Appeals</Link>
-          <Link to="/community" className="text-secondary hover:text-on-surface transition-colors">Community</Link>
-          <Link to="/resources" className="text-secondary hover:text-on-surface transition-colors">Resources</Link>
+        <nav className="hidden md:flex gap-4 font-label text-sm font-semibold">
+          <Link to="/camps" className="px-4 py-2 rounded-lg bg-surface hover:bg-surface-container text-secondary hover:text-on-surface transition-all font-bold">Camps</Link>
+          <Link to="/appeals" className="px-4 py-2 rounded-lg bg-surface hover:bg-surface-container text-secondary hover:text-on-surface transition-all font-bold">Appeals</Link>
+          <Link to="/community" className="px-4 py-2 rounded-lg bg-surface hover:bg-surface-container text-secondary hover:text-on-surface transition-all font-bold">Community</Link>
+          <Link to="/resources" className="px-4 py-2 rounded-lg bg-surface hover:bg-surface-container text-secondary hover:text-on-surface transition-all font-bold">Resources</Link>
             {user?.role === 'WEBMASTER' && (
-              <Link to="/webmaster" className="text-primary hover:text-primary/80 transition-colors">Webmaster Dashboard</Link>
+              <Link to="/webmaster" className="px-4 py-2 rounded-lg bg-surface hover:bg-surface-container text-secondary hover:text-on-surface transition-all font-bold">Webmaster Dashboard</Link>
             )}
             {user?.role === 'DONOR' && (
-              <Link to="/donor/dashboard" className="text-primary hover:text-primary/80 transition-colors">Donor Dashboard</Link>
+              <Link to="/donor/dashboard" className="px-4 py-2 rounded-lg bg-surface hover:bg-surface-container text-secondary hover:text-on-surface transition-all font-bold">Donor Dashboard</Link>
             )}
             {user?.role === 'BLOOD_BANK' && (
-              <Link to="/bloodbank/dashboard" className="text-primary hover:text-primary/80 transition-colors">Blood Bank Dashboard</Link>
+              <Link to="/bloodbank/dashboard" className="px-4 py-2 rounded-lg bg-surface hover:bg-surface-container text-secondary hover:text-on-surface transition-all font-bold">Blood Bank Dashboard</Link>
             )}
             {user?.role === 'ORGANIZING_COMMITTEE' && (
-              <Link to="/committee/dashboard" className="text-primary hover:text-primary/80 transition-colors">Committee Hub</Link>
+              <Link to="/committee/dashboard" className="px-4 py-2 rounded-lg bg-surface hover:bg-surface-container text-secondary hover:text-on-surface transition-all font-bold">Committee Hub</Link>
             )}
           </nav>
         </div>

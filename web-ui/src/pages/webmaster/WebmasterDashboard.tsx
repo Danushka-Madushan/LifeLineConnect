@@ -406,7 +406,7 @@ const WebmasterDashboard = () => {
                     </td>
                     <td className="p-space-sm">
                       {u.role !== 'WEBMASTER' && u.status !== 'DELETED' && (
-                        <button onClick={() => handleDeleteUser(u.userId)} className="text-error hover:underline text-sm font-semibold">
+                        <button onClick={() => handleDeleteUser(u.userId)} className="px-3 py-1 bg-error-container text-error rounded hover:bg-error hover:text-white text-xs font-bold transition-colors">
                           Delete
                         </button>
                       )}
@@ -513,7 +513,7 @@ const WebmasterDashboard = () => {
                       <td className="p-space-sm">{t.authorName}</td>
                       <td className="p-space-sm text-sm">{t.category}</td>
                       <td className="p-space-sm">
-                        <button onClick={() => handleDeleteThread(t.id)} className="text-error hover:underline text-sm font-semibold">Delete</button>
+                        <button onClick={() => handleDeleteThread(t.id)} className="px-3 py-1 bg-error-container text-error rounded hover:bg-error hover:text-white text-xs font-bold transition-colors">Delete</button>
                       </td>
                     </tr>
                   ))}
@@ -542,7 +542,7 @@ const WebmasterDashboard = () => {
                       <td className="p-space-sm">{q.authorName}</td>
                       <td className="p-space-sm text-sm">{(q.answer && q.answer !== 'Pending answer from community...') ? 'Answered' : 'Open'}</td>
                       <td className="p-space-sm">
-                        <button onClick={() => handleDeleteQA(q.id)} className="text-error hover:underline text-sm font-semibold">Delete</button>
+                        <button onClick={() => handleDeleteQA(q.id)} className="px-3 py-1 bg-error-container text-error rounded hover:bg-error hover:text-white text-xs font-bold transition-colors">Delete</button>
                       </td>
                     </tr>
                   ))}

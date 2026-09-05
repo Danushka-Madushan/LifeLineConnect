@@ -128,7 +128,7 @@ const DonorDashboard = () => {
           ) : (
             <div className="bg-surface-container-lowest p-space-lg rounded-xl border border-surface-container flex justify-between items-center">
               <span className="font-semibold">You have {stats?.upcomingCamps} upcoming camp(s).</span>
-              <Link to="/donor/camps" className="text-primary font-bold hover:underline">View Details</Link>
+              <Link to="/donor/camps" className="inline-block mt-space-sm px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm font-bold hover:bg-primary/20 transition-colors">View Details</Link>
             </div>
           )}
         </div>

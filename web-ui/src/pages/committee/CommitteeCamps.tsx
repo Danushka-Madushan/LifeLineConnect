@@ -110,7 +110,7 @@ const CommitteeCamps = () => {
                 {c.venueName}
               </div>
               <Link to={`/committee/camps/${c.campId}`} className="mt-space-md bg-surface-container-high text-on-surface py-space-sm rounded-lg font-bold text-center hover:bg-surface-container-highest transition-colors text-sm">
-                Manage Operations →
+                Manage Operations 
               </Link>
             </div>
           ))}

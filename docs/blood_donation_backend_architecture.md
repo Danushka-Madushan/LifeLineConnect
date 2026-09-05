@@ -68,7 +68,7 @@ Suggested reusable functions/triggers:
 
 ---
 
-# Frontend → Backend mapping
+# Frontend  Backend mapping
 
 ## homepage
 
@@ -957,7 +957,7 @@ pageSize=50
 
 **API URL:** `GET /api/banks/me/inventory/{unitId}/source`
 
-**Backend:** Oracle relationship query from blood unit → donation batch/record → camp.
+**Backend:** Oracle relationship query from blood unit  donation batch/record  camp.
 
 **Payload:** None.
 
@@ -1455,7 +1455,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 }
 ```
 
-**What need to do:** Permit only valid camp-side transitions, e.g. `PREPARED → DISPATCHED`. Receiving the transfer is a bank action, not a committee action.
+**What need to do:** Permit only valid camp-side transitions, e.g. `PREPARED  DISPATCHED`. Receiving the transfer is a bank action, not a committee action.
 
 **What to return:** Transfer status, bank, counts and timestamps.
 
@@ -2594,14 +2594,14 @@ The backend should not be designed as **"one API per database table."** It shoul
 
 For Oracle-backed workflows, the preferred path is:
 
-**Frontend → C# API → PL/SQL procedure/function → Oracle data → C# DTO → Frontend**
+**Frontend  C# API  PL/SQL procedure/function  Oracle data  C# DTO  Frontend**
 
 For MongoDB-backed flexible content:
 
-**Frontend → C# API → authorization/Oracle validation when necessary → MongoDB → C# DTO → Frontend**
+**Frontend  C# API  authorization/Oracle validation when necessary  MongoDB  C# DTO  Frontend**
 
 For cross-database features:
 
-**Frontend → C# API → Oracle authoritative check/workflow → MongoDB content/read → C# combined response**
+**Frontend  C# API  Oracle authoritative check/workflow  MongoDB content/read  C# combined response**
 
 This keeps the relational business logic visible in Oracle PL/SQL, keeps MongoDB focused on genuinely flexible content, preserves strict role boundaries, and makes every frontend requirement traceable to a concrete backend operation.
