@@ -38,19 +38,33 @@ const CommitteeCampDetails = () => {
   };
 
   async function handleRecordDonation(donor: CampDto) {
-    if (!window.confirm(`Log 1 unit of ${donor.bloodGroup} for ${donor.fullName}?`)) return;
+    let finalBloodGroup = donor.bloodGroup;
+    if (!finalBloodGroup || finalBloodGroup.trim() === '') {
+      const input = prompt(`Please enter the blood group for ${donor.fullName} (A+, A-, B+, B-, AB+, AB-, O+, O-):`);
+      if (!input) return; // User cancelled
+      finalBloodGroup = input.trim().toUpperCase();
+      const validGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+      if (!validGroups.includes(finalBloodGroup)) {
+        toast.error("Invalid blood group entered. Please try again.");
+        return;
+      }
+    } else {
+      if (!window.confirm(`Log 1 unit of ${finalBloodGroup} for ${donor.fullName}?`)) return;
+    }
+
     try {
       const res = await api.post(`/committee/camps/${campId}/donations`, {
         registrationId: donor.registrationId,
         donorId: donor.donorId,
-        bloodGroup: donor.bloodGroup,
+        bloodGroup: finalBloodGroup,
         units: 1
       });
       if (res.data.success) {
+        toast.success("Donation recorded successfully!");
         fetchData(); // refresh attendance list
       }
     } catch (err) {
-      toast((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to record donation.');
+      toast.error((err as import("axios").AxiosError<{message: string}>).response?.data?.message || 'Failed to record donation.');
     }
   };
 
