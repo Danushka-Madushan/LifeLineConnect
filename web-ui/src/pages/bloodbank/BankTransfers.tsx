@@ -1,9 +1,11 @@
 import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
+import { ConfirmModal } from '../../components/ConfirmModal';
 
 const BankTransfers = () => {
   const [transfers, setTransfers] = useState<DonationTransferDto[]>([]);
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<number | null>(null);
 
@@ -25,7 +27,11 @@ const BankTransfers = () => {
   ;
 
   async function handleReceive(transferId: number) {
-    if (!window.confirm('Confirm receipt of this transfer? This will unpack units into available inventory.')) return;
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Confirm Action',
+      message: 'Confirm receipt of this transfer? This will unpack units into available inventory.',
+      onConfirm: async () => {
     setProcessing(transferId);
     try {
       await api.post(`/blood-bank/transfers/${transferId}/receive`);
@@ -36,6 +42,8 @@ const BankTransfers = () => {
     } finally {
       setProcessing(null);
     }
+      }
+    });
   };
 
   return (
@@ -99,6 +107,7 @@ const BankTransfers = () => {
           </table>
         </div>
       )}
+      <ConfirmModal {...confirmConfig} onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })} />
     </div>
   );
 };
