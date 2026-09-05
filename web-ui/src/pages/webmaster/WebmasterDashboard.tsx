@@ -74,6 +74,7 @@ const WebmasterDashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [overview, setOverview] = useState<OverviewStats | null>(null);
   const [error, setError] = useState('');
+  const [backupLoading, setBackupLoading] = useState(false);
 
   // Data states
   const [users, setUsers] = useState<UserDto[]>([]);
@@ -289,6 +290,25 @@ const WebmasterDashboard = () => {
     }
   };
 
+  const handleDatabaseBackup = async () => {
+    setBackupLoading(true);
+    try {
+      const res = await api.get('/webmaster/backup', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'database_backup.dmp');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("Backup downloaded successfully.");
+    } catch {
+      toast.error("Failed to generate or download database backup.");
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
   if (error) {
     return (
       <div className="p-space-2xl text-center">
@@ -351,6 +371,10 @@ const WebmasterDashboard = () => {
               </button>
               <button onClick={handleExportSystemReport} className="flex items-center gap-space-sm bg-primary text-on-primary px-space-md py-space-sm rounded-lg hover:bg-primary/90 font-semibold">
                 <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span> Export System Audit Report
+              </button>
+              <button onClick={handleDatabaseBackup} disabled={backupLoading} className="flex items-center gap-space-sm bg-surface-container text-on-surface px-space-md py-space-sm rounded-lg hover:bg-surface-container-high font-semibold disabled:opacity-50">
+                <span className={`material-symbols-outlined text-[20px] ${backupLoading ? 'animate-spin' : ''}`}>{backupLoading ? 'sync' : 'database'}</span> 
+                {backupLoading ? 'Generating Backup...' : 'Database Backup'}
               </button>
             </div>
           </div>
