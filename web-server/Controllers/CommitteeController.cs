@@ -124,24 +124,35 @@ public class CommitteeController : ControllerBase
     [HttpPost("camps")]
     public ActionResult<ApiResponse<object>> CreateCamp([FromBody] CreateCampDto req)
     {
-        using var connection = _oracleDb.CreateConnection() as OracleConnection;
-        connection!.Open();
+        try
+        {
+            using var connection = _oracleDb.CreateConnection() as OracleConnection;
+            connection!.Open();
 
-        using var cmd = new OracleCommand("CREATE_DONATION_CAMP", connection);
-        cmd.CommandType = CommandType.StoredProcedure;
-        cmd.Parameters.Add("p_user_id", OracleDbType.Decimal).Value = GetCurrentUserId();
-        cmd.Parameters.Add("p_venue_id", OracleDbType.Decimal).Value = req.VenueId;
-        cmd.Parameters.Add("p_title", OracleDbType.Varchar2).Value = req.Title;
-        cmd.Parameters.Add("p_date", OracleDbType.Date).Value = req.Date;
-        cmd.Parameters.Add("p_start", OracleDbType.TimeStamp).Value = req.StartTime;
-        cmd.Parameters.Add("p_end", OracleDbType.TimeStamp).Value = req.EndTime;
-        cmd.Parameters.Add("p_capacity", OracleDbType.Decimal).Value = req.Capacity;
-        
-        var pCampId = new OracleParameter("p_camp_id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
-        cmd.Parameters.Add(pCampId);
+            using var cmd = new OracleCommand("CREATE_DONATION_CAMP", connection);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Add("p_user_id", OracleDbType.Decimal).Value = GetCurrentUserId();
+            cmd.Parameters.Add("p_venue_id", OracleDbType.Decimal).Value = req.VenueId;
+            cmd.Parameters.Add("p_title", OracleDbType.Varchar2).Value = req.Title;
+            cmd.Parameters.Add("p_date", OracleDbType.Date).Value = req.Date;
+            cmd.Parameters.Add("p_start", OracleDbType.TimeStamp).Value = req.StartTime;
+            cmd.Parameters.Add("p_end", OracleDbType.TimeStamp).Value = req.EndTime;
+            cmd.Parameters.Add("p_capacity", OracleDbType.Decimal).Value = req.Capacity;
+            
+            var pCampId = new OracleParameter("p_camp_id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+            cmd.Parameters.Add(pCampId);
 
-        cmd.ExecuteNonQuery();
-        return ApiResponse<object>.Ok(new { CampId = Convert.ToInt32(pCampId.Value.ToString()) }, "Camp published successfully.");
+            cmd.ExecuteNonQuery();
+            return ApiResponse<object>.Ok(new { CampId = Convert.ToInt32(pCampId.Value.ToString()) }, "Camp published successfully.");
+        }
+        catch (OracleException ex) when (ex.Number == 2290)
+        {
+            return BadRequest(ApiResponse<object>.Error("Invalid times: End Time must be strictly after Start Time."));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Error($"An error occurred while creating the camp: {ex.Message}"));
+        }
     }
 
     [HttpGet("camps/{campId}/attendance")]
