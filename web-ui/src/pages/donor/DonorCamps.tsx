@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
+import { ConfirmModal } from '../../components/ConfirmModal';
 
 const DonorCamps = () => {
   const [camps, setCamps] = useState<DonationCampDto[]>([]);
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState<number | null>(null);
   const [message, setMessage] = useState('');
@@ -31,7 +33,11 @@ const DonorCamps = () => {
   }, []);
 
   async function handleRegister(campId: number) {
-    if (!window.confirm('Are you sure you want to register for this camp?')) return;
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Confirm Action',
+      message: 'Are you sure you want to register for this camp?',
+      onConfirm: async () => {
     setRegistering(campId);
     setMessage('');
     try {
@@ -44,6 +50,8 @@ const DonorCamps = () => {
     } finally {
       setRegistering(null);
     }
+      }
+    });
   };
 
   return (
@@ -122,6 +130,7 @@ const DonorCamps = () => {
           ))}
         </div>
       )}
+      <ConfirmModal {...confirmConfig} onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })} />
     </div>
   );
 };
