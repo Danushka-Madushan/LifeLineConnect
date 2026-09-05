@@ -211,7 +211,7 @@ public class PublicController : ControllerBase
             list.Add(new {
                 BloodBankId = reader["BLOOD_BANK_ID"],
                 BankName = reader["BANK_NAME"],
-                Address = reader["ADDRESS"]
+                Address = reader["DISTRICT"]
             });
         }
         return ApiResponse<List<object>>.Ok(list);
@@ -370,4 +370,3 @@ public class PublicController : ControllerBase
         return ApiResponse<SystemStats>.Error("Failed to fetch stats");
     }
 }
-
