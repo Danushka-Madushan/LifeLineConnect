@@ -131,6 +131,11 @@ BEGIN
     SET ATTENDANCE_STATUS = 'COMPLETED'
     WHERE REGISTRATION_ID = p_registration_id;
 
+    -- Update the donor's blood group if they don't have one on file
+    UPDATE DONOR
+    SET BLOOD_GROUP = p_blood_group
+    WHERE DONOR_ID = p_donor_id AND BLOOD_GROUP IS NULL;
+
     COMMIT;
 EXCEPTION
     WHEN OTHERS THEN
