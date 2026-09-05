@@ -1,9 +1,11 @@
 import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
+import { ConfirmModal } from '../../components/ConfirmModal';
 
 const CommitteeStaff = () => {
   const [staff, setStaff] = useState<CommitteeStaffDto[]>([]);
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ fullName: '', positionTitle: '', email: '', phone: '' });
@@ -41,14 +43,19 @@ const CommitteeStaff = () => {
   }
 
   async function handleRemove(id: number) {
-    if (window.confirm("Remove this staff member?")) {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Confirm Action',
+      message: 'Remove this staff member?',
+      onConfirm: async () => {
       try {
         await api.delete(`/committee/staff/${id}`);
         fetchStaff();
       } catch {
         toast.error('Failed to remove staff');
       }
-    }
+      }
+    });
   };
 
   return (
@@ -106,6 +113,7 @@ const CommitteeStaff = () => {
           </div>
         </div>
       )}
+      <ConfirmModal {...confirmConfig} onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })} />
     </div>
   );
 };
