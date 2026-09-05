@@ -13,7 +13,10 @@ builder.Configuration["JwtSettings:Secret"] = Environment.GetEnvironmentVariable
 
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => 
+{
+    options.Filters.Add<web_server.Filters.OracleExceptionFilter>();
+});
 builder.Services.AddEndpointsApiExplorer();
 
 // Database Contexts
@@ -47,6 +50,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 var app = builder.Build();
+
+// Register the custom request/response logging middleware
+app.UseMiddleware<web_server.Middlewares.RequestResponseLoggingMiddleware>();
 
 // Configure the HTTP request pipeline.
 app.UseCors("AllowVite");
