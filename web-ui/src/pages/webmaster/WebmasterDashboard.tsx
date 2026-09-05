@@ -1,6 +1,7 @@
 import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
+import { ConfirmModal } from '../../components/ConfirmModal';
 
 // --- Interfaces ---
 interface DashboardStats {
@@ -71,6 +72,7 @@ interface QaDto {
 
 const WebmasterDashboard = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'banks' | 'committees' | 'community'>('overview');
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [overview, setOverview] = useState<OverviewStats | null>(null);
   const [error, setError] = useState('');
@@ -243,7 +245,11 @@ const WebmasterDashboard = () => {
   }, [activeTab]);
 
   const handleDeleteUser = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Confirm Action',
+      message: 'Are you sure you want to delete this user?',
+      onConfirm: async () => {
     try {
       const res = await api.delete(`/webmaster/users/${id}`);
       if (res.data.success) {
@@ -251,10 +257,16 @@ const WebmasterDashboard = () => {
         fetchUsers();
       }
     } catch { toast.error("Failed to delete user"); }
+      }
+    });
   };
 
   const handleDeleteThread = async (id: string) => {
-    if (!window.confirm("Delete this thread?")) return;
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Confirm Action',
+      message: 'Delete this thread?',
+      onConfirm: async () => {
     try {
       const res = await api.delete(`/webmaster/community/threads/${id}`);
       if (res.data.success) {
@@ -262,10 +274,16 @@ const WebmasterDashboard = () => {
         fetchCommunity();
       }
     } catch { toast.error("Failed to delete thread"); }
+      }
+    });
   };
 
   const handleDeleteQA = async (id: string) => {
-    if (!window.confirm("Delete this QA?")) return;
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Confirm Action',
+      message: 'Delete this QA?',
+      onConfirm: async () => {
     try {
       const res = await api.delete(`/webmaster/community/qa/${id}`);
       if (res.data.success) {
@@ -273,6 +291,8 @@ const WebmasterDashboard = () => {
         fetchCommunity();
       }
     } catch { toast.error("Failed to delete QA"); }
+      }
+    });
   };
 
   const handleExportSystemReport = async () => {
@@ -709,7 +729,8 @@ const StatCard = ({ icon, title, value, color }: { icon: string, title: string, 
       <span className="font-label text-xs uppercase tracking-wider text-secondary">{title}</span>
       <span className="font-heading text-2xl font-bold text-on-surface">{value?.toLocaleString() ?? 0}</span>
     </div>
-  </div>
+    <ConfirmModal {...confirmConfig} onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })} />
+</div>
 );
 
 export default WebmasterDashboard;
