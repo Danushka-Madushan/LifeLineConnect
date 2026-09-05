@@ -2,10 +2,12 @@ import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../../lib/api';
+import { ConfirmModal } from '../../components/ConfirmModal';
 
 const CommitteeCampDetails = () => {
   const { campId } = useParams();
   const [activeTab, setActiveTab] = useState<'ATTENDANCE' | 'FEEDBACK'>('ATTENDANCE');
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
   const [attendance, setAttendance] = useState<CampDto[]>([]);
   const [feedback, setFeedback] = useState<CampFeedbackDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,8 +66,14 @@ const CommitteeCampDetails = () => {
       setSelectedDonor(donor);
       setShowBloodGroupModal(true);
     } else {
-      if (!window.confirm(`Log 1 unit of ${donor.bloodGroup} for ${donor.fullName}?`)) return;
-      submitDonation(donor, donor.bloodGroup);
+      setConfirmConfig({
+        isOpen: true,
+        title: 'Confirm Action',
+        message: `Log 1 unit of ${donor.bloodGroup} for ${donor.fullName}?`,
+        onConfirm: async () => {
+          submitDonation(donor, donor.bloodGroup);
+        }
+      });
     }
   };
 
@@ -79,7 +87,11 @@ const CommitteeCampDetails = () => {
   }
 
   async function handleDispatch() {
-    if (!window.confirm('Dispatch all completed donations to the selected Blood Bank?')) return;
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Confirm Action',
+      message: 'Dispatch all completed donations to the selected Blood Bank?',
+      onConfirm: async () => {
     setTransferring(true);
     try {
       const res = await api.post(`/committee/camps/${campId}/transfers`, { bloodBankId: parseInt(transferBankId) });
@@ -92,6 +104,8 @@ const CommitteeCampDetails = () => {
     } finally {
       setTransferring(false);
     }
+      }
+    });
   };
 
   if (loading) return <div className="p-space-2xl text-center"><span className="material-symbols-outlined animate-spin text-4xl text-primary">sync</span></div>;
@@ -241,6 +255,7 @@ const CommitteeCampDetails = () => {
           </div>
         </div>
       )}
+      <ConfirmModal {...confirmConfig} onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })} />
     </div>
   );
 };
