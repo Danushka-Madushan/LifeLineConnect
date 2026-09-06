@@ -1,14 +1,11 @@
--- ================================================================
--- Public Catalog Procedures
--- Blood Donation System — Oracle 21c PL/SQL
--- ================================================================
-
+/* Get Public Donation Camps */
 CREATE OR REPLACE PROCEDURE GET_PUBLIC_CAMPS (
     p_status        IN  VARCHAR2,
     p_lat           IN  NUMBER,
     p_lng           IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
     v_sql VARCHAR2(4000);
 BEGIN
     v_sql := 'SELECT c.CAMP_ID, c.COMMITTEE_ID, c.VENUE_ID, c.CAMP_TITLE, c.CAMP_DESCRIPTION, ' ||
@@ -35,7 +32,8 @@ END GET_PUBLIC_CAMPS;
 /
 
 CREATE OR REPLACE FUNCTION FN_GET_PUBLIC_STATS
-RETURN SYS_REFCURSOR AS
+RETURN SYS_REFCURSOR
+AS
     v_cursor SYS_REFCURSOR;
 BEGIN
     OPEN v_cursor FOR
@@ -48,7 +46,7 @@ BEGIN
 END FN_GET_PUBLIC_STATS;
 /
 
--- Get camps by a comma-separated list of IDs (used by top-rated camps endpoint)
+/* Get camps by a comma-separated list of IDs */
 CREATE OR REPLACE PROCEDURE GET_CAMPS_BY_IDS (
     p_camp_ids      IN  VARCHAR2,
     p_result_cursor OUT SYS_REFCURSOR
@@ -64,10 +62,12 @@ BEGIN
 END GET_CAMPS_BY_IDS;
 /
 
--- ================================================================
--- Helper Function: Check if a camp is publicly visible
--- ================================================================
-CREATE OR REPLACE FUNCTION IS_PUBLICLY_VISIBLE(p_camp_id IN NUMBER) RETURN NUMBER IS
+/* Check if a camp is publicly visible */
+CREATE OR REPLACE FUNCTION IS_PUBLICLY_VISIBLE (
+    p_camp_id IN NUMBER
+)
+RETURN NUMBER
+IS
     v_status VARCHAR2(20);
     v_public_visible CHAR(1);
 BEGIN
@@ -86,8 +86,11 @@ EXCEPTION
         RETURN 0;
 END IS_PUBLICLY_VISIBLE;
 /
+
+/* Get all active blood banks */
 CREATE OR REPLACE FUNCTION FN_GET_ACTIVE_BLOOD_BANKS
-RETURN SYS_REFCURSOR IS
+RETURN SYS_REFCURSOR
+IS
     v_cursor SYS_REFCURSOR;
 BEGIN
     OPEN v_cursor FOR
