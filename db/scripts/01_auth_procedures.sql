@@ -1,5 +1,4 @@
--- Register a new donor account
-
+/* Register a new donor account */
 CREATE OR REPLACE PROCEDURE REGISTER_DONOR (
     p_username       IN  VARCHAR2,
     p_email          IN  VARCHAR2,
