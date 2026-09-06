@@ -26,7 +26,6 @@ public class DonorController : ControllerBase
     {
         _oracleDb = oracleDb;
         _mongoDb = mongoDb;
-        QuestPDF.Settings.License = LicenseType.Community;
     }
 
     private int GetCurrentUserId()

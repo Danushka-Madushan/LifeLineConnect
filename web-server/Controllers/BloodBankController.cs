@@ -22,7 +22,6 @@ public class BloodBankController : ControllerBase
     public BloodBankController(OracleDbContext oracleDb)
     {
         _oracleDb = oracleDb;
-        QuestPDF.Settings.License = LicenseType.Community;
     }
 
     private int GetCurrentUserId()
@@ -493,5 +492,3 @@ public class BloodBankController : ControllerBase
         return File(pdf, "application/pdf", $"Hospital_Requests_Report_{DateTime.Now:yyyyMMdd}.pdf");
     }
 }
-
-
