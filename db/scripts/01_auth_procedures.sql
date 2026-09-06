@@ -48,11 +48,11 @@ BEGIN
         SELECT ROLE_CODE INTO v_role FROM USER_ROLE_LINK WHERE USER_ID = v_user.USER_ID;
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
-            RAISE_APPLICATION_ERROR(-20001, 'Invalid username or password.');
+            RAISE_APPLICATION_ERROR(-20009, 'Invalid username or password.');
     END;
 
     IF v_user.ACCOUNT_STATUS != 'ACTIVE' THEN
-        RAISE_APPLICATION_ERROR(-20002, 'Account is not active.');
+        RAISE_APPLICATION_ERROR(-20008, 'Account is not active.');
     END IF;
 
     p_user_id := v_user.USER_ID;

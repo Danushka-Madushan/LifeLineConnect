@@ -102,7 +102,19 @@ public class AuthController : ControllerBase
         cmd.Parameters.Add(pStatus);
         cmd.Parameters.Add(pRole);
 
-        cmd.ExecuteNonQuery();
+        try
+        {
+            cmd.ExecuteNonQuery();
+        }
+        catch (OracleException ex)
+        {
+            if (ex.Number == 20009)
+                return Unauthorized(ApiResponse<AuthResponseDto>.Error("Invalid username or password."));
+            if (ex.Number == 20009)
+                return Unauthorized(ApiResponse<AuthResponseDto>.Error("Account is not active."));
+                
+            throw;
+        }
 
         if (pUserId.Value == null || pUserId.Value.ToString() == "null" || string.IsNullOrEmpty(pUserId.Value.ToString()))
         {
