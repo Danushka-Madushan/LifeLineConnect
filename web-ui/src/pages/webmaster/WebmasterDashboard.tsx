@@ -70,8 +70,19 @@ interface QaDto {
   createdAt: string;
 }
 
+interface AuditLogDto {
+  logId: number;
+  actorRoleCode: string;
+  actorId: number | null;
+  actionCode: string;
+  entityType: string;
+  entityId: number | null;
+  details: string;
+  createdAt: string;
+}
+
 const WebmasterDashboard = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'banks' | 'committees' | 'community'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'banks' | 'committees' | 'community' | 'audit'>('overview');
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [overview, setOverview] = useState<OverviewStats | null>(null);
@@ -84,6 +95,7 @@ const WebmasterDashboard = () => {
   const [committees, setCommittees] = useState<WebmasterCommitteeDto[]>([]);
   const [threads, setThreads] = useState<ThreadDto[]>([]);
   const [qas, setQas] = useState<QaDto[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogDto[]>([]);
 
   // Modal states
   const [showBankModal, setShowBankModal] = useState(false);
@@ -219,6 +231,11 @@ const WebmasterDashboard = () => {
               setQas(qRes.data.data);
             }
           }
+        } else if (activeTab === 'audit') {
+          const res = await api.get('/webmaster/audit-logs');
+          if (!cancelled && res.data.success) {
+            setAuditLogs(res.data.data);
+          }
         }
       } catch {
         if (!cancelled) {
@@ -230,6 +247,8 @@ const WebmasterDashboard = () => {
             toast.error('Failed to fetch committees');
           } else if (activeTab === 'community') {
             toast.error('Failed to fetch community data');
+          } else if (activeTab === 'audit') {
+            toast.error('Failed to fetch audit logs');
           }
         }
       }
@@ -310,6 +329,22 @@ const WebmasterDashboard = () => {
     }
   };
 
+  const handleExportAuditLogs = async () => {
+    try {
+      const res = await api.get('/webmaster/audit-logs/export', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'Audit_Logs.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("Audit logs exported successfully.");
+    } catch {
+      toast.error("Failed to export audit logs");
+    }
+  };
+
   const handleDatabaseBackup = async () => {
     setBackupLoading(true);
     try {
@@ -358,7 +393,7 @@ const WebmasterDashboard = () => {
       </div>
 
       <div className="flex gap-space-md border-b border-surface-container pb-space-md">
-        {(['overview', 'users', 'banks', 'committees', 'community'] as const).map(tab => (
+        {(['overview', 'users', 'banks', 'committees', 'community', 'audit'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -570,6 +605,44 @@ const WebmasterDashboard = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'audit' && (
+        <div className="bg-surface-container-lowest border border-surface-container p-space-xl rounded-2xl">
+          <div className="flex justify-between items-center mb-space-lg">
+            <h2 className="font-heading text-2xl font-bold text-on-surface">System Audit Logs</h2>
+            <button onClick={handleExportAuditLogs} className="flex items-center gap-space-sm bg-primary text-on-primary px-space-md py-space-sm rounded-lg hover:bg-primary/90 font-semibold">
+              <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span> Export DB Audit Logs
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-surface-container">
+                  <th className="p-space-sm font-semibold text-secondary">Log ID</th>
+                  <th className="p-space-sm font-semibold text-secondary">Actor Role</th>
+                  <th className="p-space-sm font-semibold text-secondary">Action</th>
+                  <th className="p-space-sm font-semibold text-secondary">Entity Type</th>
+                  <th className="p-space-sm font-semibold text-secondary">Details</th>
+                  <th className="p-space-sm font-semibold text-secondary">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditLogs.map(log => (
+                  <tr key={log.logId} className="border-b border-surface-container/50 hover:bg-surface-container/20">
+                    <td className="p-space-sm">{log.logId}</td>
+                    <td className="p-space-sm">{log.actorRoleCode}</td>
+                    <td className="p-space-sm font-semibold">{log.actionCode}</td>
+                    <td className="p-space-sm">{log.entityType}</td>
+                    <td className="p-space-sm text-sm">{log.details}</td>
+                    <td className="p-space-sm whitespace-nowrap text-sm">{new Date(log.createdAt).toLocaleString()}</td>
+                  </tr>
+                ))}
+                {auditLogs.length === 0 && <tr><td colSpan={6} className="p-space-md text-center text-secondary">No audit logs found.</td></tr>}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

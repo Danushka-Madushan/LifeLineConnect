@@ -366,4 +366,124 @@ public class WebmasterController : ControllerBase
             return StatusCode(500, ApiResponse<string>.Error("Failed to generate backup: " + ex.Message));
         }
     }
+    public class AuditLogDto
+    {
+        public int LogId { get; set; }
+        public string ActorRoleCode { get; set; } = "";
+        public int? ActorId { get; set; }
+        public string ActionCode { get; set; } = "";
+        public string EntityType { get; set; } = "";
+        public int? EntityId { get; set; }
+        public string Details { get; set; } = "";
+        public DateTime CreatedAt { get; set; }
+    }
+
+    [HttpGet("audit-logs")]
+    public ActionResult<ApiResponse<List<AuditLogDto>>> GetAuditLogs()
+    {
+        var list = new List<AuditLogDto>();
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        if (connection == null) return StatusCode(500, "Database connection error");
+        connection.Open();
+
+        using var cmd = new OracleCommand("GET_SYSTEM_AUDIT_LOGS", connection);
+        cmd.CommandType = CommandType.StoredProcedure;
+
+        var pCursor = new OracleParameter("p_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(pCursor);
+
+        cmd.ExecuteNonQuery();
+
+        using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
+        while (reader.Read())
+        {
+            list.Add(new AuditLogDto
+            {
+                LogId = Convert.ToInt32(reader["LOG_ID"]),
+                ActorRoleCode = reader["ACTOR_ROLE_CODE"]?.ToString() ?? "",
+                ActorId = reader["ACTOR_ID"] != DBNull.Value ? Convert.ToInt32(reader["ACTOR_ID"]) : null,
+                ActionCode = reader["ACTION_CODE"]?.ToString() ?? "",
+                EntityType = reader["ENTITY_TYPE"]?.ToString() ?? "",
+                EntityId = reader["ENTITY_ID"] != DBNull.Value ? Convert.ToInt32(reader["ENTITY_ID"]) : null,
+                Details = reader["DETAILS"]?.ToString() ?? "",
+                CreatedAt = Convert.ToDateTime(reader["CREATED_AT"])
+            });
+        }
+        return ApiResponse<List<AuditLogDto>>.Ok(list);
+    }
+
+    [HttpGet("audit-logs/export")]
+    public ActionResult ExportAuditLogs()
+    {
+        var list = new List<AuditLogDto>();
+        using (var connection = _oracleDb.CreateConnection() as OracleConnection)
+        {
+            connection!.Open();
+            using var cmd = new OracleCommand("GET_SYSTEM_AUDIT_LOGS", connection);
+            cmd.CommandType = CommandType.StoredProcedure;
+            var pCursor = new OracleParameter("p_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+            cmd.Parameters.Add(pCursor);
+            cmd.ExecuteNonQuery();
+            using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
+            while (reader.Read())
+            {
+                list.Add(new AuditLogDto
+                {
+                    LogId = Convert.ToInt32(reader["LOG_ID"]),
+                    ActorRoleCode = reader["ACTOR_ROLE_CODE"]?.ToString() ?? "",
+                    ActorId = reader["ACTOR_ID"] != DBNull.Value ? Convert.ToInt32(reader["ACTOR_ID"]) : null,
+                    ActionCode = reader["ACTION_CODE"]?.ToString() ?? "",
+                    EntityType = reader["ENTITY_TYPE"]?.ToString() ?? "",
+                    EntityId = reader["ENTITY_ID"] != DBNull.Value ? Convert.ToInt32(reader["ENTITY_ID"]) : null,
+                    Details = reader["DETAILS"]?.ToString() ?? "",
+                    CreatedAt = Convert.ToDateTime(reader["CREATED_AT"])
+                });
+            }
+        }
+
+        var document = QuestPDF.Fluent.Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(QuestPDF.Helpers.PageSizes.A4.Landscape());
+                page.Margin(1, QuestPDF.Infrastructure.Unit.Centimetre);
+                page.Header().Text("Audit Logs Export").SemiBold().FontSize(20).FontColor(QuestPDF.Helpers.Colors.Blue.Darken2);
+                
+                page.Content().PaddingVertical(1, QuestPDF.Infrastructure.Unit.Centimetre).Table(table =>
+                {
+                    table.ColumnsDefinition(columns =>
+                    {
+                        columns.RelativeColumn(1);
+                        columns.RelativeColumn(2);
+                        columns.RelativeColumn(2);
+                        columns.RelativeColumn(2);
+                        columns.RelativeColumn(4);
+                        columns.RelativeColumn(2);
+                    });
+                    
+                    table.Header(header =>
+                    {
+                        header.Cell().Text("ID").SemiBold();
+                        header.Cell().Text("Actor Role").SemiBold();
+                        header.Cell().Text("Action").SemiBold();
+                        header.Cell().Text("Entity").SemiBold();
+                        header.Cell().Text("Details").SemiBold();
+                        header.Cell().Text("Created At").SemiBold();
+                    });
+
+                    foreach (var log in list)
+                    {
+                        table.Cell().Text(log.LogId.ToString());
+                        table.Cell().Text(log.ActorRoleCode);
+                        table.Cell().Text(log.ActionCode);
+                        table.Cell().Text(log.EntityType);
+                        table.Cell().Text(log.Details);
+                        table.Cell().Text(log.CreatedAt.ToString("g"));
+                    }
+                });
+            });
+        });
+        
+        return File(document.GeneratePdf(), "application/pdf", "Audit_Logs.pdf");
+    }
 }
