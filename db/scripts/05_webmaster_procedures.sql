@@ -1,12 +1,8 @@
--- ================================================================
--- Webmaster Procedures
--- Blood Donation System — Oracle 21c PL/SQL
--- ================================================================
-
--- Get Webmaster Dashboard Statistics
+/* Get Webmaster Dashboard Statistics */
 CREATE OR REPLACE PROCEDURE GET_WEBMASTER_DASHBOARD (
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
 BEGIN
     OPEN p_result_cursor FOR
         SELECT
@@ -21,9 +17,10 @@ BEGIN
 END GET_WEBMASTER_DASHBOARD;
 /
 
--- Get all users for administration
+/* Get all users for administration */
 CREATE OR REPLACE FUNCTION FN_GET_ALL_USERS
-RETURN SYS_REFCURSOR AS
+RETURN SYS_REFCURSOR
+IS
     v_cursor SYS_REFCURSOR;
 BEGIN
     OPEN v_cursor FOR
