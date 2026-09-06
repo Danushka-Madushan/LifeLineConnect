@@ -199,9 +199,9 @@ public class PublicController : ControllerBase
         connection!.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandType = CommandType.StoredProcedure;
-        cmd.CommandText = "GET_ACTIVE_BLOOD_BANKS";
+        cmd.CommandText = "FN_GET_ACTIVE_BLOOD_BANKS";
 
-        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.ReturnValue };
         cmd.Parameters.Add(pCursor);
 
         cmd.ExecuteNonQuery();
@@ -347,9 +347,9 @@ public class PublicController : ControllerBase
 
         using var command = connection.CreateCommand();
         command.CommandType = System.Data.CommandType.StoredProcedure;
-        command.CommandText = "GET_PUBLIC_STATS";
+        command.CommandText = "FN_GET_PUBLIC_STATS";
         
-        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.ReturnValue };
         command.Parameters.Add(pCursor);
         
         command.ExecuteNonQuery();
