@@ -1,4 +1,4 @@
-# Backend Architecture — Blood Donation System
+# Backend Architecture - Blood Donation System
 
 > **Scope:** Backend architecture only. This document defines how the C# application layer exposes APIs and how those APIs use **Oracle PL/SQL** and **MongoDB**. It does **not** contain implementation code.
 >
@@ -15,7 +15,7 @@
 > 
 > **Oracle operation variable convention:** every Oracle-backed API below includes an `OraclePLSql` design variable. This is a human-readable reference to the intended PL/SQL call/query; it is **not implementation code**.
 >
-> **MongoDB convention:** when an endpoint is MongoDB-backed, `OraclePLSql` is marked `N/A — MongoDB operation` rather than inventing an Oracle query for non-Oracle data.
+> **MongoDB convention:** when an endpoint is MongoDB-backed, `OraclePLSql` is marked `N/A - MongoDB operation` rather than inventing an Oracle query for non-Oracle data.
 
 ## 0. Backend-wide conventions
 
@@ -84,7 +84,7 @@ Suggested reusable functions/triggers:
 
 **What to return:** Nothing.
 
-**OraclePLSql:** N/A — frontend-only navigation.
+**OraclePLSql:** N/A - frontend-only navigation.
 
 ---
 
@@ -107,7 +107,7 @@ pageSize=10
 
 **What to return:** Paginated broadcast cards with `id`, `title`, `message`, `bloodGroup`, `urgency`, `location`, `publishedAt`, `expiresAt`, `status`, and a safe reference to the related request/bank if applicable.
 
-**OraclePLSql:** N/A — MongoDB broadcast feed; Oracle is only the source of the underlying institutional request when correlation is required.
+**OraclePLSql:** N/A - MongoDB broadcast feed; Oracle is only the source of the underlying institutional request when correlation is required.
 
 ---
 
@@ -130,7 +130,7 @@ pageSize=12
 
 **What to return:** `appealId`, required blood group, urgency, location, required units if public, needed-by date, summary, status, publication date, and safe contact/action metadata.
 
-**OraclePLSql:** N/A — MongoDB emergency appeal content.
+**OraclePLSql:** N/A - MongoDB emergency appeal content.
 
 ---
 
@@ -149,7 +149,7 @@ GET /api/public/emergency-appeals/search?bloodGroup=A%2B&urgency=critical&locati
 
 **What to return:** Matching appeal summaries plus `page`, `pageSize`, `total` where available.
 
-**OraclePLSql:** N/A — MongoDB search.
+**OraclePLSql:** N/A - MongoDB search.
 
 ---
 
@@ -187,7 +187,7 @@ pageSize=12
 
 **What to return:** Media cards with `id`, `title`, `description`, `mediaType`, `url`, `thumbnailUrl`, `publishedAt`, and optional campaign association.
 
-**OraclePLSql:** N/A — MongoDB.
+**OraclePLSql:** N/A - MongoDB.
 
 ---
 
@@ -207,7 +207,7 @@ language=en
 
 **What to return:** `documentId`, `title`, `summary`, `contentUrl` or content payload, `category`, `version`, `publishedAt`, `updatedAt`, `status`.
 
-**OraclePLSql:** N/A — MongoDB guideline repository.
+**OraclePLSql:** N/A - MongoDB guideline repository.
 
 ---
 
@@ -228,7 +228,7 @@ category=donation
 
 **What to return:** Thread list with `threadId`, title, excerpt, displayAuthor, createdAt, updatedAt, replyCount, status.
 
-**OraclePLSql:** N/A — MongoDB.
+**OraclePLSql:** N/A - MongoDB.
 
 ---
 
@@ -247,7 +247,7 @@ q=first%20time%20donation&page=1&pageSize=20
 
 **What to return:** Matching thread summaries and pagination.
 
-**OraclePLSql:** N/A — MongoDB.
+**OraclePLSql:** N/A - MongoDB.
 
 ---
 
@@ -263,7 +263,7 @@ q=first%20time%20donation&page=1&pageSize=20
 
 **What to return:** Questions with answer text, category, tags, publication status, and updated timestamp.
 
-**OraclePLSql:** N/A — MongoDB.
+**OraclePLSql:** N/A - MongoDB.
 
 ---
 
@@ -345,7 +345,7 @@ pageSize=20
 
 **What to return:** Nothing.
 
-**OraclePLSql:** N/A — frontend navigation; authentication is specified under `COMMON-03`.
+**OraclePLSql:** N/A - frontend navigation; authentication is specified under `COMMON-03`.
 
 ---
 
@@ -630,7 +630,7 @@ bloodGroup=O+
 
 **What to return:** Feedback ID, camp ID, rating, comment, submission date and status.
 
-**OraclePLSql:** N/A — MongoDB feedback collection.
+**OraclePLSql:** N/A - MongoDB feedback collection.
 
 ---
 
@@ -646,7 +646,7 @@ bloodGroup=O+
 
 **What to return:** Published guideline metadata/content.
 
-**OraclePLSql:** N/A — MongoDB.
+**OraclePLSql:** N/A - MongoDB.
 
 ---
 
@@ -678,7 +678,7 @@ bloodGroup=O+
 
 **What to return:** Appeal list and pagination metadata.
 
-**OraclePLSql:** N/A — MongoDB.
+**OraclePLSql:** N/A - MongoDB.
 
 ---
 
@@ -727,7 +727,7 @@ bloodGroup=O+
 
 **What to return:** Created reply/thread metadata and current thread state.
 
-**OraclePLSql:** N/A — MongoDB community data; Oracle may be consulted only to verify donor account status.
+**OraclePLSql:** N/A - MongoDB community data; Oracle may be consulted only to verify donor account status.
 
 ---
 
@@ -749,7 +749,7 @@ bloodGroup=O+
 
 **What to return:** Q&A item, status, timestamps, safe display author and answer list.
 
-**OraclePLSql:** N/A — MongoDB.
+**OraclePLSql:** N/A - MongoDB.
 
 ---
 
@@ -1475,7 +1475,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** `403 Forbidden` for invalid actions.
 
-**OraclePLSql:** N/A — absence of an inventory API is the intended design; Oracle transfer procedures manage only camp-side records.
+**OraclePLSql:** N/A - absence of an inventory API is the intended design; Oracle transfer procedures manage only camp-side records.
 
 ---
 
@@ -1723,7 +1723,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** `403 Forbidden`.
 
-**OraclePLSql:** N/A — there should be no webmaster write procedure/function entry points.
+**OraclePLSql:** N/A - there should be no webmaster write procedure/function entry points.
 
 ---
 
@@ -1739,7 +1739,7 @@ date=2026-09-20&startTime=09:00&endTime=15:00
 
 **What to return:** Document counts, current-version metadata and publication status.
 
-**OraclePLSql:** N/A — MongoDB content status.
+**OraclePLSql:** N/A - MongoDB content status.
 
 ---
 
@@ -1830,7 +1830,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Nothing.
 
-**OraclePLSql:** N/A — frontend-only.
+**OraclePLSql:** N/A - frontend-only.
 
 ---
 
@@ -2251,7 +2251,7 @@ page=1&pageSize=20&sort=createdAt&order=desc
 
 **What to return:** Nothing beyond normal entity/list responses.
 
-**OraclePLSql:** N/A — frontend UX rule.
+**OraclePLSql:** N/A - frontend UX rule.
 
 ---
 

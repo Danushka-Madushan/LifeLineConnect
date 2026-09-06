@@ -1,7 +1,7 @@
 # LifeLineConnect - Application Overview
 
 ## Purpose of the Application
-LifeLineConnect is a comprehensive blood donation management system designed to bridge the gap between donors, organizing committees, blood banks, and hospitals. It streamlines the entire blood donation lifecycle—from donor registration and camp organization to inventory management and fulfillment of hospital requests. The platform ensures a steady and trackable supply of blood units while fostering a strong community through engagement and awareness initiatives.
+LifeLineConnect is a comprehensive blood donation management system designed to bridge the gap between donors, organizing committees, blood banks, and hospitals. It streamlines the entire blood donation lifecycle-from donor registration and camp organization to inventory management and fulfillment of hospital requests. The platform ensures a steady and trackable supply of blood units while fostering a strong community through engagement and awareness initiatives.
 
 ## Features by Role
 

@@ -22,7 +22,7 @@
 
 ## About
 
-LifeLineConnect is a full-stack platform that manages the complete blood donation lifecycle — from donor registration and camp scheduling through to blood unit storage, hospital allocation, and supply chain logistics.
+LifeLineConnect is a full-stack platform that manages the complete blood donation lifecycle - from donor registration and camp scheduling through to blood unit storage, hospital allocation, and supply chain logistics.
 
 The system connects four distinct stakeholder roles through a unified interface: system administrators, blood bank operators, organizing committee members, and individual donors. Each role has a dedicated dashboard with capabilities tailored to their operational requirements.
 
@@ -73,7 +73,7 @@ The system connects four distinct stakeholder roles through a unified interface:
 ### Blood Bank Operations
 - Live blood unit inventory with expiry monitoring (42-day shelf life)
 - Receive and process incoming donation transfers
-- Global hospital request board — any hospital can request, any bank can fulfill
+- Global hospital request board - any hospital can request, any bank can fulfill
 - Automated unit allocation against pending requests
 - Medical staff assignment and management
 - PDF export: inventory reports, hospital request status
