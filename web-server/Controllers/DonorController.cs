@@ -514,16 +514,22 @@ public class DonorController : ControllerBase
     [HttpPost("medical-check")]
     public ActionResult<ApiResponse<object>> SubmitMedicalCheck([FromBody] MedicalCheckDto req)
     {
-        var status = (req.FeelingWell && !req.RecentAntibiotics && !req.RecentTattoo) ? "PASSED" : "FAILED";
-
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
 
         using var cmd = new OracleCommand("SUBMIT_MEDICAL_CHECK", connection);
         cmd.CommandType = CommandType.StoredProcedure;
         cmd.Parameters.Add("p_user_id", OracleDbType.Decimal).Value = GetCurrentUserId();
-        cmd.Parameters.Add("p_status", OracleDbType.Varchar2).Value = status;
+        cmd.Parameters.Add("p_feeling_well", OracleDbType.Decimal).Value = req.FeelingWell ? 1 : 0;
+        cmd.Parameters.Add("p_recent_antibiotics", OracleDbType.Decimal).Value = req.RecentAntibiotics ? 1 : 0;
+        cmd.Parameters.Add("p_recent_tattoo", OracleDbType.Decimal).Value = req.RecentTattoo ? 1 : 0;
+        
+        var pStatus = new OracleParameter("p_status", OracleDbType.Varchar2, 20) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(pStatus);
+        
         cmd.ExecuteNonQuery();
+        
+        var status = pStatus.Value.ToString();
 
         if (status == "PASSED")
             return ApiResponse<object>.Ok(new { Status = status }, "Medical check passed.");

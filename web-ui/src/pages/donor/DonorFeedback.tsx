@@ -1,8 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 
 export interface CampFeedbackDto {
   [key: string]: string | number | boolean | null | undefined | CampFeedbackDto | CampFeedbackDto[];
+}
+
+interface DonationDto {
+  donationId: number;
+  campId: number;
+  campTitle: string;
+  donationDate: string;
 }
 
 const DonorFeedback = () => {
@@ -11,9 +18,28 @@ const DonorFeedback = () => {
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [donations, setDonations] = useState<DonationDto[]>([]);
+
+  useEffect(() => {
+    async function fetchDonations() {
+      try {
+        const res = await api.get('/donors/me/donations');
+        if (res.data.success) {
+          setDonations(res.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to load donations", err);
+      }
+    }
+    fetchDonations();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!campId) {
+      setMessage('Please select a camp.');
+      return;
+    }
     setSubmitting(true);
     setMessage('');
     
@@ -48,15 +74,20 @@ const DonorFeedback = () => {
         </p>
 
         <div className="flex flex-col gap-space-xs">
-          <label className="font-label text-sm font-semibold">Camp ID</label>
-          <input 
-            type="number" 
+          <label className="font-label text-sm font-semibold">Select Camp</label>
+          <select 
             required 
             value={campId} 
             onChange={e => setCampId(e.target.value)} 
-            placeholder="e.g. 1"
             className="px-space-md py-space-sm border border-surface-container-high rounded-lg focus:outline-none focus:border-primary bg-surface" 
-          />
+          >
+            <option value="" disabled>Select a camp...</option>
+            {donations.map(d => (
+              <option key={d.donationId} value={d.campId}>
+                {d.campTitle} ({new Date(d.donationDate).toLocaleDateString()})
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="flex flex-col gap-space-xs">

@@ -36,6 +36,21 @@ const Register = () => {
       return;
     }
 
+    if (formData.dateOfBirth) {
+      const birthDate = new Date(formData.dateOfBirth);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      if (age < 18) {
+        setError('You must be at least 18 years old to register as a donor.');
+        setIsLoading(false);
+        return;
+      }
+    }
+
     try {
       const res = await api.post('/auth/donors/register', { ...formData, email: formData.email.toLowerCase() });
       if (res.data.success) {

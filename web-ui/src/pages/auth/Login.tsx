@@ -28,6 +28,10 @@ const Login = () => {
           navigate('/webmaster');
         } else if (role === 'DONOR') {
           navigate('/donor/dashboard');
+        } else if (role === 'BLOOD_BANK') {
+          navigate('/bank');
+        } else if (role === 'ORGANIZING_COMMITTEE') {
+          navigate('/committee');
         } else {
           navigate('/');
         }
