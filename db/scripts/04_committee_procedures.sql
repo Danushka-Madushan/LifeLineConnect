@@ -1,13 +1,9 @@
--- ================================================================
--- Committee Procedures
--- Blood Donation System — Oracle 21c PL/SQL
--- ================================================================
-
--- Get committee dashboard stats
+/* Get committee dashboard stats */
 CREATE OR REPLACE PROCEDURE GET_COMMITTEE_DASHBOARD (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
     v_committee_id ORGANIZING_COMMITTEE.COMMITTEE_ID%TYPE;
 BEGIN
     SELECT COMMITTEE_ID INTO v_committee_id
@@ -23,10 +19,12 @@ BEGIN
 END GET_COMMITTEE_DASHBOARD;
 /
 
--- Get committee venues
+/* Get committee venues */
 CREATE OR REPLACE FUNCTION FN_GET_COMMITTEE_VENUES (
     p_user_id       IN  NUMBER
-) RETURN SYS_REFCURSOR AS
+)
+RETURN SYS_REFCURSOR
+IS
     v_committee_id ORGANIZING_COMMITTEE.COMMITTEE_ID%TYPE;
     v_cursor SYS_REFCURSOR;
 BEGIN
@@ -42,11 +40,12 @@ BEGIN
 END FN_GET_COMMITTEE_VENUES;
 /
 
--- Get committee camps
+/* Get committee camps */
 CREATE OR REPLACE PROCEDURE GET_COMMITTEE_CAMPS (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
     v_committee_id ORGANIZING_COMMITTEE.COMMITTEE_ID%TYPE;
 BEGIN
     SELECT COMMITTEE_ID INTO v_committee_id
@@ -64,7 +63,7 @@ BEGIN
 END GET_COMMITTEE_CAMPS;
 /
 
--- Create a new donation camp
+/* Create a new donation camp */
 CREATE OR REPLACE PROCEDURE CREATE_DONATION_CAMP (
     p_user_id   IN  NUMBER,
     p_venue_id  IN  NUMBER,
@@ -74,7 +73,8 @@ CREATE OR REPLACE PROCEDURE CREATE_DONATION_CAMP (
     p_end       IN  TIMESTAMP,
     p_capacity  IN  NUMBER,
     p_camp_id   OUT NUMBER
-) AS
+)
+IS
     v_committee_id ORGANIZING_COMMITTEE.COMMITTEE_ID%TYPE;
 BEGIN
     SELECT COMMITTEE_ID INTO v_committee_id
@@ -83,21 +83,16 @@ BEGIN
     INSERT INTO DONATION_CAMP (COMMITTEE_ID, VENUE_ID, CAMP_TITLE, CAMP_DATE, START_TIME, END_TIME, CAPACITY, STATUS, PUBLIC_VISIBLE)
     VALUES (v_committee_id, p_venue_id, p_title, p_date, p_start, p_end, p_capacity, 'PUBLISHED', 'Y')
     RETURNING CAMP_ID INTO p_camp_id;
-
-    COMMIT;
-EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE;
 END CREATE_DONATION_CAMP;
 /
 
--- Get camp attendance list
+/* Get camp attendance list */
 CREATE OR REPLACE PROCEDURE GET_CAMP_ATTENDANCE (
     p_user_id       IN  NUMBER,
     p_camp_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
 BEGIN
     OPEN p_result_cursor FOR
         SELECT cr.REGISTRATION_ID, cr.DONOR_ID,
@@ -114,7 +109,7 @@ BEGIN
 END GET_CAMP_ATTENDANCE;
 /
 
--- Record a donation at a camp
+/* Record a donation at a camp */
 CREATE OR REPLACE PROCEDURE RECORD_CAMP_DONATION (
     p_user_id         IN NUMBER,
     p_registration_id IN NUMBER,
@@ -122,44 +117,40 @@ CREATE OR REPLACE PROCEDURE RECORD_CAMP_DONATION (
     p_donor_id        IN NUMBER,
     p_blood_group     IN VARCHAR2,
     p_units           IN NUMBER
-) AS
+)
+IS
 BEGIN
     INSERT INTO DONATION_RECORD (REGISTRATION_ID, CAMP_ID, DONOR_ID, DONATION_DATE, BLOOD_GROUP, UNITS_COLLECTED, STATUS)
     VALUES (p_registration_id, p_camp_id, p_donor_id, TRUNC(SYSDATE), p_blood_group, p_units, 'SUBMITTED');
 
-    -- Update attendance status
+    /* Update attendance status */
     UPDATE CAMP_REGISTRATION
     SET ATTENDANCE_STATUS = 'COMPLETED'
     WHERE REGISTRATION_ID = p_registration_id;
 
-    -- Update the donor's blood group if they don't have one on file
+    /* Update the donor's blood group if they don't have one on profile */
     UPDATE DONOR
     SET BLOOD_GROUP = p_blood_group
     WHERE DONOR_ID = p_donor_id AND BLOOD_GROUP IS NULL;
-
-    COMMIT;
-EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE;
 END RECORD_CAMP_DONATION;
 /
 
--- Dispatch donation transfer to blood bank
+/* Dispatch donation transfer to blood bank */
 CREATE OR REPLACE PROCEDURE DISPATCH_DONATION_TRANSFER (
     p_user_id       IN  NUMBER,
     p_camp_id       IN  NUMBER,
     p_blood_bank_id IN  NUMBER,
     p_transfer_id   OUT NUMBER,
     p_transfer_code OUT VARCHAR2
-) AS
+)
+IS
     v_committee_id ORGANIZING_COMMITTEE.COMMITTEE_ID%TYPE;
     v_count        NUMBER;
 BEGIN
     SELECT COMMITTEE_ID INTO v_committee_id
     FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE = 'ORGANIZING_COMMITTEE';
 
-    -- Check if there are submitted donations not yet transferred
+    /* Check if there are submitted donations not yet transferred */
     SELECT COUNT(*) INTO v_count
     FROM DONATION_RECORD dr
     WHERE dr.CAMP_ID = p_camp_id
@@ -172,36 +163,31 @@ BEGIN
         RETURN;
     END IF;
 
-    -- Generate transfer code
+    /* Generate transfer code */
     p_transfer_code := 'TRF-' || TO_CHAR(SYSDATE, 'YYYYMMDD') || '-' || TO_CHAR(DBMS_RANDOM.VALUE(1000, 9999), 'FM9999');
 
-    -- Create transfer
+    /* Create transfer */
     INSERT INTO DONATION_TRANSFER (CAMP_ID, COMMITTEE_ID, BLOOD_BANK_ID, TRANSFER_CODE, STATUS, DISPATCHED_AT)
     VALUES (p_camp_id, v_committee_id, p_blood_bank_id, p_transfer_code, 'DISPATCHED', SYSTIMESTAMP)
     RETURNING TRANSFER_ID INTO p_transfer_id;
 
-    -- Link all untransferred donations
+    /* Link all untransferred donations */
     INSERT INTO DONATION_TRANSFER_ITEM (TRANSFER_ID, DONATION_ID, UNITS_TRANSFERRED)
     SELECT p_transfer_id, dr.DONATION_ID, dr.UNITS_COLLECTED
     FROM DONATION_RECORD dr
     WHERE dr.CAMP_ID = p_camp_id
       AND dr.STATUS = 'SUBMITTED'
       AND NOT EXISTS (SELECT 1 FROM DONATION_TRANSFER_ITEM dti WHERE dti.DONATION_ID = dr.DONATION_ID);
-
-    COMMIT;
-EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE;
 END DISPATCH_DONATION_TRANSFER;
 /
 
--- Update camp status
+/* Update camp status */
 CREATE OR REPLACE PROCEDURE UPDATE_CAMP_STATUS (
     p_user_id  IN NUMBER,
     p_camp_id  IN NUMBER,
     p_status   IN VARCHAR2
-) AS
+)
+IS
     v_committee_id ORGANIZING_COMMITTEE.COMMITTEE_ID%TYPE;
 BEGIN
     SELECT COMMITTEE_ID INTO v_committee_id
@@ -211,18 +197,18 @@ BEGIN
     SET STATUS = p_status, UPDATED_AT = SYSTIMESTAMP
     WHERE CAMP_ID = p_camp_id AND COMMITTEE_ID = v_committee_id;
 
-    COMMIT;
 END UPDATE_CAMP_STATUS;
 /
 
--- Create a new venue
+/* Create a new venue */
 CREATE OR REPLACE PROCEDURE CREATE_VENUE (
     p_user_id    IN  NUMBER,
     p_venue_name IN  VARCHAR2,
     p_address    IN  VARCHAR2,
     p_capacity   IN  NUMBER,
     p_venue_id   OUT NUMBER
-) AS
+)
+IS
     v_committee_id ORGANIZING_COMMITTEE.COMMITTEE_ID%TYPE;
 BEGIN
     SELECT COMMITTEE_ID INTO v_committee_id
@@ -232,15 +218,15 @@ BEGIN
     VALUES (v_committee_id, p_venue_name, p_address, p_capacity, 'ACTIVE')
     RETURNING VENUE_ID INTO p_venue_id;
 
-    COMMIT;
 END CREATE_VENUE;
 /
 
--- Get committee transfers
+/* Get committee transfers */
 CREATE OR REPLACE PROCEDURE GET_COMMITTEE_TRANSFERS (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
     v_committee_id ORGANIZING_COMMITTEE.COMMITTEE_ID%TYPE;
 BEGIN
     SELECT COMMITTEE_ID INTO v_committee_id
@@ -254,11 +240,12 @@ BEGIN
 END GET_COMMITTEE_TRANSFERS;
 /
 
--- Get committee staff
+/* Get committee staff */
 CREATE OR REPLACE PROCEDURE GET_COMMITTEE_STAFF (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
     v_committee_id ORGANIZING_COMMITTEE.COMMITTEE_ID%TYPE;
 BEGIN
     SELECT COMMITTEE_ID INTO v_committee_id
@@ -275,7 +262,7 @@ BEGIN
 END GET_COMMITTEE_STAFF;
 /
 
--- Add a staff member to a committee
+/* Add a staff member to a committee */
 CREATE OR REPLACE PROCEDURE ADD_COMMITTEE_STAFF (
     p_user_id    IN  NUMBER,
     p_full_name  IN  VARCHAR2,
@@ -283,7 +270,8 @@ CREATE OR REPLACE PROCEDURE ADD_COMMITTEE_STAFF (
     p_phone      IN  VARCHAR2,
     p_email      IN  VARCHAR2,
     p_staff_id   OUT NUMBER
-) AS
+)
+IS
     v_committee_id ORGANIZING_COMMITTEE.COMMITTEE_ID%TYPE;
 BEGIN
     SELECT COMMITTEE_ID INTO v_committee_id
@@ -295,20 +283,15 @@ BEGIN
 
     INSERT INTO COMMITTEE_STAFF_ASSIGNMENT (STAFF_ID, COMMITTEE_ID, ASSIGNED_FROM, STATUS)
     VALUES (p_staff_id, v_committee_id, TRUNC(SYSDATE), 'ACTIVE');
-
-    COMMIT;
-EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE;
 END ADD_COMMITTEE_STAFF;
 /
 
--- Remove (deactivate) a staff member from a committee
+/* Remove  a staff member from a committee */
 CREATE OR REPLACE PROCEDURE REMOVE_COMMITTEE_STAFF (
     p_user_id   IN NUMBER,
     p_staff_id  IN NUMBER
-) AS
+)
+IS
     v_committee_id ORGANIZING_COMMITTEE.COMMITTEE_ID%TYPE;
 BEGIN
     SELECT COMMITTEE_ID INTO v_committee_id
@@ -322,6 +305,5 @@ BEGIN
     SET STATUS = 'INACTIVE'
     WHERE STAFF_ID = p_staff_id;
 
-    COMMIT;
 END REMOVE_COMMITTEE_STAFF;
 /
