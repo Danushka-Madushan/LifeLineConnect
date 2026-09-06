@@ -4,7 +4,11 @@
     <img src="./web-ui/public/favicon.svg" alt="LifeLineConnect" width="90" />
   </a>
   <h3>LifeLineConnect</h3>
-  <p>Blood Donation & Supply Chain Management Platform</p>
+  <p align="center">
+    <strong>Blood Donation & Supply Chain Management Platform</strong>
+    <br />
+    A comprehensive solution for filling the gap between Blood Banks, Hospitals, Organizing Committees, and Donors.
+  </p>
 
   <p>
     <img src="https://img.shields.io/badge/.NET_10-512BD4?style=flat-square&logo=dotnet&logoColor=white" />
