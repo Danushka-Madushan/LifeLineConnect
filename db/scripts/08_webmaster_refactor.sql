@@ -8,7 +8,7 @@ CREATE OR REPLACE PROCEDURE SEED_WEBMASTER (
     p_password_hash IN VARCHAR2
 ) AS
     v_count NUMBER;
-    v_user_id NUMBER;
+    v_user_id APP_USER.USER_ID%TYPE;
 BEGIN
     SELECT COUNT(*) INTO v_count FROM USER_ROLE_LINK WHERE ROLE_CODE = 'WEBMASTER';
     IF v_count > 0 THEN
@@ -40,8 +40,8 @@ CREATE OR REPLACE PROCEDURE REGISTER_BLOOD_BANK (
     p_phone      IN VARCHAR2,
     p_address    IN VARCHAR2
 ) AS
-    v_user_id NUMBER;
-    v_bank_id NUMBER;
+    v_user_id APP_USER.USER_ID%TYPE;
+    v_bank_id BLOOD_BANK.BLOOD_BANK_ID%TYPE;
 BEGIN
     INSERT INTO APP_USER (USERNAME, EMAIL, PASSWORD_HASH, ACCOUNT_STATUS)
     VALUES (p_username, p_email, p_hash, 'ACTIVE')
@@ -72,8 +72,8 @@ CREATE OR REPLACE PROCEDURE REGISTER_COMMITTEE (
     p_phone          IN VARCHAR2,
     p_address        IN VARCHAR2
 ) AS
-    v_user_id NUMBER;
-    v_comm_id NUMBER;
+    v_user_id APP_USER.USER_ID%TYPE;
+    v_comm_id ORGANIZING_COMMITTEE.COMMITTEE_ID%TYPE;
 BEGIN
     INSERT INTO APP_USER (USERNAME, EMAIL, PASSWORD_HASH, ACCOUNT_STATUS)
     VALUES (p_username, p_email, p_hash, 'ACTIVE')
