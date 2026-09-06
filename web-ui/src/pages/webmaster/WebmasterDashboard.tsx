@@ -88,6 +88,7 @@ const WebmasterDashboard = () => {
   const [overview, setOverview] = useState<OverviewStats | null>(null);
   const [error, setError] = useState('');
   const [backupLoading, setBackupLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Data states
   const [users, setUsers] = useState<UserDto[]>([]);
@@ -151,6 +152,59 @@ const WebmasterDashboard = () => {
       }
     } catch {
       toast.error('Failed to fetch community data');
+    }
+  };
+
+  const fetchAuditLogs = async (silent = false) => {
+    setRefreshing(true);
+    try {
+      const res = await api.get('/webmaster/audit-logs');
+      if (res.data.success) {
+        setAuditLogs(res.data.data);
+        if (!silent) toast.success('Audit logs refreshed');
+      }
+    } catch {
+      toast.error('Failed to fetch audit logs');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const [dashRes, overRes] = await Promise.all([
+        api.get('/webmaster/dashboard'),
+        api.get('/webmaster/overview'),
+      ]);
+
+      if (dashRes.data.success) {
+        setStats(dashRes.data.data);
+      }
+      if (overRes.data.success) {
+        setOverview(overRes.data.data);
+      }
+
+      if (activeTab === 'users') {
+        await fetchUsers();
+      } else if (activeTab === 'banks') {
+        await fetchBanks();
+      } else if (activeTab === 'committees') {
+        await fetchCommittees();
+      } else if (activeTab === 'community') {
+        await fetchCommunity();
+      } else if (activeTab === 'audit') {
+        const res = await api.get('/webmaster/audit-logs');
+        if (res.data.success) {
+          setAuditLogs(res.data.data);
+        }
+      }
+
+      toast.success('Dashboard data refreshed');
+    } catch {
+      toast.error('Failed to refresh data');
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -392,17 +446,30 @@ const WebmasterDashboard = () => {
         <p className="font-body text-lg text-secondary">Global System Management & Moderation</p>
       </div>
 
-      <div className="flex gap-space-md border-b border-surface-container pb-space-md">
-        {(['overview', 'users', 'banks', 'committees', 'community', 'audit'] as const).map(tab => (
+      <div className="flex items-center justify-between border-b border-surface-container pb-space-md flex-wrap gap-space-md">
+        <div className="flex gap-space-md flex-wrap items-center">
+          {(['overview', 'users', 'banks', 'committees', 'community', 'audit'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-space-md py-space-sm rounded-lg font-semibold capitalize ${activeTab === tab ? 'bg-primary text-on-primary' : 'bg-surface-container hover:bg-surface-container-high'
+                }`}
+            >
+              {tab}
+            </button>
+          ))}
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-space-md py-space-sm rounded-lg font-semibold capitalize ${activeTab === tab ? 'bg-primary text-on-primary' : 'bg-surface-container hover:bg-surface-container-high'
-              }`}
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-semibold transition-all disabled:opacity-50"
+            title="Refresh All Dashboard Data"
           >
-            {tab}
+            <span className={`material-symbols-outlined text-[20px] ${refreshing ? 'animate-spin text-primary' : ''}`}>
+              refresh
+            </span>
+            <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
           </button>
-        ))}
+        </div>
       </div>
 
       {activeTab === 'overview' && (
@@ -611,11 +678,24 @@ const WebmasterDashboard = () => {
 
       {activeTab === 'audit' && (
         <div className="bg-surface-container-lowest border border-surface-container p-space-xl rounded-2xl">
-          <div className="flex justify-between items-center mb-space-lg">
+          <div className="flex justify-between items-center mb-space-lg flex-wrap gap-space-md">
             <h2 className="font-heading text-2xl font-bold text-on-surface">System Audit Logs</h2>
-            <button onClick={handleExportAuditLogs} className="flex items-center gap-space-sm bg-primary text-on-primary px-space-md py-space-sm rounded-lg hover:bg-primary/90 font-semibold">
-              <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span> Export DB Audit Logs
-            </button>
+            <div className="flex items-center gap-space-sm">
+              <button
+                onClick={() => fetchAuditLogs()}
+                disabled={refreshing}
+                className="flex items-center gap-space-xs bg-surface-container text-on-surface px-space-md py-space-sm rounded-lg hover:bg-surface-container-high font-semibold disabled:opacity-50"
+                title="Refresh Audit Logs"
+              >
+                <span className={`material-symbols-outlined text-[20px] ${refreshing ? 'animate-spin text-primary' : ''}`}>
+                  refresh
+                </span>
+                Refresh Logs
+              </button>
+              <button onClick={handleExportAuditLogs} className="flex items-center gap-space-sm bg-primary text-on-primary px-space-md py-space-sm rounded-lg hover:bg-primary/90 font-semibold">
+                <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span> Export DB Audit Logs
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
