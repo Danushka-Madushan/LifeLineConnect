@@ -287,3 +287,18 @@ EXCEPTION
         
 END ALLOCATE_UNITS_TO_REQUEST;
 /
+
+/* Get Blood Bank details for reporting */
+CREATE OR REPLACE PROCEDURE GET_BLOOD_BANK_DETAILS (
+    p_user_id       IN  NUMBER,
+    p_result_cursor OUT SYS_REFCURSOR
+)
+IS
+BEGIN
+    OPEN p_result_cursor FOR
+        SELECT b.BANK_NAME, b.BANK_CODE, b.EMAIL, b.PHONE
+        FROM BLOOD_BANK b
+        JOIN USER_ROLE_LINK url ON b.BLOOD_BANK_ID = url.BLOOD_BANK_ID
+        WHERE url.USER_ID = p_user_id AND url.ROLE_CODE = 'BLOOD_BANK';
+END GET_BLOOD_BANK_DETAILS;
+/
