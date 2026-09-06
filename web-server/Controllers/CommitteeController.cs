@@ -413,6 +413,28 @@ public class CommitteeController : ControllerBase
     public ActionResult GenerateCampsReport()
     {
         var camps = GetCamps().Value?.Data ?? new List<CommitteeCampDto>();
+        
+        string commName = "ORGANIZING COMMITTEE", commCode = "", commEmail = "", commPhone = "";
+        using (var connection = _oracleDb.CreateConnection() as OracleConnection)
+        {
+            connection!.Open();
+            using var cmd = connection.CreateCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "GET_COMMITTEE_DETAILS";
+            cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+            var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+            cmd.Parameters.Add(pCursor);
+            cmd.ExecuteNonQuery();
+            using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
+            if (reader.Read())
+            {
+                commName = reader["COMMITTEE_NAME"].ToString()!;
+                commCode = reader["COMMITTEE_CODE"].ToString()!;
+                commEmail = reader["EMAIL"].ToString()!;
+                commPhone = reader["PHONE"].ToString()!;
+            }
+        }
+
         var document = QuestPDF.Fluent.Document.Create(container =>
         {
             container.Page(page =>
@@ -426,7 +448,11 @@ public class CommitteeController : ControllerBase
                     {
                         row.RelativeItem().Column(col =>
                         {
-                            col.Item().Text("LIFELINECONNECT · ORGANIZING COMMITTEE").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Red.Medium);
+                            col.Item().Text($"LIFELINECONNECT · {commName.ToUpper()}").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Red.Medium);
+                            if (!string.IsNullOrEmpty(commCode))
+                            {
+                                col.Item().PaddingBottom(2).Text($"Code: {commCode} | Email: {commEmail} | Phone: {commPhone}").FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
+                            }
                             col.Item().Text("Donation Camps Schedule & Audit Report").ExtraBold().FontSize(18).FontColor(QuestPDF.Helpers.Colors.Grey.Darken4);
                             col.Item().Text($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss} | Total Camps: {camps.Count}").FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
                         });

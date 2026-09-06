@@ -29,6 +29,31 @@ public class BloodBankController : ControllerBase
         return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
     }
 
+    private (string Name, string Code, string Email, string Phone) GetBankDetails()
+    {
+        string bName = "BLOOD BANK", bCode = "", bEmail = "", bPhone = "";
+        using (var connection = _oracleDb.CreateConnection() as OracleConnection)
+        {
+            connection!.Open();
+            using var cmd = connection.CreateCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "GET_BLOOD_BANK_DETAILS";
+            cmd.Parameters.Add(new OracleParameter("p_user_id", GetCurrentUserId()));
+            var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+            cmd.Parameters.Add(pCursor);
+            cmd.ExecuteNonQuery();
+            using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
+            if (reader.Read())
+            {
+                bName = reader["BANK_NAME"].ToString()!;
+                bCode = reader["BANK_CODE"].ToString()!;
+                bEmail = reader["EMAIL"].ToString()!;
+                bPhone = reader["PHONE"].ToString()!;
+            }
+        }
+        return (bName, bCode, bEmail, bPhone);
+    }
+
     [HttpGet("dashboard")]
     public ActionResult<ApiResponse<BankDashboardDto>> GetDashboard()
     {
@@ -331,6 +356,7 @@ public class BloodBankController : ControllerBase
     public ActionResult GenerateInventoryReport()
     {
         var inventory = GetInventory(null, null).Value?.Data ?? new List<BloodUnitDto>();
+        var details = GetBankDetails();
         
         var document = Document.Create(container =>
         {
@@ -345,7 +371,11 @@ public class BloodBankController : ControllerBase
                     {
                         row.RelativeItem().Column(col =>
                         {
-                            col.Item().Text("LIFELINECONNECT · BLOOD BANK OPERATIONS").Bold().FontSize(9).FontColor(Colors.Red.Medium);
+                            col.Item().Text($"LIFELINECONNECT · {details.Name.ToUpper()}").Bold().FontSize(9).FontColor(Colors.Red.Medium);
+                            if (!string.IsNullOrEmpty(details.Code))
+                            {
+                                col.Item().PaddingBottom(2).Text($"Code: {details.Code} | Email: {details.Email} | Phone: {details.Phone}").FontSize(8).FontColor(Colors.Grey.Darken2);
+                            }
                             col.Item().Text("Blood Stock Inventory Report").ExtraBold().FontSize(18).FontColor(Colors.Grey.Darken4);
                             col.Item().Text($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss} | Total Stock Units: {inventory.Count}").FontSize(8.5f).FontColor(Colors.Grey.Darken1);
                         });
@@ -432,6 +462,7 @@ public class BloodBankController : ControllerBase
     {
         var inventory = GetInventory(null, null).Value?.Data ?? new List<BloodUnitDto>();
         var expiring = inventory.Where(i => i.ExpiryDate <= DateTime.Now.AddDays(7) && i.Status == "AVAILABLE").OrderBy(i => i.ExpiryDate).ToList();
+        var details = GetBankDetails();
         
         var document = Document.Create(container =>
         {
@@ -446,7 +477,11 @@ public class BloodBankController : ControllerBase
                     {
                         row.RelativeItem().Column(col =>
                         {
-                            col.Item().Text("LIFELINECONNECT · CRITICAL COLD-CHAIN ALERT").Bold().FontSize(9).FontColor(Colors.Red.Medium);
+                            col.Item().Text($"LIFELINECONNECT · {details.Name.ToUpper()}").Bold().FontSize(9).FontColor(Colors.Red.Medium);
+                            if (!string.IsNullOrEmpty(details.Code))
+                            {
+                                col.Item().PaddingBottom(2).Text($"Code: {details.Code} | Email: {details.Email} | Phone: {details.Phone}").FontSize(8).FontColor(Colors.Grey.Darken2);
+                            }
                             col.Item().Text("Blood Unit Expiry Advisory (Next 7 Days)").ExtraBold().FontSize(18).FontColor(Colors.Red.Darken2);
                             col.Item().Text($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss} | Units Expiring Soon: {expiring.Count}").FontSize(8.5f).FontColor(Colors.Grey.Darken1);
                         });
@@ -533,6 +568,7 @@ public class BloodBankController : ControllerBase
     public ActionResult GenerateHospitalRequestsReport()
     {
         var requests = GetHospitalRequests().Value?.Data ?? new List<HospitalRequestDto>();
+        var details = GetBankDetails();
         
         var document = Document.Create(container =>
         {
@@ -547,7 +583,11 @@ public class BloodBankController : ControllerBase
                     {
                         row.RelativeItem().Column(col =>
                         {
-                            col.Item().Text("LIFELINECONNECT · HOSPITAL LOGISTICS").Bold().FontSize(9).FontColor(Colors.Red.Medium);
+                            col.Item().Text($"LIFELINECONNECT · {details.Name.ToUpper()}").Bold().FontSize(9).FontColor(Colors.Red.Medium);
+                            if (!string.IsNullOrEmpty(details.Code))
+                            {
+                                col.Item().PaddingBottom(2).Text($"Code: {details.Code} | Email: {details.Email} | Phone: {details.Phone}").FontSize(8).FontColor(Colors.Grey.Darken2);
+                            }
                             col.Item().Text("Hospital Blood Request Status Report").ExtraBold().FontSize(18).FontColor(Colors.Grey.Darken4);
                             col.Item().Text($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss} | Total Demands: {requests.Count}").FontSize(8.5f).FontColor(Colors.Grey.Darken1);
                         });
