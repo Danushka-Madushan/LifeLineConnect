@@ -1,0 +1,1179 @@
+{
+  "info": {
+    "name": "LifeLineConnect API",
+    "description": "API collection for LifeLineConnect system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_BEARER_TOKEN"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register Donor",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"johndoe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"John Doe\",\n  \"nic\": \"123456789V\",\n  \"dateOfBirth\": \"1990-01-01\",\n  \"gender\": \"Male\",\n  \"phone\": \"0712345678\",\n  \"address\": \"123 Main St, Colombo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/donors/register",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "auth", "donors", "register" ]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"johndoe\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "auth", "login" ]
+            }
+          }
+        },
+        {
+          "name": "Seed Webmaster",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/seed-webmaster",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "auth", "seed-webmaster" ]
+            }
+          }
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "auth", "me" ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Blood Bank",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/blood-bank/dashboard",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "blood-bank", "dashboard" ]
+            }
+          }
+        },
+        {
+          "name": "Get Inventory",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/blood-bank/inventory?bloodGroup=A%2B&status=AVAILABLE",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "blood-bank", "inventory" ],
+              "query": [
+                { "key": "bloodGroup", "value": "A+" },
+                { "key": "status", "value": "AVAILABLE" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Unit Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"USED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/blood-bank/inventory/1/status",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "blood-bank", "inventory", "1", "status" ]
+            }
+          }
+        },
+        {
+          "name": "Get Transfers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/blood-bank/transfers",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "blood-bank", "transfers" ]
+            }
+          }
+        },
+        {
+          "name": "Receive Transfer",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/blood-bank/transfers/1/receive",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "blood-bank", "transfers", "1", "receive" ]
+            }
+          }
+        },
+        {
+          "name": "Get Hospital Requests",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/blood-bank/hospital-requests",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "blood-bank", "hospital-requests" ]
+            }
+          }
+        },
+        {
+          "name": "Allocate Units",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/blood-bank/hospital-requests/1/allocate",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "blood-bank", "hospital-requests", "1", "allocate" ]
+            }
+          }
+        },
+        {
+          "name": "Update Request Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/blood-bank/hospital-requests/1/status",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "blood-bank", "hospital-requests", "1", "status" ]
+            }
+          }
+        },
+        {
+          "name": "Get Staff",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/blood-bank/staff",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "blood-bank", "staff" ]
+            }
+          }
+        },
+        {
+          "name": "Add Staff",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Jane Doe\",\n  \"positionTitle\": \"Nurse\",\n  \"phone\": \"0712345679\",\n  \"email\": \"jane@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/blood-bank/staff",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "blood-bank", "staff" ]
+            }
+          }
+        },
+        {
+          "name": "Delete Staff",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/blood-bank/staff/1",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "blood-bank", "staff", "1" ]
+            }
+          }
+        },
+        {
+          "name": "Generate Inventory Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/blood-bank/reports/inventory",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "blood-bank", "reports", "inventory" ]
+            }
+          }
+        },
+        {
+          "name": "Generate Expiry Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/blood-bank/reports/expiry",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "blood-bank", "reports", "expiry" ]
+            }
+          }
+        },
+        {
+          "name": "Generate Hospital Requests Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/blood-bank/reports/hospital-requests",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "blood-bank", "reports", "hospital-requests" ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Committee",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/dashboard",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "dashboard" ]
+            }
+          }
+        },
+        {
+          "name": "Get Venues",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/venues",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "venues" ]
+            }
+          }
+        },
+        {
+          "name": "Get Camps",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/camps",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "camps" ]
+            }
+          }
+        },
+        {
+          "name": "Create Camp",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venueId\": 1,\n  \"title\": \"Annual Blood Drive\",\n  \"date\": \"2023-12-01\",\n  \"startTime\": \"2023-12-01T08:00:00Z\",\n  \"endTime\": \"2023-12-01T16:00:00Z\",\n  \"capacity\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/camps",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "camps" ]
+            }
+          }
+        },
+        {
+          "name": "Get Camp Attendance",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/camps/1/attendance",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "camps", "1", "attendance" ]
+            }
+          }
+        },
+        {
+          "name": "Record Donation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registrationId\": 1,\n  \"donorId\": 1,\n  \"bloodGroup\": \"O+\",\n  \"units\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/camps/1/donations",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "camps", "1", "donations" ]
+            }
+          }
+        },
+        {
+          "name": "Dispatch Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bloodBankId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/camps/1/transfers",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "camps", "1", "transfers" ]
+            }
+          }
+        },
+        {
+          "name": "Get Camp Feedback",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/camps/1/feedback",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "camps", "1", "feedback" ]
+            }
+          }
+        },
+        {
+          "name": "Update Camp Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/camps/1/status",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "camps", "1", "status" ]
+            }
+          }
+        },
+        {
+          "name": "Create Venue",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venueName\": \"Town Hall\",\n  \"address\": \"Main Street\",\n  \"capacity\": 200\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/venues",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "venues" ]
+            }
+          }
+        },
+        {
+          "name": "Get Transfers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/transfers",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "transfers" ]
+            }
+          }
+        },
+        {
+          "name": "Get Staff",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/staff",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "staff" ]
+            }
+          }
+        },
+        {
+          "name": "Add Staff",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Mark Smith\",\n  \"positionTitle\": \"Coordinator\",\n  \"phone\": \"0712345680\",\n  \"email\": \"mark@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/staff",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "staff" ]
+            }
+          }
+        },
+        {
+          "name": "Delete Staff",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/staff/1",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "staff", "1" ]
+            }
+          }
+        },
+        {
+          "name": "Post Awareness Material",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"campId\": 1,\n  \"title\": \"Donate Blood!\",\n  \"content\": \"Join our camp\",\n  \"published\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/awareness",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "awareness" ]
+            }
+          }
+        },
+        {
+          "name": "Generate Camps Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/committee/reports/camps",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "committee", "reports", "camps" ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donor",
+      "item": [
+        {
+          "name": "Get Eligibility",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/eligibility",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "eligibility" ]
+            }
+          }
+        },
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/dashboard",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "dashboard" ]
+            }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/profile",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "profile" ]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe updated\",\n  \"phone\": \"0712345678\",\n  \"email\": \"john@example.com\",\n  \"address\": \"New Address\",\n  \"bloodGroup\": \"O+\",\n  \"gender\": \"Male\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/profile",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "profile" ]
+            }
+          }
+        },
+        {
+          "name": "Register For Camp",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"campId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/camp-registrations",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "camp-registrations" ]
+            }
+          }
+        },
+        {
+          "name": "Get Upcoming Camps",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/camp-registrations/upcoming",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "camp-registrations", "upcoming" ]
+            }
+          }
+        },
+        {
+          "name": "Get Donations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/donations",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "donations" ]
+            }
+          }
+        },
+        {
+          "name": "Get Status History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/status-history",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "status-history" ]
+            }
+          }
+        },
+        {
+          "name": "Generate Donation Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/donations/report",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "donations", "report" ]
+            }
+          }
+        },
+        {
+          "name": "Submit Feedback",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Great experience\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/camps/1/feedback",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "camps", "1", "feedback" ]
+            }
+          }
+        },
+        {
+          "name": "Get Emergency Appeals",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/emergency-appeals",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "emergency-appeals" ]
+            }
+          }
+        },
+        {
+          "name": "Submit Emergency Appeal",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientReference\": \"P123\",\n  \"relationship\": \"Brother\",\n  \"bloodGroup\": \"A-\",\n  \"unitsRequired\": 2,\n  \"urgency\": \"HIGH\",\n  \"location\": \"General Hospital\",\n  \"neededBy\": \"2023-12-05T10:00:00Z\",\n  \"summary\": \"Urgent blood needed for surgery\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/emergency-appeals",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "emergency-appeals" ]
+            }
+          }
+        },
+        {
+          "name": "Create Thread",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Tips for first time donors\",\n  \"content\": \"Drink lots of water.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/community/threads",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "community", "threads" ]
+            }
+          }
+        },
+        {
+          "name": "Create QA",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"How often can I donate?\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/community/qa",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "community", "qa" ]
+            }
+          }
+        },
+        {
+          "name": "Submit Medical Check",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"feelingWell\": true,\n  \"recentAntibiotics\": false,\n  \"recentTattoo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/medical-check",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "medical-check" ]
+            }
+          }
+        },
+        {
+          "name": "Create Reply",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Great tip!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/community/threads/THREAD_ID/replies",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "community", "threads", "THREAD_ID", "replies" ]
+            }
+          }
+        },
+        {
+          "name": "Answer QA",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answer\": \"Every 3 months.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/community/qa/QA_ID/answer",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "community", "qa", "QA_ID", "answer" ]
+            }
+          }
+        },
+        {
+          "name": "Mark QA Helpful",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/donors/me/community/qa/QA_ID/helpful",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "donors", "me", "community", "qa", "QA_ID", "helpful" ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "notifications" ]
+            }
+          }
+        },
+        {
+          "name": "Mark As Read",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/1/read",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "notifications", "1", "read" ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "Get Emergency Broadcasts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/emergency-broadcasts",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "emergency-broadcasts" ]
+            }
+          }
+        },
+        {
+          "name": "Get Emergency Appeals",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/emergency-appeals",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "emergency-appeals" ]
+            }
+          }
+        },
+        {
+          "name": "Search Emergency Appeals",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/emergency-appeals/search?bloodGroup=A%2B&location=Colombo&urgencyLevel=HIGH",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "emergency-appeals", "search" ],
+              "query": [
+                { "key": "bloodGroup", "value": "A+" },
+                { "key": "location", "value": "Colombo" },
+                { "key": "urgencyLevel", "value": "HIGH" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Awareness Materials",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/camps/awareness-materials?campId=1",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "camps", "awareness-materials" ],
+              "query": [
+                { "key": "campId", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Promotional Media",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/promotional-media",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "promotional-media" ]
+            }
+          }
+        },
+        {
+          "name": "Get Medical Guidelines",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/medical-guidelines?category=General",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "medical-guidelines" ],
+              "query": [
+                { "key": "category", "value": "General" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Community Threads",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/community/threads",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "community", "threads" ]
+            }
+          }
+        },
+        {
+          "name": "Search Community Threads",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/community/threads/search?query=diet",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "community", "threads", "search" ],
+              "query": [
+                { "key": "query", "value": "diet" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Community QA",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/community/qa",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "community", "qa" ]
+            }
+          }
+        },
+        {
+          "name": "Get Thread Replies",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/community/threads/THREAD_ID/replies",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "community", "threads", "THREAD_ID", "replies" ]
+            }
+          }
+        },
+        {
+          "name": "Get Active Blood Banks",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/blood-banks",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "blood-banks" ]
+            }
+          }
+        },
+        {
+          "name": "Get Public Camps",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/camps?lat=6.927&lng=79.861&status=ACTIVE",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "camps" ],
+              "query": [
+                { "key": "lat", "value": "6.927" },
+                { "key": "lng", "value": "79.861" },
+                { "key": "status", "value": "ACTIVE" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Top Rated Camps",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/camps/top-rated",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "camps", "top-rated" ]
+            }
+          }
+        },
+        {
+          "name": "Get Camp Feedback",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/camps/1/feedback",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "camps", "1", "feedback" ]
+            }
+          }
+        },
+        {
+          "name": "Get Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/public/stats",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "public", "stats" ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webmaster",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/dashboard",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "dashboard" ]
+            }
+          }
+        },
+        {
+          "name": "Get Overview",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/overview",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "overview" ]
+            }
+          }
+        },
+        {
+          "name": "Get Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/users",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "users" ]
+            }
+          }
+        },
+        {
+          "name": "Create Guideline",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"General\",\n  \"title\": \"Donation Guidelines\",\n  \"content\": \"Drink plenty of water before donating.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/guidelines",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "guidelines" ]
+            }
+          }
+        },
+        {
+          "name": "Generate System Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/reports/system",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "reports", "system" ]
+            }
+          }
+        },
+        {
+          "name": "Register Bank",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"centralbank\",\n  \"email\": \"contact@centralbank.com\",\n  \"password\": \"password123\",\n  \"bankCode\": \"CB001\",\n  \"bankName\": \"Central Blood Bank\",\n  \"phone\": \"0112345678\",\n  \"address\": \"Central Hospital\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/register-bank",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "register-bank" ]
+            }
+          }
+        },
+        {
+          "name": "Register Committee",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"redcross\",\n  \"email\": \"contact@redcross.org\",\n  \"password\": \"password123\",\n  \"committeeCode\": \"RC001\",\n  \"committeeName\": \"Red Cross Society\",\n  \"phone\": \"0119876543\",\n  \"address\": \"Red Cross HQ\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/register-committee",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "register-committee" ]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/users/1",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "users", "1" ]
+            }
+          }
+        },
+        {
+          "name": "Get Banks",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/banks",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "banks" ]
+            }
+          }
+        },
+        {
+          "name": "Get Committees",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/committees",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "committees" ]
+            }
+          }
+        },
+        {
+          "name": "Delete Thread",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/community/threads/THREAD_ID",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "community", "threads", "THREAD_ID" ]
+            }
+          }
+        },
+        {
+          "name": "Delete QA",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/community/qa/QA_ID",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "community", "qa", "QA_ID" ]
+            }
+          }
+        },
+        {
+          "name": "Download Backup",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/backup",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "backup" ]
+            }
+          }
+        },
+        {
+          "name": "Get Audit Logs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/audit-logs",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "audit-logs" ]
+            }
+          }
+        },
+        {
+          "name": "Export Audit Logs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/webmaster/audit-logs/export",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "webmaster", "audit-logs", "export" ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
