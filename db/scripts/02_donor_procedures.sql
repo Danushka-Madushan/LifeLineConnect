@@ -32,11 +32,11 @@ CREATE OR REPLACE PROCEDURE CHECK_DONOR_ELIGIBILITY (
     p_reason    OUT VARCHAR2,
     p_next_date OUT DATE
 ) AS
-    v_donor_id       NUMBER;
-    v_last_donation  DATE;
+    v_donor_id       DONOR.DONOR_ID%TYPE;
+    v_last_donation  DONATION_RECORD.DONATION_DATE%TYPE;
     v_days_since     NUMBER;
-    v_med_status     VARCHAR2(20);
-    v_med_last       TIMESTAMP WITH LOCAL TIME ZONE;
+    v_med_status     DONOR.MEDICAL_CHECK_STATUS%TYPE;
+    v_med_last       DONOR.LAST_MEDICAL_CHECK_AT%TYPE;
     v_date_eligible  NUMBER;
 BEGIN
     SELECT DONOR_ID, MEDICAL_CHECK_STATUS, LAST_MEDICAL_CHECK_AT 
