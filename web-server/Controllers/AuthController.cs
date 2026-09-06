@@ -122,8 +122,7 @@ public class AuthController : ControllerBase
         }
         catch (BCrypt.Net.SaltParseException)
         {
-            // Fallback for legacy plain-text passwords in dev database, or just reject
-            // For production, this should always reject. We'll reject gracefully.
+            /* Fallback for legacy plain-text passwords in dev database, or just reject */
             if (dto.Password != hash) 
             {
                 return Unauthorized(ApiResponse<AuthResponseDto>.Error("Invalid credentials"));
