@@ -104,7 +104,7 @@ BEGIN
     
     -- Mark user as deleted
     UPDATE APP_USER
-    SET ACCOUNT_STATUS = 'DELETED'
+    SET ACCOUNT_STATUS = 'DISABLED'
     WHERE USER_ID = p_user_id;
 
     COMMIT;
