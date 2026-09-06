@@ -350,12 +350,12 @@ public class DonorController : ControllerBase
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
 
-        using var cmd = new OracleCommand("CAN_SUBMIT_FEEDBACK", connection);
+        using var cmd = new OracleCommand("FN_CAN_SUBMIT_FEEDBACK", connection);
         cmd.CommandType = CommandType.StoredProcedure;
+        var pAllowed = new OracleParameter("p_allowed", OracleDbType.Decimal) { Direction = ParameterDirection.ReturnValue };
+        cmd.Parameters.Add(pAllowed);
         cmd.Parameters.Add("p_user_id", OracleDbType.Decimal).Value = userId;
         cmd.Parameters.Add("p_camp_id", OracleDbType.Decimal).Value = campId;
-        var pAllowed = new OracleParameter("p_allowed", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
-        cmd.Parameters.Add(pAllowed);
         
         cmd.ExecuteNonQuery();
 
