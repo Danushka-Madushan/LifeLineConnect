@@ -1,13 +1,9 @@
--- ================================================================
--- Blood Bank Procedures
--- Blood Donation System — Oracle 21c PL/SQL
--- ================================================================
-
--- Get blood bank dashboard stats
+/* Get blood bank dashboard stats */
 CREATE OR REPLACE PROCEDURE GET_BANK_DASHBOARD (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
     v_bank_id BLOOD_BANK.BLOOD_BANK_ID%TYPE;
 BEGIN
     SELECT BLOOD_BANK_ID INTO v_bank_id
@@ -29,11 +25,12 @@ BEGIN
 END GET_BANK_DASHBOARD;
 /
 
--- Get blood bank inventory
+/* Get blood bank inventory */
 CREATE OR REPLACE PROCEDURE GET_BANK_INVENTORY (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
     v_bank_id BLOOD_BANK.BLOOD_BANK_ID%TYPE;
 BEGIN
     SELECT BLOOD_BANK_ID INTO v_bank_id
@@ -48,11 +45,12 @@ BEGIN
 END GET_BANK_INVENTORY;
 /
 
--- Get blood bank transfers
+/* Get blood bank transfers */
 CREATE OR REPLACE PROCEDURE GET_BANK_TRANSFERS (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
     v_bank_id BLOOD_BANK.BLOOD_BANK_ID%TYPE;
 BEGIN
     SELECT BLOOD_BANK_ID INTO v_bank_id
@@ -71,11 +69,12 @@ BEGIN
 END GET_BANK_TRANSFERS;
 /
 
--- Receive a transfer (mark as RECEIVED)
+/* Receive a transfer (mark as RECEIVED) */
 CREATE OR REPLACE PROCEDURE RECEIVE_TRANSFER (
     p_user_id     IN NUMBER,
     p_transfer_id IN NUMBER
-) AS
+)
+IS
     v_bank_id BLOOD_BANK.BLOOD_BANK_ID%TYPE;
 BEGIN
     SELECT BLOOD_BANK_ID INTO v_bank_id
@@ -88,43 +87,45 @@ BEGIN
       AND BLOOD_BANK_ID = v_bank_id
       AND STATUS IN ('DISPATCHED', 'IN_TRANSIT');
 
-    COMMIT;
 END RECEIVE_TRANSFER;
 /
 
--- Get hospital blood requests for a bank
+/* Get hospital blood requests for a bank */
 CREATE OR REPLACE PROCEDURE GET_BANK_HOSPITAL_REQUESTS (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
     v_bank_id BLOOD_BANK.BLOOD_BANK_ID%TYPE;
 BEGIN
     SELECT BLOOD_BANK_ID INTO v_bank_id
     FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE = 'BLOOD_BANK';
 
     OPEN p_result_cursor FOR
-        SELECT hr.REQUEST_ID, hr.REQUEST_CODE,
-               h.HOSPITAL_NAME,
-               hr.BLOOD_GROUP, hr.UNITS_REQUIRED, hr.UNITS_ALLOCATED, hr.UNITS_FULFILLED,
-               hr.NEEDED_BY, hr.PRIORITY, hr.STATUS
+        SELECT hr.REQUEST_ID, hr.REQUEST_CODE, h.HOSPITAL_NAME,
+            hr.BLOOD_GROUP, hr.UNITS_REQUIRED, hr.UNITS_ALLOCATED, hr.UNITS_FULFILLED,
+            hr.NEEDED_BY, hr.PRIORITY, hr.STATUS
         FROM HOSPITAL_BLOOD_REQUEST hr
         JOIN HOSPITAL h ON hr.HOSPITAL_ID = h.HOSPITAL_ID
         WHERE hr.BLOOD_BANK_ID = v_bank_id
-        ORDER BY CASE hr.PRIORITY
-            WHEN 'CRITICAL' THEN 1
-            WHEN 'HIGH' THEN 2
-            WHEN 'NORMAL' THEN 3
-            WHEN 'LOW' THEN 4
-            ELSE 5
-        END, hr.NEEDED_BY ASC;
+        ORDER BY
+            CASE hr.PRIORITY
+                WHEN 'CRITICAL' THEN 1
+                WHEN 'HIGH' THEN 2
+                WHEN 'NORMAL' THEN 3
+                WHEN 'LOW' THEN 4
+                ELSE 5
+            END,
+        hr.NEEDED_BY ASC;
 END GET_BANK_HOSPITAL_REQUESTS;
 /
 
--- Get staff assigned to a blood bank
+/* Get staff assigned to a blood bank */
 CREATE OR REPLACE PROCEDURE GET_BANK_STAFF (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
     v_bank_id BLOOD_BANK.BLOOD_BANK_ID%TYPE;
 BEGIN
     SELECT BLOOD_BANK_ID INTO v_bank_id
@@ -132,8 +133,8 @@ BEGIN
 
     OPEN p_result_cursor FOR
         SELECT sm.STAFF_ID, sm.FULL_NAME, sm.POSITION_TITLE,
-               sm.PHONE, sm.EMAIL,
-               bsa.ASSIGNED_FROM, bsa.STATUS
+            sm.PHONE, sm.EMAIL,
+            bsa.ASSIGNED_FROM, bsa.STATUS
         FROM BANK_STAFF_ASSIGNMENT bsa
         JOIN STAFF_MEMBER sm ON bsa.STAFF_ID = sm.STAFF_ID
         WHERE bsa.BLOOD_BANK_ID = v_bank_id
@@ -141,12 +142,13 @@ BEGIN
 END GET_BANK_STAFF;
 /
 
--- Update blood unit status
+/* Update blood unit status */
 CREATE OR REPLACE PROCEDURE UPDATE_UNIT_STATUS (
     p_user_id  IN NUMBER,
     p_unit_id  IN NUMBER,
     p_status   IN VARCHAR2
-) AS
+)
+IS
     v_bank_id BLOOD_BANK.BLOOD_BANK_ID%TYPE;
 BEGIN
     SELECT BLOOD_BANK_ID INTO v_bank_id
@@ -156,16 +158,16 @@ BEGIN
     SET STATUS = p_status, UPDATED_AT = SYSTIMESTAMP
     WHERE BLOOD_UNIT_ID = p_unit_id AND BLOOD_BANK_ID = v_bank_id;
 
-    COMMIT;
 END UPDATE_UNIT_STATUS;
 /
 
--- Update hospital request status
+/* Update hospital request status */
 CREATE OR REPLACE PROCEDURE UPDATE_REQUEST_STATUS (
     p_user_id    IN NUMBER,
     p_request_id IN NUMBER,
     p_status     IN VARCHAR2
-) AS
+)
+AS
     v_bank_id BLOOD_BANK.BLOOD_BANK_ID%TYPE;
 BEGIN
     SELECT BLOOD_BANK_ID INTO v_bank_id
@@ -175,11 +177,10 @@ BEGIN
     SET STATUS = p_status, UPDATED_AT = SYSTIMESTAMP
     WHERE REQUEST_ID = p_request_id AND BLOOD_BANK_ID = v_bank_id;
 
-    COMMIT;
 END UPDATE_REQUEST_STATUS;
 /
 
--- Add a staff member to a blood bank
+/* Add a staff member to a blood bank */
 CREATE OR REPLACE PROCEDURE ADD_BANK_STAFF (
     p_user_id    IN  NUMBER,
     p_full_name  IN  VARCHAR2,
@@ -187,7 +188,8 @@ CREATE OR REPLACE PROCEDURE ADD_BANK_STAFF (
     p_phone      IN  VARCHAR2,
     p_email      IN  VARCHAR2,
     p_staff_id   OUT NUMBER
-) AS
+)
+IS
     v_bank_id BLOOD_BANK.BLOOD_BANK_ID%TYPE;
 BEGIN
     SELECT BLOOD_BANK_ID INTO v_bank_id
@@ -199,20 +201,15 @@ BEGIN
 
     INSERT INTO BANK_STAFF_ASSIGNMENT (STAFF_ID, BLOOD_BANK_ID, ASSIGNED_FROM, STATUS)
     VALUES (p_staff_id, v_bank_id, TRUNC(SYSDATE), 'ACTIVE');
-
-    COMMIT;
-EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE;
 END ADD_BANK_STAFF;
 /
 
--- Remove (deactivate) a staff member from a blood bank
+/* Remove a staff member from a blood bank */
 CREATE OR REPLACE PROCEDURE REMOVE_BANK_STAFF (
     p_user_id   IN NUMBER,
     p_staff_id  IN NUMBER
-) AS
+)
+IS
     v_bank_id BLOOD_BANK.BLOOD_BANK_ID%TYPE;
 BEGIN
     SELECT BLOOD_BANK_ID INTO v_bank_id
@@ -226,24 +223,26 @@ BEGIN
     SET STATUS = 'INACTIVE'
     WHERE STAFF_ID = p_staff_id;
 
-    COMMIT;
 END REMOVE_BANK_STAFF;
 /
+
+/* Allocate blood units to a hospital request */
 CREATE OR REPLACE PROCEDURE ALLOCATE_UNITS_TO_REQUEST(
     p_user_id IN NUMBER,
     p_request_id IN NUMBER,
     p_units_to_allocate OUT NUMBER
-) IS
+)
+IS
     v_bank_id BLOOD_BANK.BLOOD_BANK_ID%TYPE;
     v_blood_group VARCHAR2(10);
     v_units_needed NUMBER;
     v_allocated_count NUMBER := 0;
 BEGIN
-    -- Verify bank user
+    /* Verify bank user */
     SELECT BLOOD_BANK_ID INTO v_bank_id
     FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE = 'BLOOD_BANK';
 
-    -- Get request details
+    /* Get request details */
     SELECT BLOOD_GROUP, (UNITS_REQUIRED - NVL(UNITS_ALLOCATED, 0))
     INTO v_blood_group, v_units_needed
     FROM HOSPITAL_BLOOD_REQUEST
@@ -251,7 +250,7 @@ BEGIN
     FOR UPDATE;
 
     IF v_units_needed > 0 THEN
-        -- Find available units and allocate them
+        /* Find available units and allocate them */
         FOR u IN (
             SELECT BLOOD_UNIT_ID 
             FROM BLOOD_UNIT 
@@ -260,7 +259,8 @@ BEGIN
               AND STATUS = 'AVAILABLE'
               AND EXPIRY_DATE >= SYSDATE
             FETCH FIRST v_units_needed ROWS ONLY
-        ) LOOP
+        )
+        LOOP
             UPDATE BLOOD_UNIT
             SET STATUS = 'RESERVED'
             WHERE BLOOD_UNIT_ID = u.BLOOD_UNIT_ID;
@@ -280,9 +280,10 @@ BEGIN
     END IF;
 
     p_units_to_allocate := v_allocated_count;
-    COMMIT;
+
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
         p_units_to_allocate := 0;
+        
 END ALLOCATE_UNITS_TO_REQUEST;
 /
