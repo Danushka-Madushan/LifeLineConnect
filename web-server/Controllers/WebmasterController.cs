@@ -85,9 +85,9 @@ public class WebmasterController : ControllerBase
         connection!.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandType = System.Data.CommandType.StoredProcedure;
-        cmd.CommandText = "GET_ALL_USERS";
+        cmd.CommandText = "FN_GET_ALL_USERS";
         
-        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+        var pCursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.ReturnValue };
         cmd.Parameters.Add(pCursor);
         
         cmd.ExecuteNonQuery();
@@ -386,10 +386,10 @@ public class WebmasterController : ControllerBase
         if (connection == null) return StatusCode(500, "Database connection error");
         connection.Open();
 
-        using var cmd = new OracleCommand("GET_SYSTEM_AUDIT_LOGS", connection);
+        using var cmd = new OracleCommand("FN_GET_SYSTEM_AUDIT_LOGS", connection);
         cmd.CommandType = CommandType.StoredProcedure;
 
-        var pCursor = new OracleParameter("p_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+        var pCursor = new OracleParameter("p_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.ReturnValue };
         cmd.Parameters.Add(pCursor);
 
         cmd.ExecuteNonQuery();
@@ -419,9 +419,9 @@ public class WebmasterController : ControllerBase
         using (var connection = _oracleDb.CreateConnection() as OracleConnection)
         {
             connection!.Open();
-            using var cmd = new OracleCommand("GET_SYSTEM_AUDIT_LOGS", connection);
+            using var cmd = new OracleCommand("FN_GET_SYSTEM_AUDIT_LOGS", connection);
             cmd.CommandType = CommandType.StoredProcedure;
-            var pCursor = new OracleParameter("p_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+            var pCursor = new OracleParameter("p_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.ReturnValue };
             cmd.Parameters.Add(pCursor);
             cmd.ExecuteNonQuery();
             using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
