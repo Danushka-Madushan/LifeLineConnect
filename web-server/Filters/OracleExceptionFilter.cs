@@ -36,6 +36,11 @@ public class OracleExceptionFilter : IExceptionFilter
                 context.Result = new BadRequestObjectResult(ApiResponse<object>.Error("Referenced record does not exist. (ORA-02291)"));
                 context.ExceptionHandled = true;
             }
+            else if (ex.Number == 1403) // No data found
+            {
+                context.Result = new NotFoundObjectResult(ApiResponse<object>.Error("The requested record was not found or you do not have permission to access it. (ORA-01403)"));
+                context.ExceptionHandled = true;
+            }
         }
     }
 }
