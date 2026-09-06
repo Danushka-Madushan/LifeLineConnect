@@ -1,7 +1,9 @@
+/* Generate Schema Backup */
 CREATE OR REPLACE PROCEDURE GENERATE_SCHEMA_BACKUP (
     p_dump_file OUT VARCHAR2,
     p_dir_path OUT VARCHAR2
-) AS
+)
+IS
     v_schema VARCHAR2(100);
     v_dp_job NUMBER;
     v_job_state VARCHAR2(30);
