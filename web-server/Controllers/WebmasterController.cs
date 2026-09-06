@@ -116,8 +116,44 @@ public class WebmasterController : ControllerBase
     }
 
     [HttpGet("reports/system")]
-    public ActionResult GenerateSystemReport()
+    public async Task<ActionResult> GenerateSystemReport()
     {
+        int totalDonors = 0, totalBanks = 0, totalCommittees = 0, ongoingCamps = 0, completedCamps = 0, totalDonations = 0, pendingRequests = 0;
+        
+        using (var connection = _oracleDb.CreateConnection() as OracleConnection)
+        {
+            if (connection != null)
+            {
+                connection.Open();
+                using var cmd = new OracleCommand("GET_WEBMASTER_DASHBOARD", connection);
+                cmd.CommandType = CommandType.StoredProcedure;
+                var pResult = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+                cmd.Parameters.Add(pResult);
+                cmd.ExecuteNonQuery();
+                using var reader = ((OracleRefCursor)pResult.Value).GetDataReader();
+                if (reader.Read())
+                {
+                    totalDonors = Convert.ToInt32(reader["TOTAL_DONORS"]);
+                    totalBanks = Convert.ToInt32(reader["TOTAL_BANKS"]);
+                    totalCommittees = Convert.ToInt32(reader["TOTAL_COMMITTEES"]);
+                    ongoingCamps = Convert.ToInt32(reader["ONGOING_CAMPS"]);
+                    completedCamps = Convert.ToInt32(reader["COMPLETED_CAMPS"]);
+                    totalDonations = Convert.ToInt32(reader["TOTAL_DONATIONS"]);
+                    pendingRequests = Convert.ToInt32(reader["PENDING_REQUESTS"]);
+                }
+            }
+        }
+
+        long activeAppeals = 0, totalThreads = 0, totalReplies = 0, totalQa = 0;
+        try
+        {
+            activeAppeals = await _mongoDb.GetCollection<BsonDocument>("emergencyAppeals").CountDocumentsAsync(Builders<BsonDocument>.Filter.Eq("status", "ACTIVE"));
+            totalThreads = await _mongoDb.GetCollection<BsonDocument>("communityThreads").CountDocumentsAsync(Builders<BsonDocument>.Filter.Empty);
+            totalReplies = await _mongoDb.GetCollection<BsonDocument>("communityReplies").CountDocumentsAsync(Builders<BsonDocument>.Filter.Empty);
+            totalQa = await _mongoDb.GetCollection<BsonDocument>("communityQa").CountDocumentsAsync(Builders<BsonDocument>.Filter.Empty);
+        }
+        catch { /* ignore mongo errors if any */ }
+
         var document = QuestPDF.Fluent.Document.Create(container =>
         {
             container.Page(page =>
@@ -149,34 +185,66 @@ public class WebmasterController : ControllerBase
 
                     x.Spacing(15);
                     
-                    x.Item().Text("Operational Highlights").Bold().FontSize(11).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+                    x.Item().Text("Platform Metrics").Bold().FontSize(11).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
                     x.Item().PaddingTop(6).Table(t =>
                     {
                         t.ColumnsDefinition(c =>
                         {
                             c.RelativeColumn(2);
-                            c.RelativeColumn(3);
+                            c.RelativeColumn(1.5f);
+                            c.RelativeColumn(2);
                             c.RelativeColumn(1.5f);
                         });
 
                         t.Header(h =>
                         {
-                            h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).Padding(6).Text("Subsystem").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
-                            h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).Padding(6).Text("Operational Scope").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
-                            h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).Padding(6).AlignCenter().Text("Status").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+                            h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).Padding(6).Text("Entity / Group").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+                            h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).Padding(6).AlignRight().Text("Count").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+                            h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).Padding(6).Text("Entity / Group").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+                            h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).Padding(6).AlignRight().Text("Count").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
                         });
 
-                        void AddRow(string system, string desc, string status)
+                        void AddRow(string label1, string val1, string label2, string val2, int idx)
                         {
-                            t.Cell().BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Padding(6).Text(system).SemiBold().FontSize(8.5f);
-                            t.Cell().BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Padding(6).Text(desc).FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
-                            t.Cell().BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Padding(6).AlignCenter().Text(status).Bold().FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Green.Darken2);
+                            var bg = idx % 2 == 0 ? QuestPDF.Helpers.Colors.White : QuestPDF.Helpers.Colors.Grey.Lighten5;
+                            t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Padding(6).Text(label1).SemiBold().FontSize(8.5f);
+                            t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Padding(6).AlignRight().Text(val1).FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
+                            t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Padding(6).Text(label2).SemiBold().FontSize(8.5f);
+                            t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Padding(6).AlignRight().Text(val2).FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
                         }
 
-                        AddRow("Relational Engine", "Oracle 21c PDB with Automated Triggers & Auditing", "ACTIVE");
-                        AddRow("Document Engine", "MongoDB Atlas Guidelines & Emergency Feed", "ACTIVE");
-                        AddRow("Notification Dispatcher", "Automated Donor & Committee Alert Pipelines", "ACTIVE");
-                        AddRow("Inventory & Cold Chain", "Blood Unit Expiry & FIFO Allocation Engine", "ACTIVE");
+                        AddRow("Registered Donors", totalDonors.ToString(), "Registered Blood Banks", totalBanks.ToString(), 0);
+                        AddRow("Organizing Committees", totalCommittees.ToString(), "Total Donations Logged", totalDonations.ToString(), 1);
+                        AddRow("Ongoing Camps", ongoingCamps.ToString(), "Completed Camps", completedCamps.ToString(), 2);
+                        AddRow("Pending Hospital Requests", pendingRequests.ToString(), "Active Emergency Appeals", activeAppeals.ToString(), 3);
+                    });
+
+                    x.Spacing(15);
+                    x.Item().Text("Community & Engagement").Bold().FontSize(11).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+                    x.Item().PaddingTop(6).Table(t =>
+                    {
+                        t.ColumnsDefinition(c =>
+                        {
+                            c.RelativeColumn(3);
+                            c.RelativeColumn(2);
+                        });
+
+                        t.Header(h =>
+                        {
+                            h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).Padding(6).Text("Metric").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+                            h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).Padding(6).AlignRight().Text("Total Count").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+                        });
+
+                        void AddCommRow(string label, string val, int idx)
+                        {
+                            var bg = idx % 2 == 0 ? QuestPDF.Helpers.Colors.White : QuestPDF.Helpers.Colors.Grey.Lighten5;
+                            t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Padding(6).Text(label).SemiBold().FontSize(8.5f);
+                            t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Padding(6).AlignRight().Text(val).FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
+                        }
+
+                        AddCommRow("Community Discussion Threads", totalThreads.ToString(), 0);
+                        AddCommRow("Discussion Replies / Comments", totalReplies.ToString(), 1);
+                        AddCommRow("Medical Q&A Submissions", totalQa.ToString(), 2);
                     });
                 });
 
@@ -320,14 +388,155 @@ public class WebmasterController : ControllerBase
         }
     }
 
+    private ActionResult GenerateSimpleTableReport(string title, string[] headers, List<string[]> rows)
+    {
+        var document = QuestPDF.Fluent.Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(QuestPDF.Helpers.PageSizes.A4);
+                page.Margin(1.5f, QuestPDF.Infrastructure.Unit.Centimetre);
+                
+                page.Header().Column(header =>
+                {
+                    header.Item().Text("LIFELINECONNECT WEBMASTER").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Red.Medium);
+                    header.Item().Text(title).ExtraBold().FontSize(18).FontColor(QuestPDF.Helpers.Colors.Grey.Darken4);
+                    header.Item().Text($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss} | Total Records: {rows.Count}").FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                    header.Item().PaddingTop(6).LineHorizontal(1.5f).LineColor(QuestPDF.Helpers.Colors.Red.Medium);
+                });
+                
+                page.Content().PaddingTop(15).Table(table =>
+                {
+                    table.ColumnsDefinition(columns =>
+                    {
+                        foreach (var _ in headers) columns.RelativeColumn();
+                    });
+                    
+                    table.Header(h =>
+                    {
+                        foreach (var header in headers)
+                        {
+                            h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3)
+                             .BorderBottom(1.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Darken1)
+                             .Padding(5).Text(header).Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+                        }
+                    });
+
+                    for (int i = 0; i < rows.Count; i++)
+                    {
+                        var row = rows[i];
+                        var bg = i % 2 == 0 ? QuestPDF.Helpers.Colors.White : QuestPDF.Helpers.Colors.Grey.Lighten5;
+                        foreach (var cell in row)
+                        {
+                            table.Cell().Background(bg).BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2)
+                                 .Padding(5).Text(cell ?? "-").FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+                        }
+                    }
+                });
+            });
+        });
+        
+        return File(document.GeneratePdf(), "application/pdf", $"{title.Replace(" ", "_")}.pdf");
+    }
+
+    [HttpGet("reports/users")]
+    public ActionResult ExportUsersReport()
+    {
+        var headers = new[] { "ID", "Email", "Role", "Status", "Created At" };
+        var rows = new List<string[]>();
+        using (var connection = _oracleDb.CreateConnection() as OracleConnection)
+        {
+            connection!.Open();
+            using var cmd = connection.CreateCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "FN_GET_ALL_USERS";
+            var pCursor = new OracleParameter("p_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.ReturnValue };
+            cmd.Parameters.Add(pCursor);
+            cmd.ExecuteNonQuery();
+            using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
+            while(reader.Read())
+            {
+                rows.Add(new[] {
+                    reader["USER_ID"].ToString()!,
+                    reader["EMAIL"].ToString()!,
+                    reader["ROLE"].ToString()!,
+                    reader["STATUS"].ToString()!,
+                    Convert.ToDateTime(reader["CREATED_AT"]).ToString("yyyy-MM-dd")
+                });
+            }
+        }
+        return GenerateSimpleTableReport("System Users Report", headers, rows);
+    }
+
+    [HttpGet("reports/banks")]
+    public ActionResult ExportBanksReport()
+    {
+        var headers = new[] { "Code", "Name", "Phone", "Status" };
+        var rows = new List<string[]>();
+        using (var connection = _oracleDb.CreateConnection() as OracleConnection)
+        {
+            connection!.Open();
+            using var cmd = connection.CreateCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "FN_GET_ALL_BANKS";
+            var pCursor = new OracleParameter("p_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.ReturnValue };
+            cmd.Parameters.Add(pCursor);
+            cmd.ExecuteNonQuery();
+            using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
+            while(reader.Read())
+            {
+                rows.Add(new[] {
+                    reader["BANK_CODE"].ToString()!,
+                    reader["BANK_NAME"].ToString()!,
+                    reader["PHONE"].ToString()!,
+                    reader["STATUS"].ToString()!
+                });
+            }
+        }
+        return GenerateSimpleTableReport("Registered Blood Banks Report", headers, rows);
+    }
+
+    [HttpGet("reports/committees")]
+    public ActionResult ExportCommitteesReport()
+    {
+        var headers = new[] { "Code", "Name", "Phone", "Status" };
+        var rows = new List<string[]>();
+        using (var connection = _oracleDb.CreateConnection() as OracleConnection)
+        {
+            connection!.Open();
+            using var cmd = connection.CreateCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "FN_GET_ALL_COMMITTEES";
+            var pCursor = new OracleParameter("p_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.ReturnValue };
+            cmd.Parameters.Add(pCursor);
+            cmd.ExecuteNonQuery();
+            using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
+            while(reader.Read())
+            {
+                rows.Add(new[] {
+                    reader["COMMITTEE_CODE"].ToString()!,
+                    reader["COMMITTEE_NAME"].ToString()!,
+                    reader["PHONE"].ToString()!,
+                    reader["STATUS"].ToString()!
+                });
+            }
+        }
+        return GenerateSimpleTableReport("Organizing Committees Report", headers, rows);
+    }
+
     [HttpGet("banks")]
     public ActionResult<ApiResponse<List<object>>> GetBanks()
     {
         var list = new List<object>();
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
-        using var cmd = new OracleCommand("SELECT BLOOD_BANK_ID, BANK_CODE, BANK_NAME, PHONE, EMAIL, ADDRESS, STATUS FROM BLOOD_BANK", connection);
-        using var reader = cmd.ExecuteReader();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.CommandText = "FN_GET_ALL_BANKS";
+        var pCursor = new OracleParameter("p_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.ReturnValue };
+        cmd.Parameters.Add(pCursor);
+        cmd.ExecuteNonQuery();
+        using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
         while(reader.Read())
         {
             list.Add(new {
@@ -349,8 +558,13 @@ public class WebmasterController : ControllerBase
         var list = new List<object>();
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
-        using var cmd = new OracleCommand("SELECT COMMITTEE_ID, COMMITTEE_CODE, COMMITTEE_NAME, PHONE, EMAIL, ADDRESS, STATUS FROM ORGANIZING_COMMITTEE", connection);
-        using var reader = cmd.ExecuteReader();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.CommandText = "FN_GET_ALL_COMMITTEES";
+        var pCursor = new OracleParameter("p_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.ReturnValue };
+        cmd.Parameters.Add(pCursor);
+        cmd.ExecuteNonQuery();
+        using var reader = ((OracleRefCursor)pCursor.Value).GetDataReader();
         while(reader.Read())
         {
             list.Add(new {
@@ -427,6 +641,39 @@ public class WebmasterController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, ApiResponse<string>.Error("Failed to generate backup: " + ex.Message));
+        }
+    }
+
+    [HttpGet("backup-mongo")]
+    public async Task<IActionResult> DownloadMongoBackup()
+    {
+        try
+        {
+            var appeals = await _mongoDb.GetCollection<BsonDocument>("emergencyAppeals").Find(Builders<BsonDocument>.Filter.Empty).ToListAsync();
+            var threads = await _mongoDb.GetCollection<BsonDocument>("communityThreads").Find(Builders<BsonDocument>.Filter.Empty).ToListAsync();
+            var replies = await _mongoDb.GetCollection<BsonDocument>("communityReplies").Find(Builders<BsonDocument>.Filter.Empty).ToListAsync();
+            var qa = await _mongoDb.GetCollection<BsonDocument>("communityQa").Find(Builders<BsonDocument>.Filter.Empty).ToListAsync();
+            var guidelines = await _mongoDb.GetCollection<BsonDocument>("medicalGuidelines").Find(Builders<BsonDocument>.Filter.Empty).ToListAsync();
+            var feedback = await _mongoDb.GetCollection<BsonDocument>("campFeedback").Find(Builders<BsonDocument>.Filter.Empty).ToListAsync();
+
+            var dump = new {
+                ExportDate = DateTime.UtcNow,
+                EmergencyAppeals = appeals.Select(a => { a.Remove("_id"); return BsonTypeMapper.MapToDotNetValue(a); }),
+                CommunityThreads = threads.Select(a => { a.Remove("_id"); return BsonTypeMapper.MapToDotNetValue(a); }),
+                CommunityReplies = replies.Select(a => { a.Remove("_id"); return BsonTypeMapper.MapToDotNetValue(a); }),
+                CommunityQa = qa.Select(a => { a.Remove("_id"); return BsonTypeMapper.MapToDotNetValue(a); }),
+                MedicalGuidelines = guidelines.Select(a => { a.Remove("_id"); return BsonTypeMapper.MapToDotNetValue(a); }),
+                CampFeedback = feedback.Select(a => { a.Remove("_id"); return BsonTypeMapper.MapToDotNetValue(a); })
+            };
+
+            var json = System.Text.Json.JsonSerializer.Serialize(dump, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            var bytes = System.Text.Encoding.UTF8.GetBytes(json);
+            
+            return File(bytes, "application/json", $"mongodb_backup_{DateTime.Now:yyyyMMdd_HHmmss}.json");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<string>.Error("Failed to generate MongoDB backup: " + ex.Message));
         }
     }
     public class AuditLogDto

@@ -96,8 +96,6 @@ const DonorProfile = () => {
           <select name="gender" value={profile?.gender} onChange={handleChange} className="px-space-md py-space-sm border border-surface-container-high rounded-lg focus:outline-none focus:border-primary bg-surface">
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
-            <option value="OTHER">Other</option>
-            <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
           </select>
         </div>
         <div className="flex flex-col gap-space-xs md:col-span-2">

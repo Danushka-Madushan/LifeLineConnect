@@ -368,7 +368,11 @@ const WebmasterDashboard = () => {
     });
   };
 
+  const [reportLoading, setReportLoading] = useState(false);
+  const [mongoBackupLoading, setMongoBackupLoading] = useState(false);
+
   const handleExportSystemReport = async () => {
+    setReportLoading(true);
     try {
       const res = await api.get('/webmaster/reports/system', { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -380,6 +384,8 @@ const WebmasterDashboard = () => {
       link.remove();
     } catch {
       toast.error("Failed to export report");
+    } finally {
+      setReportLoading(false);
     }
   };
 
@@ -417,6 +423,45 @@ const WebmasterDashboard = () => {
       setBackupLoading(false);
     }
   };
+
+  const handleMongoBackup = async () => {
+    setMongoBackupLoading(true);
+    try {
+      const res = await api.get('/webmaster/backup-mongo', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `mongodb_backup.json`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("MongoDB backup downloaded successfully.");
+    } catch {
+      toast.error("Failed to generate MongoDB backup.");
+    } finally {
+      setMongoBackupLoading(false);
+    }
+  };
+
+  const downloadReport = async (endpoint: string, filename: string) => {
+    try {
+      const res = await api.get(endpoint, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success(`${filename} exported successfully.`);
+    } catch {
+      toast.error(`Failed to export ${filename}`);
+    }
+  };
+
+  const handleExportUsers = () => downloadReport('/webmaster/reports/users', 'Users_Report.pdf');
+  const handleExportBanks = () => downloadReport('/webmaster/reports/banks', 'Banks_Report.pdf');
+  const handleExportCommittees = () => downloadReport('/webmaster/reports/committees', 'Committees_Report.pdf');
 
   if (error) {
     return (
@@ -491,12 +536,17 @@ const WebmasterDashboard = () => {
               <button onClick={() => setShowGuidelineModal(true)} className="flex items-center gap-space-sm bg-surface-container px-space-md py-space-sm rounded-lg hover:bg-surface-container-high font-semibold">
                 <span className="material-symbols-outlined text-[20px]">health_and_safety</span> Publish Medical Guideline
               </button>
-              <button onClick={handleExportSystemReport} className="flex items-center gap-space-sm bg-primary text-on-primary px-space-md py-space-sm rounded-lg hover:bg-primary/90 font-semibold">
-                <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span> Export System Audit Report
+              <button onClick={handleExportSystemReport} disabled={reportLoading} className="flex items-center gap-space-sm bg-primary text-on-primary px-space-md py-space-sm rounded-lg hover:bg-primary/90 font-semibold disabled:opacity-75">
+                <span className={`material-symbols-outlined text-[20px] ${reportLoading ? 'animate-spin' : ''}`}>{reportLoading ? 'sync' : 'picture_as_pdf'}</span> 
+                {reportLoading ? 'Generating Report...' : 'Export System Audit Report'}
               </button>
               <button onClick={handleDatabaseBackup} disabled={backupLoading} className="flex items-center gap-space-sm bg-surface-container text-on-surface px-space-md py-space-sm rounded-lg hover:bg-surface-container-high font-semibold disabled:opacity-50">
                 <span className={`material-symbols-outlined text-[20px] ${backupLoading ? 'animate-spin' : ''}`}>{backupLoading ? 'sync' : 'database'}</span> 
-                {backupLoading ? 'Generating Backup...' : 'Database Backup'}
+                {backupLoading ? 'Generating Oracle Backup...' : 'Oracle DB Backup'}
+              </button>
+              <button onClick={handleMongoBackup} disabled={mongoBackupLoading} className="flex items-center gap-space-sm bg-surface-container text-on-surface px-space-md py-space-sm rounded-lg hover:bg-surface-container-high font-semibold disabled:opacity-50">
+                <span className={`material-symbols-outlined text-[20px] ${mongoBackupLoading ? 'animate-spin' : ''}`}>{mongoBackupLoading ? 'sync' : 'dns'}</span> 
+                {mongoBackupLoading ? 'Generating MongoDB Backup...' : 'MongoDB Backup'}
               </button>
             </div>
           </div>
@@ -505,7 +555,12 @@ const WebmasterDashboard = () => {
 
       {activeTab === 'users' && (
         <div className="bg-surface-container-lowest border border-surface-container p-space-xl rounded-2xl">
-          <h2 className="font-heading text-2xl font-bold mb-space-lg text-on-surface">Manage Users</h2>
+          <div className="flex justify-between items-center mb-space-lg">
+            <h2 className="font-heading text-2xl font-bold text-on-surface">Manage Users</h2>
+            <button onClick={handleExportUsers} className="flex items-center gap-space-sm bg-surface-container px-space-md py-space-sm rounded-lg hover:bg-surface-container-high font-semibold text-primary">
+              <span className="material-symbols-outlined text-[20px]">file_download</span> Export Users
+            </button>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -546,9 +601,14 @@ const WebmasterDashboard = () => {
         <div className="bg-surface-container-lowest border border-surface-container p-space-xl rounded-2xl">
           <div className="flex justify-between items-center mb-space-lg">
             <h2 className="font-heading text-2xl font-bold text-on-surface">Registered Blood Banks</h2>
-            <button onClick={() => setShowBankModal(true)} className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-semibold">
-              + Register New Bank
-            </button>
+            <div className="flex items-center gap-space-md">
+              <button onClick={handleExportBanks} className="flex items-center gap-space-sm bg-surface-container px-space-md py-space-sm rounded-lg hover:bg-surface-container-high font-semibold text-primary">
+                <span className="material-symbols-outlined text-[20px]">file_download</span> Export Banks
+              </button>
+              <button onClick={() => setShowBankModal(true)} className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-semibold">
+                + Register New Bank
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -582,9 +642,14 @@ const WebmasterDashboard = () => {
         <div className="bg-surface-container-lowest border border-surface-container p-space-xl rounded-2xl">
           <div className="flex justify-between items-center mb-space-lg">
             <h2 className="font-heading text-2xl font-bold text-on-surface">Organizing Committees</h2>
-            <button onClick={() => setShowCommModal(true)} className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-semibold">
-              + Register Committee
-            </button>
+            <div className="flex items-center gap-space-md">
+              <button onClick={handleExportCommittees} className="flex items-center gap-space-sm bg-surface-container px-space-md py-space-sm rounded-lg hover:bg-surface-container-high font-semibold text-primary">
+                <span className="material-symbols-outlined text-[20px]">file_download</span> Export Committees
+              </button>
+              <button onClick={() => setShowCommModal(true)} className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-semibold">
+                + Register Committee
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
