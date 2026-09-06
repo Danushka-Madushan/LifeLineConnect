@@ -337,48 +337,88 @@ public class BloodBankController : ControllerBase
             container.Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.Margin(2, Unit.Centimetre);
-                page.Header().Text("Blood Bank Inventory Report").SemiBold().FontSize(24).FontColor(Colors.Red.Medium);
+                page.Margin(1.5f, Unit.Centimetre);
                 
-                page.Content().PaddingVertical(1, Unit.Centimetre).Column(x =>
+                page.Header().Column(header =>
                 {
-                    x.Item().Text($"Date Generated: {DateTime.Now:yyyy-MM-dd HH:mm}").FontSize(10);
-                    x.Spacing(20);
-
-                    x.Item().Table(t =>
+                    header.Item().Row(row =>
                     {
-                        t.ColumnsDefinition(c =>
+                        row.RelativeItem().Column(col =>
                         {
-                            c.RelativeColumn();
-                            c.RelativeColumn();
-                            c.RelativeColumn();
-                            c.RelativeColumn();
+                            col.Item().Text("LIFELINECONNECT · BLOOD BANK OPERATIONS").Bold().FontSize(9).FontColor(Colors.Red.Medium);
+                            col.Item().Text("Blood Stock Inventory Report").ExtraBold().FontSize(18).FontColor(Colors.Grey.Darken4);
+                            col.Item().Text($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss} | Total Stock Units: {inventory.Count}").FontSize(8.5f).FontColor(Colors.Grey.Darken1);
                         });
-
-                        t.Header(h =>
-                        {
-                            h.Cell().Text("Unit Code").SemiBold();
-                            h.Cell().Text("Blood Group").SemiBold();
-                            h.Cell().Text("Expiry Date").SemiBold();
-                            h.Cell().Text("Status").SemiBold();
-                        });
-
-                        foreach (var i in inventory)
-                        {
-                            t.Cell().Text(i.UnitCode);
-                            t.Cell().Text(i.BloodGroup);
-                            t.Cell().Text(i.ExpiryDate.ToString("yyyy-MM-dd"));
-                            t.Cell().Text(i.Status);
-                        }
                     });
+                    header.Item().PaddingTop(6).LineHorizontal(1.5f).LineColor(Colors.Red.Medium);
+                });
+                
+                page.Content().PaddingTop(12).Table(t =>
+                {
+                    t.ColumnsDefinition(c =>
+                    {
+                        c.RelativeColumn(2.5f); // Unit Code
+                        c.RelativeColumn(1.5f); // Blood Group
+                        c.RelativeColumn(2.0f); // Expiry Date
+                        c.RelativeColumn(1.5f); // Status
+                    });
+
+                    t.Header(h =>
+                    {
+                        h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(6).AlignLeft().AlignMiddle()
+                         .Text("Unit Code").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+
+                        h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text("Blood Group").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+
+                        h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text("Expiry Date").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+
+                        h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text("Status").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+                    });
+
+                    for (int idx = 0; idx < inventory.Count; idx++)
+                    {
+                        var i = inventory[idx];
+                        var bg = idx % 2 == 0 ? Colors.White : Colors.Grey.Lighten5;
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(6).AlignLeft().AlignMiddle()
+                         .Text(i.UnitCode).SemiBold().FontSize(8.5f).FontColor(Colors.Grey.Darken3);
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text(i.BloodGroup).Bold().FontSize(9).FontColor(Colors.Red.Darken2);
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text(i.ExpiryDate.ToString("yyyy-MM-dd")).FontSize(8.5f).FontColor(Colors.Grey.Darken2);
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text(i.Status).SemiBold().FontSize(8.5f).FontColor(i.Status == "AVAILABLE" ? Colors.Green.Darken2 : Colors.Orange.Darken2);
+                    }
                 });
 
-                page.Footer().AlignCenter().Text(x =>
+                page.Footer().Column(col =>
                 {
-                    x.Span("Page ");
-                    x.CurrentPageNumber();
-                    x.Span(" of ");
-                    x.TotalPages();
+                    col.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten2);
+                    col.Item().PaddingTop(3).Row(row =>
+                    {
+                        row.RelativeItem().Text("LifeLineConnect · Blood Inventory Audit Log · Confidential").FontSize(8).FontColor(Colors.Grey.Darken1);
+                        row.RelativeItem().AlignRight().Text(x =>
+                        {
+                            x.Span("Page ").FontSize(8).FontColor(Colors.Grey.Darken1);
+                            x.CurrentPageNumber().FontSize(8).FontColor(Colors.Grey.Darken1);
+                            x.Span(" of ").FontSize(8).FontColor(Colors.Grey.Darken1);
+                            x.TotalPages().FontSize(8).FontColor(Colors.Grey.Darken1);
+                        });
+                    });
                 });
             });
         });
@@ -398,39 +438,88 @@ public class BloodBankController : ControllerBase
             container.Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.Margin(2, Unit.Centimetre);
-                page.Header().Text("Blood Bank Expiry Report (Next 7 Days)").SemiBold().FontSize(24).FontColor(Colors.Red.Medium);
+                page.Margin(1.5f, Unit.Centimetre);
                 
-                page.Content().PaddingVertical(1, Unit.Centimetre).Column(x =>
+                page.Header().Column(header =>
                 {
-                    x.Item().Text($"Date Generated: {DateTime.Now:yyyy-MM-dd HH:mm}").FontSize(10);
-                    x.Spacing(20);
-
-                    x.Item().Table(t =>
+                    header.Item().Row(row =>
                     {
-                        t.ColumnsDefinition(c =>
+                        row.RelativeItem().Column(col =>
                         {
-                            c.RelativeColumn();
-                            c.RelativeColumn();
-                            c.RelativeColumn();
-                            c.RelativeColumn();
+                            col.Item().Text("LIFELINECONNECT · CRITICAL COLD-CHAIN ALERT").Bold().FontSize(9).FontColor(Colors.Red.Medium);
+                            col.Item().Text("Blood Unit Expiry Advisory (Next 7 Days)").ExtraBold().FontSize(18).FontColor(Colors.Red.Darken2);
+                            col.Item().Text($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss} | Units Expiring Soon: {expiring.Count}").FontSize(8.5f).FontColor(Colors.Grey.Darken1);
                         });
+                    });
+                    header.Item().PaddingTop(6).LineHorizontal(1.5f).LineColor(Colors.Red.Darken2);
+                });
+                
+                page.Content().PaddingTop(12).Table(t =>
+                {
+                    t.ColumnsDefinition(c =>
+                    {
+                        c.RelativeColumn(2.5f); // Unit Code
+                        c.RelativeColumn(1.5f); // Blood Group
+                        c.RelativeColumn(2.0f); // Expiry Date
+                        c.RelativeColumn(1.5f); // Days Left
+                    });
 
-                        t.Header(h =>
+                    t.Header(h =>
+                    {
+                        h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(6).AlignLeft().AlignMiddle()
+                         .Text("Unit Code").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+
+                        h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text("Blood Group").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+
+                        h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text("Expiry Date").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+
+                        h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text("Days Left").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+                    });
+
+                    for (int idx = 0; idx < expiring.Count; idx++)
+                    {
+                        var u = expiring[idx];
+                        var days = Math.Max(0, (u.ExpiryDate - DateTime.Now).Days);
+                        var bg = idx % 2 == 0 ? Colors.White : Colors.Red.Lighten5;
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(6).AlignLeft().AlignMiddle()
+                         .Text(u.UnitCode).SemiBold().FontSize(8.5f).FontColor(Colors.Grey.Darken3);
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text(u.BloodGroup).Bold().FontSize(9).FontColor(Colors.Red.Darken3);
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text(u.ExpiryDate.ToString("yyyy-MM-dd")).FontSize(8.5f).FontColor(Colors.Grey.Darken2);
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text($"{days} day(s)").Bold().FontSize(8.5f).FontColor(days <= 2 ? Colors.Red.Darken2 : Colors.Orange.Darken2);
+                    }
+                });
+
+                page.Footer().Column(col =>
+                {
+                    col.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten2);
+                    col.Item().PaddingTop(3).Row(row =>
+                    {
+                        row.RelativeItem().Text("LifeLineConnect · Critical Expiry Notice · Prioritize FIFO Allocation").FontSize(8).FontColor(Colors.Red.Medium);
+                        row.RelativeItem().AlignRight().Text(x =>
                         {
-                            h.Cell().Text("Unit Code").SemiBold();
-                            h.Cell().Text("Blood Group").SemiBold();
-                            h.Cell().Text("Expiry Date").SemiBold();
-                            h.Cell().Text("Days Left").SemiBold();
+                            x.Span("Page ").FontSize(8).FontColor(Colors.Grey.Darken1);
+                            x.CurrentPageNumber().FontSize(8).FontColor(Colors.Grey.Darken1);
+                            x.Span(" of ").FontSize(8).FontColor(Colors.Grey.Darken1);
+                            x.TotalPages().FontSize(8).FontColor(Colors.Grey.Darken1);
                         });
-
-                        foreach (var u in expiring)
-                        {
-                            t.Cell().Text(u.UnitCode);
-                            t.Cell().Text(u.BloodGroup);
-                            t.Cell().Text(u.ExpiryDate.ToShortDateString());
-                            t.Cell().Text(Math.Max(0, (u.ExpiryDate - DateTime.Now).Days).ToString());
-                        }
                     });
                 });
             });
@@ -450,39 +539,87 @@ public class BloodBankController : ControllerBase
             container.Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.Margin(2, Unit.Centimetre);
-                page.Header().Text("Hospital Requests Report").SemiBold().FontSize(24).FontColor(Colors.Red.Medium);
+                page.Margin(1.5f, Unit.Centimetre);
                 
-                page.Content().PaddingVertical(1, Unit.Centimetre).Column(x =>
+                page.Header().Column(header =>
                 {
-                    x.Item().Text($"Date Generated: {DateTime.Now:yyyy-MM-dd HH:mm}").FontSize(10);
-                    x.Spacing(20);
-
-                    x.Item().Table(t =>
+                    header.Item().Row(row =>
                     {
-                        t.ColumnsDefinition(c =>
+                        row.RelativeItem().Column(col =>
                         {
-                            c.RelativeColumn(2);
-                            c.RelativeColumn();
-                            c.RelativeColumn();
-                            c.RelativeColumn();
+                            col.Item().Text("LIFELINECONNECT · HOSPITAL LOGISTICS").Bold().FontSize(9).FontColor(Colors.Red.Medium);
+                            col.Item().Text("Hospital Blood Request Status Report").ExtraBold().FontSize(18).FontColor(Colors.Grey.Darken4);
+                            col.Item().Text($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss} | Total Demands: {requests.Count}").FontSize(8.5f).FontColor(Colors.Grey.Darken1);
                         });
+                    });
+                    header.Item().PaddingTop(6).LineHorizontal(1.5f).LineColor(Colors.Red.Medium);
+                });
+                
+                page.Content().PaddingTop(12).Table(t =>
+                {
+                    t.ColumnsDefinition(c =>
+                    {
+                        c.RelativeColumn(3.0f); // Hospital
+                        c.RelativeColumn(1.5f); // Blood Group
+                        c.RelativeColumn(1.5f); // Priority
+                        c.RelativeColumn(1.5f); // Status
+                    });
 
-                        t.Header(h =>
+                    t.Header(h =>
+                    {
+                        h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(6).AlignLeft().AlignMiddle()
+                         .Text("Hospital").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+
+                        h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text("Blood Group").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+
+                        h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text("Priority").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+
+                        h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text("Status").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+                    });
+
+                    for (int idx = 0; idx < requests.Count; idx++)
+                    {
+                        var r = requests[idx];
+                        var bg = idx % 2 == 0 ? Colors.White : Colors.Grey.Lighten5;
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(6).AlignLeft().AlignMiddle()
+                         .Text(r.HospitalName).SemiBold().FontSize(8.5f).FontColor(Colors.Grey.Darken3);
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text(r.BloodGroup).Bold().FontSize(9).FontColor(Colors.Red.Darken2);
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text(r.Priority).Bold().FontSize(8.5f).FontColor(r.Priority == "CRITICAL" ? Colors.Red.Medium : (r.Priority == "HIGH" ? Colors.Orange.Darken2 : Colors.Grey.Darken2));
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                         .Text(r.Status).SemiBold().FontSize(8.5f).FontColor(r.Status == "ALLOCATED" ? Colors.Green.Darken2 : Colors.Blue.Darken2);
+                    }
+                });
+
+                page.Footer().Column(col =>
+                {
+                    col.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten2);
+                    col.Item().PaddingTop(3).Row(row =>
+                    {
+                        row.RelativeItem().Text("LifeLineConnect · Hospital Supply Logistics · Confidential").FontSize(8).FontColor(Colors.Grey.Darken1);
+                        row.RelativeItem().AlignRight().Text(x =>
                         {
-                            h.Cell().Text("Hospital").SemiBold();
-                            h.Cell().Text("Blood Group").SemiBold();
-                            h.Cell().Text("Priority").SemiBold();
-                            h.Cell().Text("Status").SemiBold();
+                            x.Span("Page ").FontSize(8).FontColor(Colors.Grey.Darken1);
+                            x.CurrentPageNumber().FontSize(8).FontColor(Colors.Grey.Darken1);
+                            x.Span(" of ").FontSize(8).FontColor(Colors.Grey.Darken1);
+                            x.TotalPages().FontSize(8).FontColor(Colors.Grey.Darken1);
                         });
-
-                        foreach (var r in requests)
-                        {
-                            t.Cell().Text(r.HospitalName);
-                            t.Cell().Text(r.BloodGroup);
-                            t.Cell().Text(r.Priority);
-                            t.Cell().Text(r.Status);
-                        }
                     });
                 });
             });

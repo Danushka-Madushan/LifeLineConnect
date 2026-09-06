@@ -418,33 +418,96 @@ public class CommitteeController : ControllerBase
             container.Page(page =>
             {
                 page.Size(QuestPDF.Helpers.PageSizes.A4);
-                page.Margin(2, QuestPDF.Infrastructure.Unit.Centimetre);
-                page.Header().Text("Committee Camps Report").SemiBold().FontSize(24).FontColor(QuestPDF.Helpers.Colors.Red.Medium);
+                page.Margin(1.5f, QuestPDF.Infrastructure.Unit.Centimetre);
                 
-                page.Content().PaddingVertical(1, QuestPDF.Infrastructure.Unit.Centimetre).Column(x =>
+                page.Header().Column(header =>
                 {
-                    x.Item().Text($"Date Generated: {DateTime.Now:yyyy-MM-dd HH:mm}").FontSize(10);
-                    x.Spacing(20);
-                    x.Item().Table(t =>
+                    header.Item().Row(row =>
                     {
-                        t.ColumnsDefinition(c =>
+                        row.RelativeItem().Column(col =>
                         {
-                            c.RelativeColumn(2);
-                            c.RelativeColumn();
-                            c.RelativeColumn();
+                            col.Item().Text("LIFELINECONNECT · ORGANIZING COMMITTEE").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Red.Medium);
+                            col.Item().Text("Donation Camps Schedule & Audit Report").ExtraBold().FontSize(18).FontColor(QuestPDF.Helpers.Colors.Grey.Darken4);
+                            col.Item().Text($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss} | Total Camps: {camps.Count}").FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
                         });
-                        t.Header(h =>
+                    });
+                    header.Item().PaddingTop(6).LineHorizontal(1.5f).LineColor(QuestPDF.Helpers.Colors.Red.Medium);
+                });
+                
+                page.Content().PaddingTop(12).Table(t =>
+                {
+                    t.ColumnsDefinition(c =>
+                    {
+                        c.RelativeColumn(2.5f); // Camp Title
+                        c.RelativeColumn(2.0f); // Venue
+                        c.RelativeColumn(1.4f); // Date
+                        c.RelativeColumn(1.0f); // Capacity
+                        c.RelativeColumn(1.3f); // Status
+                    });
+
+                    t.Header(h =>
+                    {
+                        h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(5).AlignLeft().AlignMiddle()
+                         .Text("Camp Title").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+
+                        h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(5).AlignLeft().AlignMiddle()
+                         .Text("Venue").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+
+                        h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(5).AlignCenter().AlignMiddle()
+                         .Text("Date").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+
+                        h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(5).AlignCenter().AlignMiddle()
+                         .Text("Capacity").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+
+                        h.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Darken1)
+                         .PaddingVertical(6).PaddingHorizontal(5).AlignCenter().AlignMiddle()
+                         .Text("Status").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+                    });
+
+                    for (int idx = 0; idx < camps.Count; idx++)
+                    {
+                        var camp = camps[idx];
+                        var bg = idx % 2 == 0 ? QuestPDF.Helpers.Colors.White : QuestPDF.Helpers.Colors.Grey.Lighten5;
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(5).AlignLeft().AlignMiddle()
+                         .Text(camp.CampTitle).SemiBold().FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Grey.Darken4);
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(5).AlignLeft().AlignMiddle()
+                         .Text(string.IsNullOrWhiteSpace(camp.VenueName) ? "-" : camp.VenueName).FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(5).AlignCenter().AlignMiddle()
+                         .Text(camp.CampDate.ToString("yyyy-MM-dd")).FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(5).AlignCenter().AlignMiddle()
+                         .Text(camp.Capacity.ToString()).FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
+
+                        t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2)
+                         .PaddingVertical(5).PaddingHorizontal(5).AlignCenter().AlignMiddle()
+                         .Text(camp.Status).SemiBold().FontSize(8.5f).FontColor(camp.Status == "PUBLISHED" ? QuestPDF.Helpers.Colors.Green.Darken2 : (camp.Status == "ONGOING" ? QuestPDF.Helpers.Colors.Blue.Darken2 : QuestPDF.Helpers.Colors.Grey.Darken2));
+                    }
+                });
+
+                page.Footer().Column(col =>
+                {
+                    col.Item().LineHorizontal(0.5f).LineColor(QuestPDF.Helpers.Colors.Grey.Lighten2);
+                    col.Item().PaddingTop(3).Row(row =>
+                    {
+                        row.RelativeItem().Text("LifeLineConnect · Organizing Committee Schedule · Confidential").FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                        row.RelativeItem().AlignRight().Text(x =>
                         {
-                            h.Cell().Text("Camp").SemiBold();
-                            h.Cell().Text("Date").SemiBold();
-                            h.Cell().Text("Status").SemiBold();
+                            x.Span("Page ").FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                            x.CurrentPageNumber().FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                            x.Span(" of ").FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                            x.TotalPages().FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
                         });
-                        foreach (var camp in camps)
-                        {
-                            t.Cell().Text(camp.CampTitle);
-                            t.Cell().Text(camp.CampDate.ToShortDateString());
-                            t.Cell().Text(camp.Status);
-                        }
                     });
                 });
             });

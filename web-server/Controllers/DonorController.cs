@@ -292,49 +292,108 @@ public class DonorController : ControllerBase
             container.Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.Margin(2, Unit.Centimetre);
-                page.Header().Text("Donation History Report").SemiBold().FontSize(24).FontColor(Colors.Red.Medium);
+                page.Margin(1.5f, Unit.Centimetre);
                 
-                page.Content().PaddingVertical(1, Unit.Centimetre).Column(x =>
+                page.Header().Column(header =>
                 {
-                    x.Item().Text($"Donor: {name}").FontSize(14).SemiBold();
-                    x.Item().Text($"Date Generated: {DateTime.Now:yyyy-MM-dd HH:mm}").FontSize(10);
-                    x.Spacing(20);
+                    header.Item().Row(row =>
+                    {
+                        row.RelativeItem().Column(col =>
+                        {
+                            col.Item().Text("LIFELINECONNECT · VOLUNTARY DONOR SERVICES").Bold().FontSize(9).FontColor(Colors.Red.Medium);
+                            col.Item().Text("Certificate of Blood Donation History").ExtraBold().FontSize(18).FontColor(Colors.Grey.Darken4);
+                            col.Item().Text($"Official Record · Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}").FontSize(8.5f).FontColor(Colors.Grey.Darken1);
+                        });
+                    });
+                    header.Item().PaddingTop(6).LineHorizontal(1.5f).LineColor(Colors.Red.Medium);
+                });
+                
+                page.Content().PaddingTop(12).Column(x =>
+                {
+                    x.Item().Background(Colors.Grey.Lighten4).Padding(10).Row(r =>
+                    {
+                        r.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("Donor Profile").Bold().FontSize(10).FontColor(Colors.Grey.Darken3);
+                            c.Item().Text(name).ExtraBold().FontSize(13).FontColor(Colors.Red.Darken2);
+                        });
+
+                        r.RelativeItem().AlignRight().Column(c =>
+                        {
+                            c.Item().Text("Total Life-Saving Donations").Bold().FontSize(10).FontColor(Colors.Grey.Darken3);
+                            c.Item().Text($"{donations.Count} Contribution(s)").Bold().FontSize(13).FontColor(Colors.Green.Darken2);
+                        });
+                    });
+
+                    x.Spacing(12);
 
                     x.Item().Table(t =>
                     {
                         t.ColumnsDefinition(c =>
                         {
-                            c.RelativeColumn();
-                            c.RelativeColumn(2);
-                            c.RelativeColumn();
-                            c.RelativeColumn();
+                            c.RelativeColumn(1.4f); // Date
+                            c.RelativeColumn(2.6f); // Camp
+                            c.RelativeColumn(2.0f); // Venue
+                            c.RelativeColumn(1.2f); // Blood Group
                         });
 
                         t.Header(h =>
                         {
-                            h.Cell().Text("Date").SemiBold();
-                            h.Cell().Text("Camp").SemiBold();
-                            h.Cell().Text("Venue").SemiBold();
-                            h.Cell().Text("Blood Group").SemiBold();
+                            h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                             .PaddingVertical(6).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                             .Text("Date").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+
+                            h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                             .PaddingVertical(6).PaddingHorizontal(6).AlignLeft().AlignMiddle()
+                             .Text("Camp Event").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+
+                            h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                             .PaddingVertical(6).PaddingHorizontal(6).AlignLeft().AlignMiddle()
+                             .Text("Venue").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
+
+                            h.Cell().Background(Colors.Grey.Lighten3).BorderBottom(1.5f).BorderColor(Colors.Grey.Darken1)
+                             .PaddingVertical(6).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                             .Text("Group").Bold().FontSize(9).FontColor(Colors.Grey.Darken3);
                         });
 
-                        foreach (var d in donations)
+                        for (int idx = 0; idx < donations.Count; idx++)
                         {
-                            t.Cell().Text(d.DonationDate.ToString("yyyy-MM-dd"));
-                            t.Cell().Text(d.CampTitle);
-                            t.Cell().Text(d.VenueName);
-                            t.Cell().Text(d.BloodGroup);
+                            var d = donations[idx];
+                            var bg = idx % 2 == 0 ? Colors.White : Colors.Grey.Lighten5;
+
+                            t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                             .PaddingVertical(5).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                             .Text(d.DonationDate.ToString("yyyy-MM-dd")).FontSize(8.5f).FontColor(Colors.Grey.Darken2);
+
+                            t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                             .PaddingVertical(5).PaddingHorizontal(6).AlignLeft().AlignMiddle()
+                             .Text(d.CampTitle).SemiBold().FontSize(8.5f).FontColor(Colors.Grey.Darken4);
+
+                            t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                             .PaddingVertical(5).PaddingHorizontal(6).AlignLeft().AlignMiddle()
+                             .Text(string.IsNullOrWhiteSpace(d.VenueName) ? "-" : d.VenueName).FontSize(8.5f).FontColor(Colors.Grey.Darken2);
+
+                            t.Cell().Background(bg).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2)
+                             .PaddingVertical(5).PaddingHorizontal(6).AlignCenter().AlignMiddle()
+                             .Text(d.BloodGroup).Bold().FontSize(9).FontColor(Colors.Red.Darken2);
                         }
                     });
                 });
 
-                page.Footer().AlignCenter().Text(x =>
+                page.Footer().Column(col =>
                 {
-                    x.Span("Page ");
-                    x.CurrentPageNumber();
-                    x.Span(" of ");
-                    x.TotalPages();
+                    col.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten2);
+                    col.Item().PaddingTop(3).Row(row =>
+                    {
+                        row.RelativeItem().Text("Thank you for your noble contributions · Every drop saves lives!").FontSize(8).FontColor(Colors.Red.Medium);
+                        row.RelativeItem().AlignRight().Text(x =>
+                        {
+                            x.Span("Page ").FontSize(8).FontColor(Colors.Grey.Darken1);
+                            x.CurrentPageNumber().FontSize(8).FontColor(Colors.Grey.Darken1);
+                            x.Span(" of ").FontSize(8).FontColor(Colors.Grey.Darken1);
+                            x.TotalPages().FontSize(8).FontColor(Colors.Grey.Darken1);
+                        });
+                    });
                 });
             });
         });
