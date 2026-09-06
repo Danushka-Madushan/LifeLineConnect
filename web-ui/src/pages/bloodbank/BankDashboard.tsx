@@ -36,25 +36,25 @@ const BankDashboard = () => {
         <div className="p-space-xl rounded-2xl bg-surface-container-lowest border border-surface-container flex flex-col gap-space-md">
           <span className="font-label text-sm text-secondary uppercase">Available Units</span>
           <span className="font-heading text-4xl font-bold text-primary">{stats?.totalUnits}</span>
-          <Link to="/bloodbank/inventory" className="inline-block mt-space-sm px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm font-bold hover:bg-primary/20 transition-colors">View Inventory </Link>
+          <Link to="/bloodbank/inventory" className="inline-block mt-space-sm px-space-md py-space-sm rounded-lg font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-all text-center">View Inventory</Link>
         </div>
         
         <div className="p-space-xl rounded-2xl bg-surface-container-lowest border border-surface-container flex flex-col gap-space-md">
           <span className="font-label text-sm text-secondary uppercase">Incoming Transfers</span>
           <span className="font-heading text-4xl font-bold text-[#059669]">{stats?.incomingTransfers}</span>
-          <Link to="/bloodbank/transfers" className="inline-block mt-space-sm px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm font-bold hover:bg-primary/20 transition-colors">Receive Transfers </Link>
+          <Link to="/bloodbank/transfers" className="inline-block mt-space-sm px-space-md py-space-sm rounded-lg font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-all text-center">Incoming Transfers</Link>
         </div>
 
         <div className="p-space-xl rounded-2xl bg-surface-container-lowest border border-surface-container flex flex-col gap-space-md">
           <span className="font-label text-sm text-secondary uppercase">Pending Hospital Reqs</span>
           <span className="font-heading text-4xl font-bold text-[#D97706]">{stats?.pendingRequests}</span>
-          <Link to="/bloodbank/hospital-requests" className="inline-block mt-space-sm px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm font-bold hover:bg-primary/20 transition-colors">Allocate Units </Link>
+          <Link to="/bloodbank/hospital-requests" className="inline-block mt-space-sm px-space-md py-space-sm rounded-lg font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-all text-center">Allocate Units</Link>
         </div>
 
         <div className={`p-space-xl rounded-2xl border flex flex-col gap-space-md ${(stats?.expiringSoon ?? 0) > 0 ? 'bg-error-container border-error text-on-error-container' : 'bg-surface-container-lowest border-surface-container'}`}>
           <span className="font-label text-sm uppercase opacity-80">Expiring Soon (&lt; 7 Days)</span>
           <span className={`font-heading text-4xl font-bold ${(stats?.expiringSoon ?? 0) > 0 ? 'text-error' : 'text-on-surface'}`}>{stats?.expiringSoon ?? 0}</span>
-          <Link to="/bloodbank/inventory" className="inline-block mt-space-sm px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm font-bold hover:bg-primary/20 transition-colors">Filter Inventory </Link>
+          <Link to="/bloodbank/inventory" className="inline-block mt-space-sm px-space-md py-space-sm rounded-lg font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-all text-center">Filter Inventory</Link>
         </div>
       </div>
 

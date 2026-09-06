@@ -29,9 +29,9 @@ const Login = () => {
         } else if (role === 'DONOR') {
           navigate('/donor/dashboard');
         } else if (role === 'BLOOD_BANK') {
-          navigate('/bank');
+          navigate('/bloodbank/dashboard');
         } else if (role === 'ORGANIZING_COMMITTEE') {
-          navigate('/committee');
+          navigate('/committee/dashboard');
         } else {
           navigate('/');
         }

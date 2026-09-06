@@ -69,13 +69,14 @@ BEGIN
 END GET_BANK_TRANSFERS;
 /
 
-/* Receive a transfer (mark as RECEIVED) */
+/* Receive a donation transfer from a committee */
 CREATE OR REPLACE PROCEDURE RECEIVE_TRANSFER (
     p_user_id     IN NUMBER,
     p_transfer_id IN NUMBER
 )
 IS
     v_bank_id BLOOD_BANK.BLOOD_BANK_ID%TYPE;
+    v_rowcount NUMBER;
 BEGIN
     SELECT BLOOD_BANK_ID INTO v_bank_id
     FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE = 'BLOOD_BANK';
@@ -86,6 +87,35 @@ BEGIN
     WHERE TRANSFER_ID = p_transfer_id
       AND BLOOD_BANK_ID = v_bank_id
       AND STATUS IN ('DISPATCHED', 'IN_TRANSIT');
+
+    v_rowcount := SQL%ROWCOUNT;
+
+    IF v_rowcount > 0 THEN
+        INSERT INTO BLOOD_UNIT (
+            BLOOD_BANK_ID,
+            DONATION_ID,
+            TRANSFER_ID,
+            UNIT_CODE,
+            BLOOD_GROUP,
+            COLLECTION_DATE,
+            RECEIVED_DATE,
+            EXPIRY_DATE,
+            STATUS
+        )
+        SELECT
+            v_bank_id,
+            dr.DONATION_ID,
+            p_transfer_id,
+            'BU-' || TO_CHAR(SYSDATE, 'YYYYMMDD') || '-' || dr.DONATION_ID || '-' || p_transfer_id,
+            dr.BLOOD_GROUP,
+            dr.DONATION_DATE,
+            TRUNC(SYSDATE),
+            dr.DONATION_DATE + 42,
+            'AVAILABLE'
+        FROM DONATION_TRANSFER_ITEM dti
+        JOIN DONATION_RECORD dr ON dti.DONATION_ID = dr.DONATION_ID
+        WHERE dti.TRANSFER_ID = p_transfer_id;
+    END IF;
 
 END RECEIVE_TRANSFER;
 /
