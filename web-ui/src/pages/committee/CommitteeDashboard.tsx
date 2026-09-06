@@ -50,6 +50,12 @@ const CommitteeDashboard = () => {
         </div>
 
         <div className="p-space-xl rounded-2xl bg-surface-container-lowest border border-surface-container flex flex-col gap-space-md">
+          <span className="font-label text-sm text-secondary uppercase">Active Venues</span>
+          <span className="font-heading text-4xl font-bold text-[#059669]">{stats?.activeVenues}</span>
+          <Link to="/committee/venues" className="inline-block mt-space-sm px-space-md py-space-sm rounded-lg font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-all">Manage Venues</Link>
+        </div>
+
+        <div className="p-space-xl rounded-2xl bg-surface-container-lowest border border-surface-container flex flex-col gap-space-md">
           <span className="font-label text-sm text-secondary uppercase">Active Camps</span>
           <span className="font-heading text-4xl font-bold text-primary">{stats?.activeCamps}</span>
           <Link to="/committee/camps" className="inline-block mt-space-sm px-space-md py-space-sm rounded-lg font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-all">Manage Camps </Link>
@@ -59,12 +65,6 @@ const CommitteeDashboard = () => {
           <span className="font-label text-sm text-secondary uppercase">Pending Transfers</span>
           <span className="font-heading text-4xl font-bold text-[#D97706]">{stats?.pendingTransfers}</span>
           <Link to="/committee/transfers" className="inline-block mt-space-sm px-space-md py-space-sm rounded-lg font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-all">View Transfers </Link>
-        </div>
-
-        <div className="p-space-xl rounded-2xl bg-surface-container-lowest border border-surface-container flex flex-col gap-space-md">
-          <span className="font-label text-sm text-secondary uppercase">Active Venues</span>
-          <span className="font-heading text-4xl font-bold text-[#059669]">{stats?.activeVenues}</span>
-          <Link to="/committee/venues" className="inline-block mt-space-sm px-space-md py-space-sm rounded-lg font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-all">Manage Venues</Link>
         </div>
       </div>
 

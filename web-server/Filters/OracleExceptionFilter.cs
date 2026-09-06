@@ -41,6 +41,11 @@ public class OracleExceptionFilter : IExceptionFilter
                 context.Result = new NotFoundObjectResult(ApiResponse<object>.Error("The requested record was not found or you do not have permission to access it. (ORA-01403)"));
                 context.ExceptionHandled = true;
             }
+            else if (ex.Number >= 20000 && ex.Number <= 20999) // Custom application errors
+            {
+                context.Result = new BadRequestObjectResult(ApiResponse<object>.Error(ex.Message));
+                context.ExceptionHandled = true;
+            }
         }
     }
 }

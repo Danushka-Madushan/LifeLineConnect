@@ -123,34 +123,36 @@ const CommitteeCamps = () => {
             <h2 className="font-heading text-2xl font-bold text-on-surface mb-space-lg">Schedule New Camp</h2>
             <form onSubmit={handleSubmit} className="flex flex-col gap-space-md">
               <div className="flex flex-col gap-space-xs">
-                <label className="text-xs font-bold">Camp Title</label>
-                <input required value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="border rounded p-2" />
+                <label className="text-xs font-bold text-secondary">Camp Title</label>
+                <input required value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="border border-surface-container rounded-lg p-2 bg-transparent" />
               </div>
               <div className="flex flex-col gap-space-xs">
-                <label className="text-xs font-bold">Venue</label>
-                <select required value={form.venueId} onChange={e => setForm({...form, venueId: e.target.value})} className="border rounded p-2">
+                <label className="text-xs font-bold text-secondary">Venue</label>
+                <select required value={form.venueId} onChange={e => setForm({...form, venueId: e.target.value})} className="border border-surface-container rounded-lg p-2 bg-transparent">
                   <option value="">-- Select Venue --</option>
                   {venues.map(v => <option key={v.venueId} value={v.venueId}>{v.venueName} (Cap: {v.capacity})</option>)}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-space-md">
                 <div className="flex flex-col gap-space-xs">
-                  <label className="text-xs font-bold">Date</label>
-                  <input type="date" required value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="border rounded p-2" />
+                  <label className="text-xs font-bold text-secondary">Date</label>
+                  <input type="date" required value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="border border-surface-container rounded-lg p-2 bg-transparent" />
                 </div>
                 <div className="flex flex-col gap-space-xs">
-                  <label className="text-xs font-bold">Donor Capacity</label>
-                  <input type="number" min="1" required value={form.capacity} onChange={e => setForm({...form, capacity: parseInt(e.target.value)})} className="border rounded p-2" />
+                  <label className="text-xs font-bold text-secondary">
+                    Donor Capacity {form.venueId && venues.find(v => v.venueId.toString() === form.venueId) ? `(Max: ${venues.find(v => v.venueId.toString() === form.venueId)?.capacity})` : ''}
+                  </label>
+                  <input type="number" min="1" max={form.venueId ? venues.find(v => v.venueId.toString() === form.venueId)?.capacity : undefined} required value={form.capacity} onChange={e => setForm({...form, capacity: parseInt(e.target.value)})} className="border border-surface-container rounded-lg p-2 bg-transparent" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-space-md">
                 <div className="flex flex-col gap-space-xs">
-                  <label className="text-xs font-bold">Start Time</label>
-                  <input type="time" required value={form.startTime} onChange={e => setForm({...form, startTime: e.target.value})} className="border rounded p-2" />
+                  <label className="text-xs font-bold text-secondary">Start Time</label>
+                  <input type="time" required value={form.startTime} onChange={e => setForm({...form, startTime: e.target.value})} className="border border-surface-container rounded-lg p-2 bg-transparent" />
                 </div>
                 <div className="flex flex-col gap-space-xs">
-                  <label className="text-xs font-bold">End Time</label>
-                  <input type="time" required value={form.endTime} onChange={e => setForm({...form, endTime: e.target.value})} className="border rounded p-2" />
+                  <label className="text-xs font-bold text-secondary">End Time</label>
+                  <input type="time" required value={form.endTime} onChange={e => setForm({...form, endTime: e.target.value})} className="border border-surface-container rounded-lg p-2 bg-transparent" />
                 </div>
               </div>
               <div className="flex justify-end gap-space-md mt-space-md">

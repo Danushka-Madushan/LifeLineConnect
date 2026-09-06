@@ -55,9 +55,17 @@ CREATE OR REPLACE PROCEDURE CREATE_DONATION_CAMP (
 )
 IS
     v_committee_id ORGANIZING_COMMITTEE.COMMITTEE_ID%TYPE;
+    v_venue_cap    VENUE.CAPACITY%TYPE;
 BEGIN
     SELECT COMMITTEE_ID INTO v_committee_id
     FROM USER_ROLE_LINK WHERE USER_ID = p_user_id AND ROLE_CODE = 'ORGANIZING_COMMITTEE';
+
+    SELECT CAPACITY INTO v_venue_cap
+    FROM VENUE WHERE VENUE_ID = p_venue_id;
+
+    IF p_capacity > v_venue_cap THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Camp capacity cannot exceed venue capacity (' || v_venue_cap || ').');
+    END IF;
 
     INSERT INTO DONATION_CAMP (COMMITTEE_ID, VENUE_ID, CAMP_TITLE, CAMP_DATE, START_TIME, END_TIME, CAPACITY, STATUS, PUBLIC_VISIBLE)
     VALUES (v_committee_id, p_venue_id, p_title, p_date, p_start, p_end, p_capacity, 'PUBLISHED', 'Y')
