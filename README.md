@@ -1,128 +1,223 @@
 <div align="center">
+  <br />
   <a href="https://github.com/Danushka-Madushan/LifeLineConnect">
-    <img src="./web-ui/public/favicon.svg" alt="LifeLineConnect Logo" width="120" />
+    <img src="./web-ui/public/favicon.svg" alt="LifeLineConnect" width="100" />
   </a>
-  
-  <h1 align="center">LifeLineConnect</h1>
 
-  <p align="center">
-    <strong>An Enterprise-Grade Blood Donation & Logistics Management System</strong>
-    <br />
-    A comprehensive solution bridging the gap between Blood Banks, Hospitals, Organizing Committees, and Donors.
+  <h1>LifeLineConnect</h1>
+  <p><strong>Blood Donation &amp; Supply Chain Management Platform</strong></p>
+  <p>
+    Connecting donors, blood banks, hospitals, and organizing committees<br />
+    through a unified, real‑time healthcare logistics system.
   </p>
 
-  <p align="center">
-    <img src="https://img.shields.io/badge/.NET-10.0-512BD4?style=for-the-badge&logo=dotnet" alt=".NET 10" />
-    <img src="https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" />
-    <img src="https://img.shields.io/badge/Oracle-21c-F80000?style=for-the-badge&logo=oracle&logoColor=white" alt="Oracle 21c" />
-    <img src="https://img.shields.io/badge/MongoDB-NoSQL-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
-    <img src="https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+  <br />
+
+  <p>
+    <img src="https://img.shields.io/badge/.NET_10-512BD4?style=flat-square&logo=dotnet&logoColor=white" />
+    <img src="https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black" />
+    <img src="https://img.shields.io/badge/Oracle_21c-F80000?style=flat-square&logo=oracle&logoColor=white" />
+    <img src="https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white" />
+    <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" />
+    <img src="https://img.shields.io/badge/Tailwind_v4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" />
   </p>
+
+  <br />
 </div>
 
-<hr />
+---
 
-## 📖 Overview
+## Overview
 
-**LifeLineConnect** is a robust, full-stack enterprise application designed to streamline the entire lifecycle of blood donation, storage, request, and allocation. Built on a high-performance **.NET 10** micro-architecture, backed by the industrial strength of **Oracle 21c Database**, and featuring a lightning-fast **React 19 + Vite** frontend, LifeLineConnect guarantees seamless interoperability among medical supply chain stakeholders.
+LifeLineConnect is a full‑stack platform that manages the complete blood donation lifecycle — from donor registration and camp scheduling through collection, transportation, and hospital allocation.
+
+The system integrates four stakeholder groups under a single application:
+
+- **System administrators** – oversight of the entire platform, audit logs, and backups.
+- **Blood bank operators** – real‑time inventory, receipt of transfers, and fulfillment of hospital requests.
+- **Organizing committees** – venue management, camp planning, and coordination of donations.
+- **Donors** – personal dashboard, donation history, and community engagement.
+
+All database interactions are performed via PL/SQL stored procedures; there is no inline SQL in the application code.
+
+**Project metrics (as of current build):**
+
+| Metric | Count |
+|:---|:---|
+| Oracle tables | 23 |
+| PL/SQL procedures & functions | 57 |
+| REST API endpoints | 90 |
+| Frontend views | 31 |
+| Audit triggers | 3 |
 
 ## Key Features
 
-- **Secure RBAC Architecture**: Granular Role-Based Access Control (JWT) isolating Webmasters, Blood Banks, Organizing Committees, and Donors.
-- **Live Inventory & Allocation**: Real-time blood unit tracking, automatic expiry calculation (42 days), and hospital request fulfillment.
-- **Global Hospital Requests**: Unified hospital blood-request board visible to all networked blood banks for rapid emergency response.
-- **Secure Chain of Custody**: Advanced donation transfer logistics, securely tracking batches of blood units from donation camps to regional blood banks.
-- **Automated Medical Checks**: Database-level PL/SQL evaluation of donor medical questionnaires to instantly determine eligibility.
-- **Enterprise PDF Reporting**: On-the-fly, high-fidelity PDF report generation powered by QuestPDF (Audit logs, Inventory reports, Camp stats).
-- **Oracle Audit Triggers**: Strict row-level auditing managed silently and immutably via Oracle DB triggers.
+- Secure RBAC architecture with JWT‑based authentication.
+- Live inventory tracking with automatic expiry handling (42‑day shelf life).
+- Global hospital request board – any hospital may request, any bank with stock may fulfill.
+- End‑to‑end chain of custody for donation transfers.
+- Server‑side medical eligibility checks using PL/SQL.
+- High‑quality PDF reporting powered by QuestPDF.
+- Comprehensive audit trail via Oracle triggers.
 
-## Technology Stack
+## Architecture
 
-### Frontend (Client Tier)
-- **React 19** & **TypeScript 6** - UI Components & Logic
-- **Vite 8** - Ultra-fast HMR and build tooling
-- **Tailwind CSS v4** - Utility-first modern styling
-- **React Router v7** - Declarative client-side routing
-- **Axios** - Interceptor-managed API communications
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Client Tier                            │
+│         React 19 · TypeScript · Tailwind CSS v4             │
+│                    Vite 8 · Axios                           │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ HTTP / JWT
+┌──────────────────────────▼──────────────────────────────────┐
+│                       API Tier                              │
+│          ASP.NET Core (.NET 10) · RESTful JSON              │
+│      BCrypt · QuestPDF · JWT Bearer Authentication          │
+└────────────┬───────────────────────────────┬────────────────┘
+             │ ODP.NET (Stored Procedures)   │ MongoDB Driver
+┌────────────▼──────────────┐  ┌─────────────▼────────────────┐
+│       Oracle 21c XE       │  │          MongoDB             │
+│  Tables · Procedures      │  │  Community threads           │
+│  Functions · Triggers     │  │  Feedback · Leaderboards     │
+│  REF Cursors · Auditing   │  │  Appeals · Analytics         │
+└───────────────────────────┘  └──────────────────────────────┘
+```
 
-### Backend (API Tier)
-- **C# .NET 10** - ASP.NET Core Web API
-- **JWT Bearer Authentication** - Stateless, secure authorization
-- **QuestPDF** - Document creation & analytical reporting
-- **BCrypt.Net-Next** - Cryptographic password hashing
+## What Each Role Can Do
 
-### Database (Data Tier)
-- **Oracle 21c Express Edition** - Primary relational data store (Procedures, Triggers, Ref Cursors)
-- **MongoDB 7+** - Document store used for lightning-fast caching, leaderboards, and telemetry
+**Donor Portal**
+- Dashboard with donation history and eligibility status.
+- Medical questionnaire evaluated server‑side via PL/SQL.
+- Discover upcoming camps, register for slots, and receive notifications.
+- Participate in a community Q&A forum (MongoDB‑backed).
+
+**Blood Bank Operations**
+- Real‑time inventory with expiry monitoring.
+- Receive donation transfers and unpack them into tracked units.
+- Global hospital request board – any hospital can request, any bank can allocate.
+- Allocate units against pending requests with prioritisation.
+- Manage medical staff assignments.
+- Export PDF reports for inventory and request status.
+
+**Organizing Committee**
+- Register and manage venues.
+- Plan donation camps with target blood‑group goals.
+- Record donor registrations and on‑site donations.
+- Dispatch blood transfers to banks with item‑level tracking.
+- Assign and schedule staff across camps.
+- Export camp performance and transfer reports as PDFs.
+
+**System Administration**
+- Full audit trail using Oracle triggers.
+- One‑click Oracle schema backup and MongoDB collection export.
+- System‑wide analytics covering users, banks, committees, and community activity.
+- Generate PDF reports for any data domain.
 
 ## Project Structure
 
-```text
+```
 LifeLineConnect/
-├── db/                        # Oracle PL/SQL Scripts
-│   ├── scripts/               # Triggers, Procedures, & Functions
-│   └── docs/                  # Architectural Schemas
-├── web-server/                # .NET 10 Backend
-│   ├── Controllers/           # RESTful API Endpoints
-│   ├── Models/                # C# DTOs and Data Models
-│   ├── Filters/               # Custom Exception Handling
-│   └── Program.cs             # Pipeline & Dependency Injection
-└── web-ui/                    # React Frontend
-    ├── public/                # Static assets (Favicon, SVGs)
-    ├── src/                   # React source code
-    │   ├── components/        # Reusable UI elements (Layouts, Modals)
-    │   ├── pages/             # Role-based views (BankDashboard, etc.)
-    │   └── lib/               # Utility functions (Axios setup)
-    └── package.json           # Frontend dependencies
+├── db/
+│   └── scripts/                 # 17 PL/SQL files (procedures, functions, triggers)
+├── docs/                        # Architecture docs, Postman collection, design assets
+├── web-server/                  # .NET 10 Web API
+│   ├── Controllers/             # 7 controllers (Auth, Donor, BloodBank, Committee, ...)
+│   ├── Data/                    # Oracle & MongoDB connection providers
+│   ├── Filters/                 # Global exception handling (OracleExceptionFilter)
+│   ├── Middlewares/             # Request pipeline middleware
+│   └── Models/                  # DTOs grouped by domain
+└── web-ui/                      # React 19 SPA
+    └── src/
+        ├── components/          # Shared layouts, navigation, route guards
+        ├── contexts/            # Auth context provider
+        ├── hooks/               # Custom React hooks
+        ├── lib/                 # Axios instance with JWT interceptor
+        └── pages/               # 31 views across 5 role‑based modules
 ```
 
 ## Getting Started
 
-### 1. Prerequisites
-- **Oracle Database 21c XE** installed and running on `localhost`.
-- **MongoDB** running locally on default port `27017`.
-- **.NET 10.0 SDK**.
-- **Node.js** (v22+) and npm.
+### Prerequisites
 
-### 2. Database Setup (Oracle)
-1. Log into your Oracle instance as `SYSDBA`.
-2. Create the workspace by executing the master schema file:
-   `db/scripts/00_schema.sql` (Note: Ensure the `LLC_ADMIN` user is created with appropriate quotas).
-3. Execute the remaining procedure files in `db/scripts/` (01 through 11) to generate the business logic layer.
+| Dependency | Version |
+|:---|:---|
+| Oracle Database XE | 21c |
+| MongoDB | 7+ |
+| .NET SDK | 10.0 |
+| Node.js | 22+ |
 
-### 3. Backend Setup (.NET Core)
+### Database Setup (Oracle)
+
+```bash
+# Connect as SYSDBA and create the pluggable database
+sqlplus sys/password@localhost/LifeLineConnect_PDB as sysdba
+@db/scripts/pdb_permissions.sql
+
+# Connect as LLC_ADMIN and run all scripts in order (01 through 11)
+sqlplus LLC_ADMIN/admin@localhost/LifeLineConnect_PDB
+@db/scripts/01_auth_procedures.sql
+@db/scripts/02_donor_procedures.sql
+# ... continue through 11_audit_triggers.sql
+```
+
+### Backend Setup (.NET)
+
 ```bash
 cd web-server
-# Ensure all dependencies are restored
 dotnet restore
-# Run the development server (Defaults to http://localhost:5068)
-dotnet run
+dotnet run                    # → http://localhost:5068
 ```
 
-### 4. Frontend Setup (React)
+### Frontend Setup (React)
+
 ```bash
 cd web-ui
-# Install dependencies
 npm install
-# Start Vite development server
-npm run dev
+npm run dev                   # → http://localhost:5173
 ```
-Visit `http://localhost:5173` in your browser.
 
-## 👥 Core User Roles
+## API Overview
 
-| Role | Capabilities |
-| :--- | :--- |
-| **Webmaster** | Full system oversight, comprehensive audit log PDF extraction, database backups (Oracle/Mongo snapshotting), and global community analytics. |
-| **Blood Bank** | Inventory control, medical staff management, receiving committee transfers, and allocating blood to hospital requests. |
-| **Committee** | Venue registration, camp scheduling, public appeals, donor registrations, and dispatching blood transfers to banks. |
-| **Donor** | Personal dashboard, donation history, medical questionnaires, booking camp slots, and community Q&A. |
+| Controller | Prefix | Purpose | Auth |
+|:---|:---|:---|:---|
+| `AuthController` | `/api/auth` | Login, Register, Profile | Public / JWT |
+| `DonorController` | `/api/donors` | Dashboard, Donations, Medical, Feedback | Donor |
+| `BloodBankController` | `/api/blood-bank` | Inventory, Transfers, Hospital Requests, Staff | Blood Bank |
+| `CommitteeController` | `/api/committee` | Venues, Camps, Registrations, Transfers, Staff | Committee |
+| `WebmasterController` | `/api/webmaster` | Audit, Backups, Reports, Management | Webmaster |
+| `PublicController` | `/api/public` | Home Stats, Camps, Appeals, Community | Public |
+| `NotificationController` | `/api/notifications` | User Notification Feed | JWT |
+
+A full Postman collection is available at [`docs/LifeLineConnect_Postman_Collection.json`](./docs/LifeLineConnect_Postman_Collection.json).
+
+## Tech Stack
+
+| Layer | Technology | Purpose |
+|:---|:---|:---|
+| Frontend | React 19, TypeScript, Vite 8 | Component‑based SPA |
+| Styling | Tailwind CSS v4 | Utility‑first design system |
+| Routing | React Router v7 | Client‑side navigation |
+| HTTP | Axios | API communication with JWT interceptors |
+| Backend | ASP.NET Core (.NET 10) | RESTful API |
+| Auth | JWT Bearer + BCrypt | Stateless authentication |
+| Reporting | QuestPDF | Server‑side PDF generation |
+| Database | Oracle 21c XE | Transactional data, business logic in PL/SQL |
+| NoSQL | MongoDB | Community content, analytics |
 
 ## License
 
-This project is proprietary and developed as part of the SE DM2 Module. All rights reserved by **Danushka Madushan**.
+This project is proprietary and was developed as part of the Database Management II module (HDSE 26.1) at the National Institute of Business Management (NIBM). All rights reserved by **Danushka Madushan**.
 
 ---
+
 <div align="center">
-  <i>Developed with ❤️ for a better healthcare logistics future.</i>
+  <br />
+  <img src="./web-ui/public/favicon.svg" alt="LifeLineConnect" width="28" />
+  <br /><br />
+  <p>
+    LifeLineConnect was built to make blood donation logistics simpler, faster, and more transparent.<br />
+    From scheduling a camp to saving a life at a hospital — every unit is tracked, every step is audited, and every stakeholder stays connected.
+  </p>
+  <p>Developed with love by <a href="https://github.com/Danushka-Madushan">Danushka Madushan</a></p>
+  <br />
 </div>
