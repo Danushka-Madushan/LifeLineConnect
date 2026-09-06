@@ -448,7 +448,7 @@ public class CommitteeController : ControllerBase
                     {
                         row.RelativeItem().Column(col =>
                         {
-                            col.Item().Text($"LIFELINECONNECT · {commName.ToUpper()}").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Red.Medium);
+                            col.Item().PaddingBottom(2).Text($"LIFELINECONNECT · {commName.ToUpper()}").Bold().FontSize(9).FontColor(QuestPDF.Helpers.Colors.Red.Medium);
                             if (!string.IsNullOrEmpty(commCode))
                             {
                                 col.Item().PaddingBottom(2).Text($"Code: {commCode} | Email: {commEmail} | Phone: {commPhone}").FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
