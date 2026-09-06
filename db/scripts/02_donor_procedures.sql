@@ -1,13 +1,9 @@
--- ================================================================
--- Donor Procedures
--- Blood Donation System — Oracle 21c PL/SQL
--- ================================================================
-
--- Get donor dashboard summary
+/* Get donor dashboard summary */
 CREATE OR REPLACE PROCEDURE GET_DONOR_DASHBOARD (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
     v_donor_id NUMBER;
 BEGIN
     SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID = p_user_id;
@@ -25,13 +21,14 @@ BEGIN
 END GET_DONOR_DASHBOARD;
 /
 
--- Check donor eligibility (56-day rule and medical check)
+/* Check donor eligibility (56 day and medical check) */
 CREATE OR REPLACE PROCEDURE CHECK_DONOR_ELIGIBILITY (
     p_user_id   IN  NUMBER,
     p_eligible  OUT NUMBER,
     p_reason    OUT VARCHAR2,
     p_next_date OUT DATE
-) AS
+)
+IS
     v_donor_id       DONOR.DONOR_ID%TYPE;
     v_last_donation  DONATION_RECORD.DONATION_DATE%TYPE;
     v_days_since     NUMBER;
@@ -82,11 +79,12 @@ BEGIN
 END CHECK_DONOR_ELIGIBILITY;
 /
 
--- Get donor profile
+/* Get donor profile */
 CREATE OR REPLACE PROCEDURE GET_DONOR_PROFILE (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
 BEGIN
     OPEN p_result_cursor FOR
         SELECT d.DONOR_ID, d.FULL_NAME, d.NIC, d.DATE_OF_BIRTH, d.GENDER,
@@ -96,7 +94,7 @@ BEGIN
 END GET_DONOR_PROFILE;
 /
 
--- Update donor profile
+/* Update donor profile */
 CREATE OR REPLACE PROCEDURE UPDATE_DONOR_PROFILE (
     p_user_id     IN VARCHAR2,
     p_full_name   IN VARCHAR2,
@@ -105,7 +103,8 @@ CREATE OR REPLACE PROCEDURE UPDATE_DONOR_PROFILE (
     p_address     IN VARCHAR2,
     p_blood_group IN VARCHAR2,
     p_gender      IN VARCHAR2
-) AS
+)
+IS
 BEGIN
     UPDATE DONOR
     SET FULL_NAME   = p_full_name,
@@ -116,23 +115,24 @@ BEGIN
         GENDER      = p_gender,
         UPDATED_AT  = SYSTIMESTAMP
     WHERE USER_ID = p_user_id;
-    COMMIT;
+
 END UPDATE_DONOR_PROFILE;
 /
 
--- Register donor for a camp
+/* Register donor for a camp */
 CREATE OR REPLACE PROCEDURE REGISTER_DONOR_FOR_CAMP (
     p_user_id         IN  NUMBER,
     p_camp_id         IN  NUMBER,
     p_registration_id OUT NUMBER,
     p_status          OUT VARCHAR2
-) AS
+)
+IS
     v_donor_id NUMBER;
     v_existing NUMBER;
 BEGIN
     SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID = p_user_id;
 
-    -- Check for duplicate registration
+    /* Check for duplicate registration */
     SELECT COUNT(*) INTO v_existing
     FROM CAMP_REGISTRATION
     WHERE CAMP_ID = p_camp_id AND DONOR_ID = v_donor_id;
@@ -148,19 +148,15 @@ BEGIN
     RETURNING REGISTRATION_ID INTO p_registration_id;
 
     p_status := 'REGISTERED';
-    COMMIT;
-EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE;
 END REGISTER_DONOR_FOR_CAMP;
 /
 
--- Get donor upcoming registrations
+/* Get donor upcoming registrations */
 CREATE OR REPLACE PROCEDURE GET_DONOR_UPCOMING_REGISTRATIONS (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
     v_donor_id NUMBER;
 BEGIN
     SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID = p_user_id;
@@ -179,11 +175,12 @@ BEGIN
 END GET_DONOR_UPCOMING_REGISTRATIONS;
 /
 
--- Get donor donation history
+/* Get donor donation history */
 CREATE OR REPLACE PROCEDURE GET_DONOR_DONATION_HISTORY (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
     v_donor_id NUMBER;
 BEGIN
     SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID = p_user_id;
@@ -201,11 +198,12 @@ BEGIN
 END GET_DONOR_DONATION_HISTORY;
 /
 
--- Check if donor can submit feedback for a camp
+/* Check if donor can submit feedback for a camp */
 CREATE OR REPLACE FUNCTION FN_CAN_SUBMIT_FEEDBACK (
     p_user_id  IN  NUMBER,
     p_camp_id  IN  NUMBER
-) RETURN NUMBER AS
+) RETURN NUMBER
+IS
     v_donor_id NUMBER;
     v_count    NUMBER;
     v_allowed  NUMBER;
@@ -227,11 +225,12 @@ BEGIN
 END FN_CAN_SUBMIT_FEEDBACK;
 /
 
--- Get donor status history (timeline of registrations and donations)
+/* Get donor status history (timeline of registrations and donations) */
 CREATE OR REPLACE PROCEDURE GET_DONOR_STATUS_HISTORY (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
-) AS
+)
+IS
     v_donor_id NUMBER;
 BEGIN
     SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID = p_user_id;
