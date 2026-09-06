@@ -66,11 +66,11 @@ public class CommitteeController : ControllerBase
         using var connection = _oracleDb.CreateConnection() as OracleConnection;
         connection!.Open();
 
-        using var cmd = new OracleCommand("GET_COMMITTEE_VENUES", connection);
+        using var cmd = new OracleCommand("FN_GET_COMMITTEE_VENUES", connection);
         cmd.CommandType = CommandType.StoredProcedure;
-        cmd.Parameters.Add("p_user_id", OracleDbType.Decimal).Value = GetCurrentUserId();
-        var pResult = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+        var pResult = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.ReturnValue };
         cmd.Parameters.Add(pResult);
+        cmd.Parameters.Add("p_user_id", OracleDbType.Decimal).Value = GetCurrentUserId();
 
         cmd.ExecuteNonQuery();
         using var reader = ((OracleRefCursor)pResult.Value).GetDataReader();
