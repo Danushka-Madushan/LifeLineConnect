@@ -232,6 +232,29 @@ public class BloodBankController : ControllerBase
         return ApiResponse<List<HospitalRequestDto>>.Ok(list);
     }
 
+    [HttpPost("hospital-requests")]
+    public ActionResult<ApiResponse<object>> CreateHospitalRequest([FromBody] CreateHospitalRequestDto req)
+    {
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+
+        using var cmd = new OracleCommand("CREATE_HOSPITAL_REQUEST", connection);
+        cmd.CommandType = CommandType.StoredProcedure;
+        
+        cmd.Parameters.Add("p_hospital_name", OracleDbType.Varchar2).Value = req.HospitalName;
+        cmd.Parameters.Add("p_blood_group", OracleDbType.Varchar2).Value = req.BloodGroup;
+        cmd.Parameters.Add("p_units", OracleDbType.Decimal).Value = req.UnitsRequired;
+        cmd.Parameters.Add("p_priority", OracleDbType.Varchar2).Value = req.Priority;
+        cmd.Parameters.Add("p_needed_by", OracleDbType.Date).Value = req.NeededBy;
+        
+        var pRequestId = new OracleParameter("p_request_id", OracleDbType.Decimal) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(pRequestId);
+
+        cmd.ExecuteNonQuery();
+
+        return ApiResponse<object>.Ok(new { RequestId = pRequestId.Value }, "Global hospital blood request created successfully. Any bank can now allocate units to this request.");
+    }
+
     [HttpPost("hospital-requests/{requestId}/allocate")]
     public ActionResult<ApiResponse<string>> AllocateUnits(int requestId)
     {

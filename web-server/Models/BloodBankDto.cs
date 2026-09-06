@@ -52,6 +52,15 @@ namespace web_server.Models
         public string Status { get; set; } = string.Empty;
     }
 
+    public class CreateHospitalRequestDto
+    {
+        public string HospitalName { get; set; } = string.Empty;
+        public string BloodGroup { get; set; } = string.Empty;
+        public decimal UnitsRequired { get; set; }
+        public string Priority { get; set; } = string.Empty;
+        public DateTime NeededBy { get; set; }
+    }
+
     public class BankStaffDto
     {
         public int StaffId { get; set; }

@@ -120,7 +120,7 @@ BEGIN
 END RECEIVE_TRANSFER;
 /
 
-/* Get hospital blood requests for a bank */
+/* Get pending hospital requests for a blood bank */
 CREATE OR REPLACE PROCEDURE GET_BANK_HOSPITAL_REQUESTS (
     p_user_id       IN  NUMBER,
     p_result_cursor OUT SYS_REFCURSOR
@@ -137,7 +137,7 @@ BEGIN
             hr.NEEDED_BY, hr.PRIORITY, hr.STATUS
         FROM HOSPITAL_BLOOD_REQUEST hr
         JOIN HOSPITAL h ON hr.HOSPITAL_ID = h.HOSPITAL_ID
-        WHERE hr.BLOOD_BANK_ID = v_bank_id
+        WHERE (hr.BLOOD_BANK_ID = v_bank_id OR hr.BLOOD_BANK_ID IS NULL)
         ORDER BY
             CASE hr.PRIORITY
                 WHEN 'CRITICAL' THEN 1
@@ -148,6 +148,52 @@ BEGIN
             END,
         hr.NEEDED_BY ASC;
 END GET_BANK_HOSPITAL_REQUESTS;
+/
+
+/* Create a new public hospital request */
+CREATE OR REPLACE PROCEDURE CREATE_HOSPITAL_REQUEST (
+    p_hospital_name  IN VARCHAR2,
+    p_blood_group    IN VARCHAR2,
+    p_units          IN NUMBER,
+    p_priority       IN VARCHAR2,
+    p_needed_by      IN DATE,
+    p_request_id     OUT NUMBER
+)
+IS
+    v_hospital_id NUMBER;
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO v_count FROM HOSPITAL WHERE HOSPITAL_NAME = p_hospital_name;
+    IF v_count = 0 THEN
+        INSERT INTO HOSPITAL (HOSPITAL_CODE, HOSPITAL_NAME)
+        VALUES ('HOSP-' || TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), p_hospital_name)
+        RETURNING HOSPITAL_ID INTO v_hospital_id;
+    ELSE
+        SELECT HOSPITAL_ID INTO v_hospital_id FROM HOSPITAL WHERE HOSPITAL_NAME = p_hospital_name FETCH FIRST 1 ROWS ONLY;
+    END IF;
+
+    INSERT INTO HOSPITAL_BLOOD_REQUEST (
+        REQUEST_CODE,
+        HOSPITAL_ID,
+        BLOOD_BANK_ID,
+        BLOOD_GROUP,
+        UNITS_REQUIRED,
+        NEEDED_BY,
+        PRIORITY,
+        STATUS
+    )
+    VALUES (
+        'REQ-' || TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),
+        v_hospital_id,
+        NULL,
+        p_blood_group,
+        p_units,
+        p_needed_by,
+        p_priority,
+        'PENDING'
+    )
+    RETURNING REQUEST_ID INTO p_request_id;
+END CREATE_HOSPITAL_REQUEST;
 /
 
 /* Get staff assigned to a blood bank */
