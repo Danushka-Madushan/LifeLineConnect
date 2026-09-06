@@ -202,13 +202,13 @@ END GET_DONOR_DONATION_HISTORY;
 /
 
 -- Check if donor can submit feedback for a camp
-CREATE OR REPLACE PROCEDURE CAN_SUBMIT_FEEDBACK (
+CREATE OR REPLACE FUNCTION FN_CAN_SUBMIT_FEEDBACK (
     p_user_id  IN  NUMBER,
-    p_camp_id  IN  NUMBER,
-    p_allowed  OUT NUMBER
-) AS
+    p_camp_id  IN  NUMBER
+) RETURN NUMBER AS
     v_donor_id NUMBER;
     v_count    NUMBER;
+    v_allowed  NUMBER;
 BEGIN
     SELECT DONOR_ID INTO v_donor_id FROM DONOR WHERE USER_ID = p_user_id;
 
@@ -219,11 +219,12 @@ BEGIN
       AND STATUS = 'SUBMITTED';
 
     IF v_count > 0 THEN
-        p_allowed := 1;
+        v_allowed := 1;
     ELSE
-        p_allowed := 0;
+        v_allowed := 0;
     END IF;
-END CAN_SUBMIT_FEEDBACK;
+    RETURN v_allowed;
+END FN_CAN_SUBMIT_FEEDBACK;
 /
 
 -- Get donor status history (timeline of registrations and donations)
