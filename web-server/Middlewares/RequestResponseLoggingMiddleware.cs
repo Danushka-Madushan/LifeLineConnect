@@ -1,10 +1,5 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace web_server.Middlewares
 {
@@ -66,7 +61,20 @@ namespace web_server.Middlewares
         private async Task<string> FormatResponse(HttpResponse response)
         {
             response.Body.Seek(0, SeekOrigin.Begin);
-            string text = await new StreamReader(response.Body).ReadToEndAsync(); 
+            string text = string.Empty;
+
+            if (response.ContentType != null && (
+                response.ContentType.Contains("application/pdf") || 
+                response.ContentType.Contains("application/octet-stream") || 
+                response.ContentType.Contains("image/")))
+            {
+                text = $"[Binary Payload - {response.Body.Length} bytes]";
+            }
+            else
+            {
+                text = await new StreamReader(response.Body).ReadToEndAsync(); 
+            }
+
             response.Body.Seek(0, SeekOrigin.Begin);
 
             return $"Status: {response.StatusCode}\nResult: {text}";
