@@ -399,9 +399,9 @@ public class WebmasterController : ControllerBase
         {
             list.Add(new AuditLogDto
             {
-                LogId = Convert.ToInt32(reader["LOG_ID"]),
+                LogId = Convert.ToInt32(reader["AUDIT_ID"]),
                 ActorRoleCode = reader["ACTOR_ROLE_CODE"]?.ToString() ?? "",
-                ActorId = reader["ACTOR_ID"] != DBNull.Value ? Convert.ToInt32(reader["ACTOR_ID"]) : null,
+                ActorId = reader["ACTOR_USER_ID"] != DBNull.Value ? Convert.ToInt32(reader["ACTOR_USER_ID"]) : null,
                 ActionCode = reader["ACTION_CODE"]?.ToString() ?? "",
                 EntityType = reader["ENTITY_TYPE"]?.ToString() ?? "",
                 EntityId = reader["ENTITY_ID"] != DBNull.Value ? Convert.ToInt32(reader["ENTITY_ID"]) : null,
@@ -429,9 +429,9 @@ public class WebmasterController : ControllerBase
             {
                 list.Add(new AuditLogDto
                 {
-                    LogId = Convert.ToInt32(reader["LOG_ID"]),
+                    LogId = Convert.ToInt32(reader["AUDIT_ID"]),
                     ActorRoleCode = reader["ACTOR_ROLE_CODE"]?.ToString() ?? "",
-                    ActorId = reader["ACTOR_ID"] != DBNull.Value ? Convert.ToInt32(reader["ACTOR_ID"]) : null,
+                    ActorId = reader["ACTOR_USER_ID"] != DBNull.Value ? Convert.ToInt32(reader["ACTOR_USER_ID"]) : null,
                     ActionCode = reader["ACTION_CODE"]?.ToString() ?? "",
                     EntityType = reader["ENTITY_TYPE"]?.ToString() ?? "",
                     EntityId = reader["ENTITY_ID"] != DBNull.Value ? Convert.ToInt32(reader["ENTITY_ID"]) : null,
@@ -445,7 +445,7 @@ public class WebmasterController : ControllerBase
         {
             container.Page(page =>
             {
-                page.Size(QuestPDF.Helpers.PageSizes.A4.Landscape());
+                page.Size(QuestPDF.Helpers.PageSizes.A4);
                 page.Margin(1, QuestPDF.Infrastructure.Unit.Centimetre);
                 page.Header().Text("Audit Logs Export").SemiBold().FontSize(20).FontColor(QuestPDF.Helpers.Colors.Blue.Darken2);
                 

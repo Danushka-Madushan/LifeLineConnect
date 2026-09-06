@@ -2650,3 +2650,196 @@ cells:
 
       /\r\n"
     languageId: oracle-sql
+  - kind: 2
+    value: "CREATE OR REPLACE TRIGGER TRG_AUDIT_APP_USER\r
+
+      AFTER INSERT OR UPDATE OR DELETE ON APP_USER\r
+
+      FOR EACH ROW\r
+
+      DECLARE\r
+
+      \    v_action VARCHAR2(50);\r
+
+      \    v_details VARCHAR2(255);\r
+
+      \    v_id NUMBER;\r
+
+      BEGIN\r
+
+      \    IF INSERTING THEN\r
+
+      \        v_action := 'USER_CREATED';\r
+
+      \        v_details := 'Username: ' || :NEW.USERNAME;\r
+
+      \        v_id := :NEW.USER_ID;\r
+
+      \    ELSIF UPDATING THEN\r
+
+      \        v_action := 'USER_UPDATED';\r
+
+      \        v_details := 'Username: ' || :NEW.USERNAME;\r
+
+      \        v_id := :NEW.USER_ID;\r
+
+      \    ELSIF DELETING THEN\r
+
+      \        v_action := 'USER_DELETED';\r
+
+      \        v_details := 'Username: ' || :OLD.USERNAME;\r
+
+      \        v_id := :OLD.USER_ID;\r
+
+      \    END IF;\r
+
+      \    \r
+
+      \    INSERT INTO AUDIT_LOG (ACTOR_ROLE_CODE, ACTION_CODE, ENTITY_TYPE,
+      ENTITY_ID, DETAILS)\r
+
+      \    VALUES ('DB_TRIGGER', v_action, 'APP_USER', v_id, v_details);\r
+
+      END;\r
+
+      /\r
+
+      \r
+
+      CREATE OR REPLACE TRIGGER TRG_AUDIT_DONATION_CAMP\r
+
+      AFTER INSERT OR UPDATE OR DELETE ON DONATION_CAMP\r
+
+      FOR EACH ROW\r
+
+      DECLARE\r
+
+      \    v_action VARCHAR2(50);\r
+
+      \    v_details VARCHAR2(255);\r
+
+      \    v_id NUMBER;\r
+
+      BEGIN\r
+
+      \    IF INSERTING THEN\r
+
+      \        v_action := 'CAMP_CREATED';\r
+
+      \        v_details := 'Camp Title: ' || :NEW.CAMP_TITLE;\r
+
+      \        v_id := :NEW.CAMP_ID;\r
+
+      \    ELSIF UPDATING THEN\r
+
+      \        v_action := 'CAMP_UPDATED';\r
+
+      \        v_details := 'Camp Title: ' || :NEW.CAMP_TITLE;\r
+
+      \        v_id := :NEW.CAMP_ID;\r
+
+      \    ELSIF DELETING THEN\r
+
+      \        v_action := 'CAMP_DELETED';\r
+
+      \        v_details := 'Camp Title: ' || :OLD.CAMP_TITLE;\r
+
+      \        v_id := :OLD.CAMP_ID;\r
+
+      \    END IF;\r
+
+      \    \r
+
+      \    INSERT INTO AUDIT_LOG (ACTOR_ROLE_CODE, ACTION_CODE, ENTITY_TYPE,
+      ENTITY_ID, DETAILS)\r
+
+      \    VALUES ('DB_TRIGGER', v_action, 'DONATION_CAMP', v_id, v_details);\r
+
+      END;\r
+
+      /\r
+
+      \r
+
+      CREATE OR REPLACE TRIGGER TRG_AUDIT_BLOOD_UNIT\r
+
+      AFTER INSERT OR UPDATE OR DELETE ON BLOOD_UNIT\r
+
+      FOR EACH ROW\r
+
+      DECLARE\r
+
+      \    v_action VARCHAR2(50);\r
+
+      \    v_details VARCHAR2(255);\r
+
+      \    v_id NUMBER;\r
+
+      BEGIN\r
+
+      \    IF INSERTING THEN\r
+
+      \        v_action := 'UNIT_CREATED';\r
+
+      \        v_details := 'Unit Code: ' || :NEW.UNIT_CODE || ' Group: ' ||
+      :NEW.BLOOD_GROUP;\r
+
+      \        v_id := :NEW.BLOOD_UNIT_ID;\r
+
+      \    ELSIF UPDATING THEN\r
+
+      \        v_action := 'UNIT_UPDATED';\r
+
+      \        v_details := 'Unit Code: ' || :NEW.UNIT_CODE || ' Group: ' ||
+      :NEW.BLOOD_GROUP;\r
+
+      \        v_id := :NEW.BLOOD_UNIT_ID;\r
+
+      \    ELSIF DELETING THEN\r
+
+      \        v_action := 'UNIT_DELETED';\r
+
+      \        v_details := 'Unit Code: ' || :OLD.UNIT_CODE || ' Group: ' ||
+      :OLD.BLOOD_GROUP;\r
+
+      \        v_id := :OLD.BLOOD_UNIT_ID;\r
+
+      \    END IF;\r
+
+      \    \r
+
+      \    INSERT INTO AUDIT_LOG (ACTOR_ROLE_CODE, ACTION_CODE, ENTITY_TYPE,
+      ENTITY_ID, DETAILS)\r
+
+      \    VALUES ('DB_TRIGGER', v_action, 'BLOOD_UNIT', v_id, v_details);\r
+
+      END;\r
+
+      /\r
+
+      \r
+
+      CREATE OR REPLACE PROCEDURE GET_SYSTEM_AUDIT_LOGS(p_cursor OUT
+      SYS_REFCURSOR)\r
+
+      AS\r
+
+      BEGIN\r
+
+      \    OPEN p_cursor FOR\r
+
+      \    SELECT * FROM (\r
+
+      \        SELECT AUDIT_ID, ACTOR_ROLE_CODE, ACTOR_USER_ID, ACTION_CODE,
+      ENTITY_TYPE, ENTITY_ID, DETAILS, CREATED_AT\r
+
+      \        FROM AUDIT_LOG\r
+
+      \        ORDER BY CREATED_AT DESC\r
+
+      \    ) WHERE ROWNUM <= 200;\r
+
+      END;\r
+
+      /\r\n"
+    languageId: oracle-sql
