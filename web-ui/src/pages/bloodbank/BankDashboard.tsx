@@ -8,6 +8,7 @@ const BankDashboard = () => {
   
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hospitals, setHospitals] = useState<string[]>([]);
   const [requestForm, setRequestForm] = useState({
     hospitalName: '',
     bloodGroup: '',
@@ -21,6 +22,10 @@ const BankDashboard = () => {
       const res = await api.get('/blood-bank/dashboard');
       if (res.data.success) {
         setStats(res.data.data);
+      }
+      const hospRes = await api.get('/blood-bank/hospitals');
+      if (hospRes.data.success) {
+        setHospitals(hospRes.data.data);
       }
     } finally {
       setLoading(false);
@@ -122,8 +127,11 @@ const BankDashboard = () => {
             
             <form onSubmit={handleCreateRequest} className="flex flex-col gap-space-md">
               <div className="flex flex-col gap-space-xs">
-                <label className="font-label text-sm font-semibold">Hospital Name</label>
-                <input required type="text" value={requestForm.hospitalName} onChange={e => setRequestForm({...requestForm, hospitalName: e.target.value})} className="px-space-md py-space-sm border border-surface-container-high rounded-lg focus:outline-none focus:border-primary bg-surface" placeholder="e.g. General Hospital" />
+                <label className="font-label text-sm font-semibold">Requesting Hospital Name</label>
+                <input required type="text" list="hospital-list" value={requestForm.hospitalName} onChange={e => setRequestForm({...requestForm, hospitalName: e.target.value})} className="px-space-md py-space-sm border border-surface-container-high rounded-lg focus:outline-none focus:border-primary bg-surface" placeholder="e.g. General Hospital" />
+                <datalist id="hospital-list">
+                  {hospitals.map((h, i) => <option key={i} value={h} />)}
+                </datalist>
               </div>
               
               <div className="grid grid-cols-2 gap-space-md">

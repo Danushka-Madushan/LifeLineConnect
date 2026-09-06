@@ -198,6 +198,29 @@ public class BloodBankController : ControllerBase
         return ApiResponse<string>.Ok("Transfer received. Blood units have been successfully added to the inventory.");
     }
 
+    [HttpGet("hospitals")]
+    public ActionResult<ApiResponse<List<string>>> GetHospitals()
+    {
+        var list = new List<string>();
+        using var connection = _oracleDb.CreateConnection() as OracleConnection;
+        connection!.Open();
+
+        using var cmd = new OracleCommand("GET_ALL_HOSPITALS", connection);
+        cmd.CommandType = CommandType.StoredProcedure;
+        
+        var cursor = new OracleParameter("p_result_cursor", OracleDbType.RefCursor) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(cursor);
+        
+        using var reader = cmd.ExecuteReader();
+        
+        while (reader.Read())
+        {
+            list.Add(reader["HOSPITAL_NAME"].ToString()!);
+        }
+
+        return ApiResponse<List<string>>.Ok(list);
+    }
+
     [HttpGet("hospital-requests")]
     public ActionResult<ApiResponse<List<HospitalRequestDto>>> GetHospitalRequests()
     {

@@ -150,6 +150,17 @@ BEGIN
 END GET_BANK_HOSPITAL_REQUESTS;
 /
 
+/* Get all hospitals for dropdowns */
+CREATE OR REPLACE PROCEDURE GET_ALL_HOSPITALS (
+    p_result_cursor OUT SYS_REFCURSOR
+)
+IS
+BEGIN
+    OPEN p_result_cursor FOR
+        SELECT HOSPITAL_NAME FROM HOSPITAL ORDER BY HOSPITAL_NAME;
+END GET_ALL_HOSPITALS;
+/
+
 /* Create a new public hospital request */
 CREATE OR REPLACE PROCEDURE CREATE_HOSPITAL_REQUEST (
     p_hospital_name  IN VARCHAR2,
