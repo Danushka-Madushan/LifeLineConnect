@@ -51,11 +51,6 @@ CREATE OR REPLACE PROCEDURE AUTHENTICATE_USER (
     v_user APP_USER%ROWTYPE;
     v_role USER_ROLE_LINK.ROLE_CODE%TYPE;
 BEGIN
-    SELECT u.USER_ID, u.PASSWORD_HASH, u.ACCOUNT_STATUS, r.ROLE_CODE
-    INTO p_user_id, p_password_hash, p_account_status, p_role_code
-    FROM APP_USER u
-    JOIN USER_ROLE_LINK r ON u.USER_ID = r.USER_ID
-    WHERE (u.USERNAME = p_username OR u.EMAIL = p_username);
     BEGIN
         SELECT * INTO v_user FROM APP_USER WHERE USERNAME = p_username OR EMAIL = p_username;
         SELECT ROLE_CODE INTO v_role FROM USER_ROLE_LINK WHERE USER_ID = v_user.USER_ID;
