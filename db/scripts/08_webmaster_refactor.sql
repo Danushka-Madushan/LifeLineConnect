@@ -1,12 +1,8 @@
--- ================================================================
--- Webmaster Refactor Procedures
--- Blood Donation System — Oracle 21c PL/SQL
--- ================================================================
-
--- Seed Webmaster
+/* Seed Webmaster */
 CREATE OR REPLACE PROCEDURE SEED_WEBMASTER (
     p_password_hash IN VARCHAR2
-) AS
+)
+IS
     v_count NUMBER;
     v_user_id APP_USER.USER_ID%TYPE;
 BEGIN
@@ -21,16 +17,10 @@ BEGIN
 
     INSERT INTO USER_ROLE_LINK (USER_ID, ROLE_CODE)
     VALUES (v_user_id, 'WEBMASTER');
-
-    COMMIT;
-EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE;
 END SEED_WEBMASTER;
 /
 
--- Register Blood Bank
+/* Seed Webmaster */
 CREATE OR REPLACE PROCEDURE REGISTER_BLOOD_BANK (
     p_username   IN VARCHAR2,
     p_email      IN VARCHAR2,
@@ -39,7 +29,8 @@ CREATE OR REPLACE PROCEDURE REGISTER_BLOOD_BANK (
     p_name       IN VARCHAR2,
     p_phone      IN VARCHAR2,
     p_address    IN VARCHAR2
-) AS
+)
+IS
     v_user_id APP_USER.USER_ID%TYPE;
     v_bank_id BLOOD_BANK.BLOOD_BANK_ID%TYPE;
 BEGIN
@@ -53,16 +44,10 @@ BEGIN
 
     INSERT INTO USER_ROLE_LINK (USER_ID, ROLE_CODE, BLOOD_BANK_ID)
     VALUES (v_user_id, 'BLOOD_BANK', v_bank_id);
-
-    COMMIT;
-EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE;
 END REGISTER_BLOOD_BANK;
 /
 
--- Register Committee
+/* Register Committee */
 CREATE OR REPLACE PROCEDURE REGISTER_COMMITTEE (
     p_username       IN VARCHAR2,
     p_email          IN VARCHAR2,
@@ -71,7 +56,8 @@ CREATE OR REPLACE PROCEDURE REGISTER_COMMITTEE (
     p_name           IN VARCHAR2,
     p_phone          IN VARCHAR2,
     p_address        IN VARCHAR2
-) AS
+)
+IS
     v_user_id APP_USER.USER_ID%TYPE;
     v_comm_id ORGANIZING_COMMITTEE.COMMITTEE_ID%TYPE;
 BEGIN
@@ -85,32 +71,21 @@ BEGIN
 
     INSERT INTO USER_ROLE_LINK (USER_ID, ROLE_CODE, COMMITTEE_ID)
     VALUES (v_user_id, 'ORGANIZING_COMMITTEE', v_comm_id);
-
-    COMMIT;
-EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE;
 END REGISTER_COMMITTEE;
 /
 
--- Delete User (Soft Delete)
+/* Delete User */
 CREATE OR REPLACE PROCEDURE DELETE_USER (
     p_user_id IN NUMBER
-) AS
+)
+IS
 BEGIN
-    -- Remove the role link so they can no longer act as that role
+    /* Remove the role link so they can no longer act as that role */
     DELETE FROM USER_ROLE_LINK WHERE USER_ID = p_user_id;
     
-    -- Mark user as deleted
+    /* Mark user as deleted */
     UPDATE APP_USER
     SET ACCOUNT_STATUS = 'DISABLED'
     WHERE USER_ID = p_user_id;
-
-    COMMIT;
-EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        RAISE;
 END DELETE_USER;
 /
