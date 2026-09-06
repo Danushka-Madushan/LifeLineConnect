@@ -16,8 +16,6 @@
   </p>
 </div>
 
----
-
 ## About
 
 LifeLineConnect is a full-stack platform that manages the complete blood donation lifecycle — from donor registration and camp scheduling through to blood unit storage, hospital allocation, and supply chain logistics.
@@ -187,8 +185,6 @@ A complete Postman collection is available at [`docs/LifeLineConnect_Postman_Col
 
 Proprietary. Developed by **Danushka Madushan** as part of the Database Management II module at NIBM.
 
----
-
 <div align="center">
-  <sub>Built with .NET, React, Oracle, and MongoDB.</sub>
+  <i>Developed with ❤️ for a better healthcare logistics future</i>
 </div>
