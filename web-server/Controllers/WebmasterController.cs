@@ -876,4 +876,48 @@ public class WebmasterController : ControllerBase
         
         return File(document.GeneratePdf(), "application/pdf", "Audit_Logs.pdf");
     }
+
+    [HttpGet("emergency-appeals")]
+    public async Task<ActionResult<ApiResponse<List<object>>>> GetPendingAppeals()
+    {
+        var appealsCol = _mongoDb.GetCollection<BsonDocument>("emergencyAppeals");
+        var pendingAppeals = await appealsCol.Find(Builders<BsonDocument>.Filter.Eq("status", "PENDING")).ToListAsync();
+        
+        var list = pendingAppeals.Select(a => new
+        {
+            AppealId = a["_id"].ToString(),
+            PatientReference = a.Contains("patientReference") ? a["patientReference"].AsString : "",
+            BloodGroup = a.Contains("bloodGroup") ? a["bloodGroup"].AsString : "",
+            UnitsRequired = a.Contains("unitsRequired") ? (a["unitsRequired"].IsInt32 ? a["unitsRequired"].AsInt32 : 0) : 0,
+            Urgency = a.Contains("urgency") ? a["urgency"].AsString : "",
+            Location = a.Contains("location") ? a["location"].AsString : "",
+            NeededBy = a.Contains("neededBy") ? a["neededBy"].ToUniversalTime() : DateTime.UtcNow,
+            Summary = a.Contains("summary") ? a["summary"].AsString : "",
+            Status = a.Contains("status") ? a["status"].AsString : "PENDING",
+            CreatedAt = a.Contains("createdAt") ? a["createdAt"].ToUniversalTime() : DateTime.UtcNow
+        }).ToList<object>();
+
+        return ApiResponse<List<object>>.Ok(list);
+    }
+
+    public class UpdateAppealStatusDto
+    {
+        public string Status { get; set; } = "";
+    }
+
+    [HttpPatch("emergency-appeals/{id}/status")]
+    public async Task<ActionResult<ApiResponse<string>>> UpdateAppealStatus(string id, [FromBody] UpdateAppealStatusDto dto)
+    {
+        var appealsCol = _mongoDb.GetCollection<BsonDocument>("emergencyAppeals");
+        var filter = Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(id));
+        var update = Builders<BsonDocument>.Update.Set("status", dto.Status);
+        
+        var result = await appealsCol.UpdateOneAsync(filter, update);
+        if (result.ModifiedCount == 0)
+        {
+            return NotFound(ApiResponse<string>.Error("Appeal not found or status already matches."));
+        }
+
+        return ApiResponse<string>.Ok("Appeal status updated successfully.");
+    }
 }
