@@ -70,6 +70,7 @@ interface QaDto {
   createdAt: string;
 }
 
+
 interface AuditLogDto {
   logId: number;
   actorRoleCode: string;
@@ -81,8 +82,22 @@ interface AuditLogDto {
   createdAt: string;
 }
 
+interface AppealDto {
+  appealId: string;
+  patientReference: string;
+  bloodGroup: string;
+  unitsRequired: number;
+  urgency: string;
+  location: string;
+  neededBy: string;
+  summary: string;
+  status: string;
+  createdAt: string;
+}
+
+
 const WebmasterDashboard = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'banks' | 'committees' | 'community' | 'audit'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'banks' | 'committees' | 'community' | 'audit' | 'appeals'>('overview');
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [overview, setOverview] = useState<OverviewStats | null>(null);
@@ -97,6 +112,7 @@ const WebmasterDashboard = () => {
   const [threads, setThreads] = useState<ThreadDto[]>([]);
   const [qas, setQas] = useState<QaDto[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogDto[]>([]);
+  const [appeals, setAppeals] = useState<AppealDto[]>([]);
 
   // Modal states
   const [showBankModal, setShowBankModal] = useState(false);
@@ -155,6 +171,7 @@ const WebmasterDashboard = () => {
     }
   };
 
+
   const fetchAuditLogs = async (silent = false) => {
     setRefreshing(true);
     try {
@@ -167,6 +184,29 @@ const WebmasterDashboard = () => {
       toast.error('Failed to fetch audit logs');
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const fetchAppeals = async () => {
+    try {
+      const res = await api.get('/webmaster/emergency-appeals');
+      if (res.data.success) {
+        setAppeals(res.data.data);
+      }
+    } catch {
+      toast.error('Failed to fetch appeals');
+    }
+  };
+
+  const approveAppeal = async (id: string) => {
+    try {
+      const res = await api.patch(`/webmaster/emergency-appeals/${id}/status`, { status: 'ACTIVE' });
+      if (res.data.success) {
+        toast.success('Appeal approved and published!');
+        fetchAppeals();
+      }
+    } catch {
+      toast.error('Failed to approve appeal');
     }
   };
 
@@ -185,6 +225,7 @@ const WebmasterDashboard = () => {
         setOverview(overRes.data.data);
       }
 
+
       if (activeTab === 'users') {
         await fetchUsers();
       } else if (activeTab === 'banks') {
@@ -198,6 +239,8 @@ const WebmasterDashboard = () => {
         if (res.data.success) {
           setAuditLogs(res.data.data);
         }
+      } else if (activeTab === 'appeals') {
+        await fetchAppeals();
       }
 
       toast.success('Dashboard data refreshed');
@@ -285,10 +328,16 @@ const WebmasterDashboard = () => {
               setQas(qRes.data.data);
             }
           }
+
         } else if (activeTab === 'audit') {
           const res = await api.get('/webmaster/audit-logs');
           if (!cancelled && res.data.success) {
             setAuditLogs(res.data.data);
+          }
+        } else if (activeTab === 'appeals') {
+          const res = await api.get('/webmaster/emergency-appeals');
+          if (!cancelled && res.data.success) {
+            setAppeals(res.data.data);
           }
         }
       } catch {
@@ -303,6 +352,8 @@ const WebmasterDashboard = () => {
             toast.error('Failed to fetch community data');
           } else if (activeTab === 'audit') {
             toast.error('Failed to fetch audit logs');
+          } else if (activeTab === 'appeals') {
+            toast.error('Failed to fetch appeals');
           }
         }
       }
@@ -459,9 +510,56 @@ const WebmasterDashboard = () => {
     }
   };
 
+
   const handleExportUsers = () => downloadReport('/webmaster/reports/users', 'Users_Report.pdf');
   const handleExportBanks = () => downloadReport('/webmaster/reports/banks', 'Banks_Report.pdf');
   const handleExportCommittees = () => downloadReport('/webmaster/reports/committees', 'Committees_Report.pdf');
+
+  const renderAppeals = () => (
+    <div className="flex flex-col gap-space-lg">
+      <h2 className="font-heading text-2xl font-bold text-on-surface">Pending Emergency Appeals</h2>
+      <div className="bg-surface-container-lowest border border-surface-container rounded-2xl overflow-hidden">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-surface-container">
+              <th className="p-space-md font-semibold text-secondary">Patient</th>
+              <th className="p-space-md font-semibold text-secondary">Blood Group</th>
+              <th className="p-space-md font-semibold text-secondary">Units</th>
+              <th className="p-space-md font-semibold text-secondary">Urgency</th>
+              <th className="p-space-md font-semibold text-secondary">Location</th>
+              <th className="p-space-md font-semibold text-secondary">Needed By</th>
+              <th className="p-space-md font-semibold text-secondary text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {appeals.map((a: AppealDto) => (
+              <tr key={a.appealId} className="border-b border-surface-container/50">
+                <td className="p-space-md">{a.patientReference}</td>
+                <td className="p-space-md"><span className="font-bold text-error">{a.bloodGroup}</span></td>
+                <td className="p-space-md">{a.unitsRequired}</td>
+                <td className="p-space-md">{a.urgency}</td>
+                <td className="p-space-md">{a.location}</td>
+                <td className="p-space-md">{new Date(a.neededBy).toLocaleString()}</td>
+                <td className="p-space-md text-right">
+                  <button
+                    onClick={() => approveAppeal(a.appealId)}
+                    className="px-space-md py-space-sm bg-primary text-on-primary rounded-lg font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    Approve
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {appeals.length === 0 && (
+              <tr>
+                <td colSpan={7} className="p-space-xl text-center text-secondary">No pending appeals.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 
   if (error) {
     return (
@@ -491,9 +589,10 @@ const WebmasterDashboard = () => {
         <p className="font-body text-lg text-secondary">Global System Management & Moderation</p>
       </div>
 
+
       <div className="flex items-center justify-between border-b border-surface-container pb-space-md flex-wrap gap-space-md">
         <div className="flex gap-space-md flex-wrap items-center">
-          {(['overview', 'users', 'banks', 'committees', 'community', 'audit'] as const).map(tab => (
+          {(['overview', 'users', 'banks', 'committees', 'community', 'audit', 'appeals'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -792,7 +891,11 @@ const WebmasterDashboard = () => {
         </div>
       )}
 
+
+      {activeTab === 'appeals' && renderAppeals()}
+
       {/* Modals */}
+
       {showBankModal && <RegisterBankModal onClose={() => { setShowBankModal(false); fetchBanks(); }} />}
       {showCommModal && <RegisterCommModal onClose={() => { setShowCommModal(false); fetchCommittees(); }} />}
       {showGuidelineModal && <CreateGuidelineModal onClose={() => setShowGuidelineModal(false)} />}
