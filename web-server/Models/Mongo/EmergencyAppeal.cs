@@ -3,6 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace web_server.Models.Mongo;
 
+[BsonIgnoreExtraElements]
 public class EmergencyAppeal
 {
     [BsonId]
